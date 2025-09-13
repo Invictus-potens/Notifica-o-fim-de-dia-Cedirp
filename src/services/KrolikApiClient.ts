@@ -8,6 +8,8 @@ import {
   KrolikApiConfig, 
   ApiError 
 } from '../models/ApiTypes';
+import { RetryUtils, retryApiCall } from '../utils/RetryUtils';
+import { validateKrolikApiPayload, sanitizeData } from '../utils/ValidationUtils';
 import { WaitingPatient } from '../models/WaitingPatient';
 
 export class KrolikApiClient {
@@ -49,21 +51,28 @@ export class KrolikApiClient {
   }
 
   /**
-   * Executa requisição com retry automático
+   * Executa requisição com retry automático usando RetryUtils
    */
   private async executeWithRetry<T>(
     requestFn: () => Promise<AxiosResponse<T>>,
     retries: number = this.config.maxRetries
   ): Promise<T> {
-    try {
-      const response = await requestFn();
-      return response.data;
-    } catch (error) {
-      if (retries > 0 && this.shouldRetry(error as ApiError)) {
-        await this.delay(this.config.retryDelay);
-        return this.executeWithRetry(requestFn, retries - 1);
+    const result = await retryApiCall(
+      async () => {
+        const response = await requestFn();
+        return response.data;
+      },
+      {
+        maxRetries: retries,
+        baseDelay: this.config.retryDelay,
+        retryCondition: (error: any) => this.shouldRetry(error as ApiError)
       }
-      throw error;
+    );
+
+    if (result.success) {
+      return result.data!;
+    } else {
+      throw result.error;
     }
   }
 
@@ -75,6 +84,10 @@ export class KrolikApiClient {
     if (!error.status) return true; // Erro de rede
     if (error.status >= 500) return true; // Erro do servidor
     if (error.status === 429) return true; // Rate limit
+    if (error.status === 408) return true; // Timeout
+    if (error.status === 503) return true; // Service Unavailable
+    if (error.status === 502) return true; // Bad Gateway
+    if (error.status === 504) return true; // Gateway Timeout
     return false;
   }
 
@@ -89,6 +102,8 @@ export class KrolikApiClient {
    * Lista atendimentos aguardando (status=1)
    */
   async listWaitingAttendances(): Promise<WaitingPatient[]> {
+    console.log('👥 Listando pacientes aguardando na API CAM Krolik...');
+    
     const response = await this.executeWithRetry(() =>
       this.axiosInstance.get<ApiResponse<Attendance[]>>('/core/v2/api/chats/list-lite', {
         params: { status: 1 }
@@ -96,11 +111,14 @@ export class KrolikApiClient {
     );
 
     if (!response.success || !response.data) {
+      console.error('❌ Erro ao listar pacientes aguardando:', response.error);
       throw new Error(response.error || 'Falha ao listar atendimentos');
     }
 
     // Converter dados da API para o modelo interno
-    return response.data.map(attendance => this.convertToWaitingPatient(attendance));
+    const patients = response.data.map(attendance => this.convertToWaitingPatient(attendance));
+    console.log(`👥 Encontrados ${patients.length} pacientes aguardando`);
+    return patients;
   }
 
   /**
@@ -108,16 +126,33 @@ export class KrolikApiClient {
    */
   async sendActionCard(chatId: string, cardId: string): Promise<boolean> {
     try {
+      console.log(`📤 Enviando cartão de ação (${cardId}) para chat ${chatId}...`);
+      
+      // Validar payload
+      const payload = { chatId, actionCardId: cardId };
+      const validation = validateKrolikApiPayload(payload, 'send-action-card');
+      
+      if (!validation.isValid) {
+        console.error('❌ Payload inválido para send-action-card:', validation.errors);
+        return false;
+      }
+
+      // Sanitizar dados
+      const sanitizedPayload = sanitizeData(payload);
+
       const response = await this.executeWithRetry(() =>
-        this.axiosInstance.post<ApiResponse<any>>('/core/v2/api/chats/send-action-card', {
-          chatId,
-          actionCardId: cardId
-        })
+        this.axiosInstance.post<ApiResponse<any>>('/core/v2/api/chats/send-action-card', sanitizedPayload)
       );
+
+      if (response.success) {
+        console.log(`✅ Cartão de ação enviado com sucesso para chat ${chatId}`);
+      } else {
+        console.log(`❌ Falha ao enviar cartão de ação para chat ${chatId}`);
+      }
 
       return response.success;
     } catch (error) {
-      console.error(`Erro ao enviar cartão de ação para chat ${chatId}:`, error);
+      console.error(`❌ Erro ao enviar cartão de ação para chat ${chatId}:`, error);
       return false;
     }
   }
@@ -127,11 +162,20 @@ export class KrolikApiClient {
    */
   async sendTemplate(chatId: string, templateId: string): Promise<boolean> {
     try {
+      // Validar payload
+      const payload = { chatId, templateId };
+      const validation = validateKrolikApiPayload(payload, 'send-template');
+      
+      if (!validation.isValid) {
+        console.error('Payload inválido para send-template:', validation.errors);
+        return false;
+      }
+
+      // Sanitizar dados
+      const sanitizedPayload = sanitizeData(payload);
+
       const response = await this.executeWithRetry(() =>
-        this.axiosInstance.post<ApiResponse<any>>('/core/v2/api/chats/send-template', {
-          chatId,
-          templateId
-        })
+        this.axiosInstance.post<ApiResponse<any>>('/core/v2/api/chats/send-template', sanitizedPayload)
       );
 
       return response.success;
@@ -142,15 +186,62 @@ export class KrolikApiClient {
   }
 
   /**
+   * Envia mensagem de texto simples
+   */
+  async sendTextMessage(chatId: string, message: string): Promise<boolean> {
+    try {
+      // Validar payload
+      const payload = { chatId, message };
+      const validation = validateKrolikApiPayload(payload, 'send-text');
+      
+      if (!validation.isValid) {
+        console.error('Payload inválido para send-text:', validation.errors);
+        return false;
+      }
+
+      // Sanitizar dados
+      const sanitizedPayload = sanitizeData(payload);
+
+      const response = await this.executeWithRetry(() =>
+        this.axiosInstance.post<ApiResponse<any>>('/core/v2/api/chats/send-text', sanitizedPayload)
+      );
+
+      return response.success;
+    } catch (error) {
+      console.error(`Erro ao enviar mensagem de texto para chat ${chatId}:`, error);
+      return false;
+    }
+  }
+
+  /**
    * Lista setores disponíveis
    */
   async getSectors(): Promise<Sector[]> {
+    console.log('📋 Buscando setores da API CAM Krolik...');
+    
     const response = await this.executeWithRetry(() =>
       this.axiosInstance.get<ApiResponse<Sector[]>>('/core/v2/api/sectors')
     );
 
     if (!response.success || !response.data) {
+      console.error('❌ Erro ao buscar setores:', response.error);
       throw new Error(response.error || 'Falha ao listar setores');
+    }
+
+    console.log(`📋 Encontrados ${response.data.length} setores`);
+    return response.data;
+  }
+
+  /**
+   * Obtém um setor específico
+   */
+  async getSector(sectorId: string): Promise<Sector> {
+    const response = await this.executeWithRetry(() =>
+      this.axiosInstance.get<ApiResponse<Sector>>(`/core/v2/api/sectors/${sectorId}`)
+    );
+
+    if (!response.success || !response.data) {
+      throw new Error(response.error || 'Falha ao obter setor');
     }
 
     return response.data;
@@ -172,15 +263,45 @@ export class KrolikApiClient {
   }
 
   /**
+   * Obtém um cartão de ação específico
+   */
+  async getActionCard(cardId: string): Promise<ActionCard> {
+    const response = await this.executeWithRetry(() =>
+      this.axiosInstance.get<ApiResponse<ActionCard>>(`/core/v2/api/action-cards/${cardId}`)
+    );
+
+    if (!response.success || !response.data) {
+      throw new Error(response.error || 'Falha ao obter cartão de ação');
+    }
+
+    return response.data;
+  }
+
+  /**
    * Lista templates disponíveis
    */
   async getTemplates(): Promise<Template[]> {
     const response = await this.executeWithRetry(() =>
-      this.axiosInstance.get<ApiResponse<Template[]>>('/core/v2/api/templates')
+      this.axiosInstance.get<ApiResponse<Template[]>>('/core/v2/api/action-cards/templates')
     );
 
     if (!response.success || !response.data) {
       throw new Error(response.error || 'Falha ao listar templates');
+    }
+
+    return response.data;
+  }
+
+  /**
+   * Obtém um template específico
+   */
+  async getTemplate(templateId: string): Promise<Template> {
+    const response = await this.executeWithRetry(() =>
+      this.axiosInstance.get<ApiResponse<Template>>(`/core/v2/api/action-cards/templates/${templateId}`)
+    );
+
+    if (!response.success || !response.data) {
+      throw new Error(response.error || 'Falha ao obter template');
     }
 
     return response.data;
@@ -212,12 +333,21 @@ export class KrolikApiClient {
    */
   async testConnection(): Promise<boolean> {
     try {
-      await this.executeWithRetry(() =>
+      console.log('🔍 Testando conectividade com API CAM Krolik...');
+      console.log(`📡 URL: ${this.config.baseUrl}`);
+      console.log(`🔑 Token: ${this.config.apiToken ? 'Configurado' : 'NÃO CONFIGURADO'}`);
+      
+      const response = await this.executeWithRetry(() =>
         this.axiosInstance.get('/core/v2/api/health')
       );
+      
+      console.log('✅ API CAM Krolik conectada com sucesso!');
+      console.log(`📊 Status: ${response.status}`);
       return true;
     } catch (error) {
-      console.error('Falha no teste de conectividade:', error);
+      console.error('❌ Falha no teste de conectividade com API CAM Krolik:');
+      console.error(`   Erro: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
+      console.error(`   URL: ${this.config.baseUrl}/core/v2/api/health`);
       return false;
     }
   }

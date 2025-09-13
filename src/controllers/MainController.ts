@@ -5,10 +5,16 @@ import { MessageService, IMessageService } from '../services/MessageService';
 import { KrolikApiClient } from '../services/KrolikApiClient';
 import { ErrorHandler, IErrorHandler } from '../services/ErrorHandler';
 import { MonitoringScheduler, createMonitoringScheduler } from '../services/Scheduler';
+import { ProductionScheduler, createProductionScheduler } from '../services/ProductionScheduler';
 import { WaitingPatient } from '../models';
 import { logger, Logger } from '../services/Logger';
 import { LogLevel, LogEntry } from '../services/ErrorHandler';
 import { metricsService } from '../services/MetricsService';
+import { TimeUtils } from '../utils/TimeUtils';
+import { ConsoleMonitor } from '../services/ConsoleMonitor';
+import { HealthCheckService } from '../services/HealthCheckService';
+import { SupabaseClient } from '../services/SupabaseClient';
+import { SimpleConsoleLogger } from '../services/SimpleConsoleLogger';
 
 export interface IMainController {
   start(): Promise<void>;
@@ -32,6 +38,11 @@ export class MainController implements IMainController {
   private krolikApiClient: KrolikApiClient;
   private errorHandler: IErrorHandler;
   private monitoringScheduler: MonitoringScheduler;
+  private productionScheduler: ProductionScheduler;
+  private consoleMonitor: ConsoleMonitor;
+  private healthCheckService: HealthCheckService;
+  private supabaseClient: SupabaseClient;
+  private simpleLogger: SimpleConsoleLogger;
   
   private isRunning: boolean = false;
   private initialized: boolean = false;
@@ -53,6 +64,9 @@ export class MainController implements IMainController {
       retryDelay: 1000
     };
     this.krolikApiClient = new KrolikApiClient(defaultApiConfig);
+
+    // Inicializar SupabaseClient
+    this.supabaseClient = new SupabaseClient(this.errorHandler);
     
     // Inicializar MonitoringService
     this.monitoringService = new MonitoringService(
@@ -74,6 +88,32 @@ export class MainController implements IMainController {
       { intervalMs: 60000, autoStart: false }
     );
     
+    // Inicializar ProductionScheduler
+    this.productionScheduler = createProductionScheduler(
+      this.monitoringService,
+      this.messageService,
+      this.configManager
+    );
+
+    // Inicializar HealthCheckService
+    this.healthCheckService = new HealthCheckService(
+      this.configManager,
+      this.monitoringService,
+      this.messageService,
+      this.krolikApiClient,
+      this.supabaseClient
+    );
+
+    // Inicializar ConsoleMonitor
+    this.consoleMonitor = new ConsoleMonitor(
+      logger,
+      this.healthCheckService,
+      metricsService
+    );
+
+    // Inicializar SimpleConsoleLogger
+    this.simpleLogger = SimpleConsoleLogger.getInstance();
+    
     // Configurar callback para processar pacientes elegíveis
     if (this.monitoringScheduler && this.monitoringScheduler.onEligiblePatientsFound) {
       this.monitoringScheduler.onEligiblePatientsFound(
@@ -93,14 +133,22 @@ export class MainController implements IMainController {
         return;
       }
 
-      logger.info('Inicializando sistema...', 'MainController.initialize');
+      this.consoleMonitor.showStartupInfo();
 
       // Inicializar ConfigManager (carrega configurações e dados)
       await this.configManager.initialize();
-      logger.info('ConfigManager inicializado', 'MainController.initialize');
+      this.consoleMonitor.showComponentInitialized('ConfigManager');
       
-      // Inicializar KrolikApiClient se necessário
-      // (configurações de API são carregadas do ConfigManager)
+      // Testar conectividade com API CAM Krolik
+      console.log('\n🔍 TESTANDO CONECTIVIDADE COM API CAM KROLIK...');
+      const apiConnected = await this.krolikApiClient.testConnection();
+      if (apiConnected) {
+        this.simpleLogger.logInfo('API CAM Krolik conectada com sucesso!');
+      } else {
+        this.simpleLogger.logError('Falha na conexão com API CAM Krolik');
+      }
+      
+      this.consoleMonitor.showComponentInitialized('KrolikApiClient');
       
       this.initialized = true;
       this.startTime = new Date();
@@ -141,11 +189,23 @@ export class MainController implements IMainController {
       logger.info('Iniciando sistema de automação...', 'MainController.start');
 
       // Iniciar scheduler de monitoramento
+      // Iniciar ProductionScheduler (cron jobs reais)
+      await this.productionScheduler.start();
+      logger.info('ProductionScheduler iniciado', 'MainController.start');
+      
+      // Manter MonitoringScheduler para compatibilidade (pode ser removido depois)
       this.monitoringScheduler.start();
       logger.info('Scheduler de monitoramento iniciado', 'MainController.start');
       
+      // Iniciar ConsoleMonitor
+      this.consoleMonitor.start();
+      
+      // Iniciar SimpleConsoleLogger
+      this.simpleLogger.start();
+      
       this.isRunning = true;
       
+      this.consoleMonitor.showSystemReady();
       logger.info('Sistema de automação iniciado com sucesso', 'MainController.start');
       
     } catch (error) {
@@ -171,9 +231,19 @@ export class MainController implements IMainController {
 
       logger.info('Parando sistema de automação...', 'MainController.stop');
 
+      // Parar ProductionScheduler
+      await this.productionScheduler.stop();
+      logger.info('ProductionScheduler parado', 'MainController.stop');
+      
       // Parar scheduler de monitoramento
       this.monitoringScheduler.stop();
       logger.info('Scheduler de monitoramento parado', 'MainController.stop');
+      
+      // Parar ConsoleMonitor
+      this.consoleMonitor.stop();
+      
+      // Parar SimpleConsoleLogger
+      this.simpleLogger.stop();
       
       // Executar limpeza diária se necessário
       await this.configManager.cleanupDailyData();
@@ -364,7 +434,7 @@ export class MainController implements IMainController {
         return;
       }
 
-      console.log(`Processando ${eligiblePatients.length} pacientes para mensagem de 30 minutos`);
+      this.simpleLogger.logInfo(`Processando ${eligiblePatients.length} pacientes para mensagem de 30 min`);
       
       let successCount = 0;
       let errorCount = 0;
@@ -387,7 +457,10 @@ export class MainController implements IMainController {
         }
       }
 
-      console.log(`Mensagens de 30 min: ${successCount} enviadas, ${errorCount} falharam`);
+      this.simpleLogger.logMessageSent('30min', successCount);
+      if (errorCount > 0) {
+        this.simpleLogger.logError(`${errorCount} mensagens de 30min falharam`);
+      }
       
     } catch (error) {
       this.errorHandler.logError(
@@ -414,11 +487,11 @@ export class MainController implements IMainController {
         return;
       }
 
-      console.log(`Processando ${eligiblePatients.length} pacientes para mensagem de fim de expediente`);
+      this.simpleLogger.logInfo(`Processando ${eligiblePatients.length} pacientes para mensagem de fim de expediente`);
       
       try {
         await this.messageService.sendEndOfDayMessages(eligiblePatients);
-        console.log('Mensagens de fim de expediente enviadas com sucesso');
+        this.simpleLogger.logMessageSent('end_of_day', eligiblePatients.length);
       } catch (error) {
         this.errorHandler.logError(
           error as Error,
@@ -439,24 +512,7 @@ export class MainController implements IMainController {
    * Requisito: 2.4 - Mensagem às 18h em dias úteis
    */
   private isEndOfDayTime(): boolean {
-    const now = new Date();
-    
-    // Verificar se é dia útil
-    if (!this.monitoringService.isWorkingDay()) {
-      return false;
-    }
-
-    // Verificar se é o horário configurado (padrão 18:00)
-    const config = this.configManager.getSystemConfig();
-    const [endHour, endMinute] = config.endOfDayTime.split(':').map(Number);
-    
-    // Converter para horário de Brasília (UTC-3)
-    const brasiliaTime = new Date(now.getTime() - (3 * 60 * 60 * 1000));
-    const currentHour = brasiliaTime.getHours();
-    const currentMinute = brasiliaTime.getMinutes();
-    
-    // Verificar se é exatamente o horário de fim de expediente (com tolerância de 1 minuto)
-    return currentHour === endHour && Math.abs(currentMinute - endMinute) <= 1;
+    return TimeUtils.isEndOfDayTimeWithTolerance(1) && TimeUtils.isWorkingDay();
   }
 
   /**

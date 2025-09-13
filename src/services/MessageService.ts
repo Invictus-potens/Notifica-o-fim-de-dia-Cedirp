@@ -2,6 +2,9 @@ import { WaitingPatient } from '../models';
 import { IConfigManager } from './ConfigManager';
 import { KrolikApiClient } from './KrolikApiClient';
 import { IErrorHandler } from './ErrorHandler';
+import { TimeUtils } from '../utils/TimeUtils';
+import { retryApiCall, retryCriticalOperation } from '../utils/RetryUtils';
+import { executeWithFallback, executeWithDefaultFallback } from '../utils/FallbackUtils';
 
 export interface IMessageService {
   send30MinuteMessage(patient: WaitingPatient): Promise<boolean>;
@@ -201,11 +204,30 @@ export class MessageService implements IMessageService {
         return false;
       }
 
-      // Enviar cartão de ação através da API
-      const success = await this.krolikApiClient.sendActionCard(
-        patient.channelId,
-        config.selectedActionCard
+      // Enviar cartão de ação através da API com retry e fallback
+      const result = await executeWithFallback(
+        async () => {
+          const retryResult = await retryApiCall(async () => {
+            return await this.krolikApiClient.sendActionCard(
+              patient.channelId,
+              config.selectedActionCard
+            );
+          });
+          
+          if (!retryResult.success) {
+            throw new Error(retryResult.error?.message || 'API call failed');
+          }
+          
+          return retryResult.data;
+        },
+        async () => {
+          // Fallback: tentar enviar mensagem de texto simples
+          const fallbackMessage = `Mensagem automática: Sua consulta está aguardando há mais de 30 minutos. Em breve você será atendido.`;
+          return await this.krolikApiClient.sendTextMessage(patient.id, fallbackMessage);
+        }
       );
+
+      const success = result.success && result.data;
 
       if (!success) {
         this.errorHandler.logError(
@@ -214,7 +236,7 @@ export class MessageService implements IMessageService {
         );
       }
 
-      return success;
+      return success || false;
     } catch (error) {
       // Tratamento de erro específico para cartão de ação (Requisito 6.5)
       this.errorHandler.logError(
@@ -244,11 +266,30 @@ export class MessageService implements IMessageService {
         return false;
       }
 
-      // Enviar template através da API
-      const success = await this.krolikApiClient.sendTemplate(
-        patient.channelId,
-        config.selectedTemplate
+      // Enviar template através da API com retry e fallback
+      const result = await executeWithFallback(
+        async () => {
+          const retryResult = await retryApiCall(async () => {
+            return await this.krolikApiClient.sendTemplate(
+              patient.channelId,
+              config.selectedTemplate
+            );
+          });
+          
+          if (!retryResult.success) {
+            throw new Error(retryResult.error?.message || 'API call failed');
+          }
+          
+          return retryResult.data;
+        },
+        async () => {
+          // Fallback: tentar enviar mensagem de texto simples
+          const fallbackMessage = `Mensagem automática: Sua consulta está aguardando há mais de 30 minutos. Em breve você será atendido.`;
+          return await this.krolikApiClient.sendTextMessage(patient.id, fallbackMessage);
+        }
       );
+
+      const success = result.success && result.data;
 
       if (!success) {
         this.errorHandler.logError(
@@ -257,7 +298,7 @@ export class MessageService implements IMessageService {
         );
       }
 
-      return success;
+      return success || false;
     } catch (error) {
       // Tratamento de erro específico para template (Requisito 6.5)
       this.errorHandler.logError(
@@ -273,22 +314,6 @@ export class MessageService implements IMessageService {
    * Requisito: 2.4
    */
   private isEndOfDayTime(): boolean {
-    const now = new Date();
-    
-    // Verificar se é fim de semana (Requisito 2.4)
-    const dayOfWeek = now.getDay();
-    if (dayOfWeek === 0 || dayOfWeek === 6) { // Domingo = 0, Sábado = 6
-      return false;
-    }
-
-    // Verificar se é o horário configurado (padrão 18:00)
-    const config = this.configManager.getSystemConfig();
-    const [endHour, endMinute] = config.endOfDayTime.split(':').map(Number);
-    
-    const currentHour = now.getHours();
-    const currentMinute = now.getMinutes();
-    
-    // Verificar se é exatamente o horário de fim de expediente
-    return currentHour === endHour && currentMinute === endMinute;
+    return TimeUtils.isEndOfDayTime() && TimeUtils.isWorkingDay();
   }
 }

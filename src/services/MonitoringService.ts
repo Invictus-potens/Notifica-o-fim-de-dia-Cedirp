@@ -1,6 +1,7 @@
 import { WaitingPatient } from '../models/WaitingPatient';
 import { KrolikApiClient } from './KrolikApiClient';
 import { IConfigManager } from './ConfigManager';
+import { TimeUtils } from '../utils/TimeUtils';
 
 export interface IMonitoringService {
   checkWaitingPatients(): Promise<WaitingPatient[]>;
@@ -110,14 +111,7 @@ export class MonitoringService implements IMonitoringService {
    * Requisito 2.4 - Considerar horário de Brasília
    */
   isBusinessHours(): boolean {
-    const now = new Date();
-    
-    // Converter para horário de Brasília (UTC-3)
-    const brasiliaTime = new Date(now.getTime() - (3 * 60 * 60 * 1000));
-    const hour = brasiliaTime.getHours();
-    
-    // Horário comercial: 8h às 18h
-    return hour >= 8 && hour < 18;
+    return TimeUtils.isBusinessHours();
   }
 
   /**
@@ -125,23 +119,17 @@ export class MonitoringService implements IMonitoringService {
    * Requisito 2.4 - Não executar em fins de semana
    */
   isWorkingDay(date?: Date): boolean {
-    const checkDate = date || new Date();
-    
-    // Converter para horário de Brasília
-    const brasiliaTime = new Date(checkDate.getTime() - (3 * 60 * 60 * 1000));
-    const dayOfWeek = brasiliaTime.getDay();
-    
-    // Segunda (1) a Sexta (5)
-    return dayOfWeek >= 1 && dayOfWeek <= 5;
+    if (date) {
+      return TimeUtils.toBrasiliaTime(date).weekday >= 1 && TimeUtils.toBrasiliaTime(date).weekday <= 5;
+    }
+    return TimeUtils.isWorkingDay();
   }
 
   /**
    * Calcula tempo de espera em minutos
    */
   private calculateWaitTimeMinutes(waitStartTime: Date): number {
-    const now = new Date();
-    const diffMs = now.getTime() - waitStartTime.getTime();
-    return Math.floor(diffMs / (1000 * 60));
+    return TimeUtils.calculateWaitTimeMinutes(waitStartTime);
   }
 
   /**
@@ -219,11 +207,7 @@ export class MonitoringService implements IMonitoringService {
    */
   async getEligiblePatientsForEndOfDayMessage(): Promise<WaitingPatient[]> {
     // Verificar se é horário de fim de expediente (18h)
-    const now = new Date();
-    const brasiliaTime = new Date(now.getTime() - (3 * 60 * 60 * 1000));
-    const hour = brasiliaTime.getHours();
-    
-    if (hour !== 18) {
+    if (!TimeUtils.isEndOfDayTimeWithTolerance(1)) {
       return [];
     }
 

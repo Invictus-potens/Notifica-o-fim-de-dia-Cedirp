@@ -1,4 +1,5 @@
 import { logger } from './Logger';
+import { advancedMetricsService } from './AdvancedMetricsService';
 
 export interface MessageMetrics {
   totalSent: number;
@@ -122,6 +123,21 @@ export class MetricsService {
     }
 
     this.messageMetrics.lastSentAt = new Date();
+
+    // Registrar no AdvancedMetricsService
+    advancedMetricsService.recordBusinessMetric({
+      messagesSent: success ? 1 : 0,
+      messagesFailed: success ? 0 : 1
+    });
+
+    if (responseTime) {
+      advancedMetricsService.recordPerformanceMetric(
+        'message_response_time',
+        responseTime,
+        'histogram',
+        { messageType, sectorId, channelId, success: success.toString() }
+      );
+    }
 
     logger.debug('Message metrics updated', 'METRICS_SERVICE', {
       success,

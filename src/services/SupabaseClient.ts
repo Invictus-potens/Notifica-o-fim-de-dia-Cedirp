@@ -5,7 +5,7 @@ import { IErrorHandler } from './ErrorHandler';
 export class SupabaseClient {
   private client: SupabaseClientType;
   private errorHandler: IErrorHandler;
-  private isConnected: boolean = false;
+  private connectionStatus: boolean = false;
 
   constructor(errorHandler: IErrorHandler) {
     this.errorHandler = errorHandler;
@@ -27,16 +27,16 @@ export class SupabaseClient {
       
       if (error) {
         this.errorHandler.logError(error, 'SupabaseClient.connect');
-        this.isConnected = false;
+        this.connectionStatus = false;
         return false;
       }
 
-      this.isConnected = true;
+      this.connectionStatus = true;
       await this.ensureTablesExist();
       return true;
     } catch (error) {
       this.errorHandler.logError(error as Error, 'SupabaseClient.connect');
-      this.isConnected = false;
+      this.connectionStatus = false;
       return false;
     }
   }
@@ -103,7 +103,7 @@ export class SupabaseClient {
   }
 
   async addExclusionEntry(entry: Omit<ExclusionEntry, 'id'>): Promise<string | null> {
-    if (!this.isConnected) {
+    if (!this.connectionStatus) {
       return null;
     }
 
@@ -132,7 +132,7 @@ export class SupabaseClient {
   }
 
   async getExclusionEntries(): Promise<ExclusionEntry[]> {
-    if (!this.isConnected) {
+    if (!this.connectionStatus) {
       return [];
     }
 
@@ -161,7 +161,7 @@ export class SupabaseClient {
   }
 
   async cleanupExpiredEntries(): Promise<number> {
-    if (!this.isConnected) {
+    if (!this.connectionStatus) {
       return 0;
     }
 
@@ -185,7 +185,7 @@ export class SupabaseClient {
   }
 
   async setConfigValue(key: string, value: string): Promise<boolean> {
-    if (!this.isConnected) {
+    if (!this.connectionStatus) {
       return false;
     }
 
@@ -211,7 +211,7 @@ export class SupabaseClient {
   }
 
   async getConfigValue(key: string): Promise<string | null> {
-    if (!this.isConnected) {
+    if (!this.connectionStatus) {
       return null;
     }
 
@@ -237,7 +237,7 @@ export class SupabaseClient {
   }
 
   async getAllConfig(): Promise<Record<string, string>> {
-    if (!this.isConnected) {
+    if (!this.connectionStatus) {
       return {};
     }
 
@@ -264,11 +264,28 @@ export class SupabaseClient {
   }
 
   isHealthy(): boolean {
-    return this.isConnected;
+    return this.connectionStatus;
   }
+
+  /**
+   * Verifica se está conectado ao Supabase
+   */
+  async testConnection(): Promise<boolean> {
+    try {
+      const { data, error } = await this.client
+        .from('system_health')
+        .select('id')
+        .limit(1);
+      
+      return !error;
+    } catch (error) {
+      return false;
+    }
+  }
+
 
   async disconnect(): Promise<void> {
     // Supabase client doesn't require explicit disconnection
-    this.isConnected = false;
+    this.connectionStatus = false;
   }
 }

@@ -1,4 +1,5 @@
 import { ErrorHandler, LogLevel, LogEntry } from './ErrorHandler';
+import { secureLogger } from '../utils/SecureLogger';
 
 export class Logger {
   private static instance: Logger;
@@ -18,60 +19,68 @@ export class Logger {
   }
 
   debug(message: string, context: string, metadata?: Record<string, any>): void {
-    this.errorHandler.debug(message, context, metadata);
+    secureLogger.secureLog('debug', message, metadata, context);
   }
 
   info(message: string, context: string, metadata?: Record<string, any>): void {
-    this.errorHandler.info(message, context, metadata);
+    secureLogger.secureLog('info', message, metadata, context);
   }
 
   warn(message: string, context: string, metadata?: Record<string, any>): void {
-    this.errorHandler.warn(message, context, metadata);
+    secureLogger.secureLog('warn', message, metadata, context);
   }
 
   error(message: string, context: string, error?: Error, metadata?: Record<string, any>): void {
-    this.errorHandler.error(message, context, error, metadata);
+    if (error) {
+      secureLogger.secureError(message, error, context);
+    } else {
+      secureLogger.secureLog('error', message, metadata, context);
+    }
   }
 
   critical(message: string, context: string, error?: Error, metadata?: Record<string, any>): void {
-    this.errorHandler.critical(message, context, error, metadata);
+    if (error) {
+      secureLogger.secureError(message, error, context);
+    } else {
+      secureLogger.secureLog('error', message, metadata, context);
+    }
   }
 
   // Métodos de conveniência para operações críticas
   logApiCall(endpoint: string, method: string, success: boolean, duration?: number): void {
     const metadata = { endpoint, method, duration };
     if (success) {
-      this.info(`API call successful`, 'API_CLIENT', metadata);
+      secureLogger.logApiData('info', `API call successful`, metadata, 'API_CLIENT');
     } else {
-      this.error(`API call failed`, 'API_CLIENT', undefined, metadata);
+      secureLogger.logApiData('error', `API call failed`, metadata, 'API_CLIENT');
     }
   }
 
   logMessageSent(patientId: string, messageType: string, success: boolean, error?: Error): void {
     const metadata = { patientId, messageType };
     if (success) {
-      this.info(`Message sent successfully`, 'MESSAGE_SERVICE', metadata);
+      secureLogger.logPatientData('info', `Message sent successfully`, metadata, 'MESSAGE_SERVICE');
     } else {
-      this.error(`Failed to send message`, 'MESSAGE_SERVICE', error, metadata);
+      secureLogger.secureError(`Failed to send message`, error, 'MESSAGE_SERVICE');
     }
   }
 
   logMonitoringCycle(patientsFound: number, messagesEligible: number, duration: number): void {
     const metadata = { patientsFound, messagesEligible, duration };
-    this.info(`Monitoring cycle completed`, 'MONITORING_SERVICE', metadata);
+    secureLogger.secureLog('info', `Monitoring cycle completed`, metadata, 'MONITORING_SERVICE');
   }
 
   logConfigChange(setting: string, oldValue: any, newValue: any, userId?: string): void {
     const metadata = { setting, oldValue, newValue, userId };
-    this.info(`Configuration changed`, 'CONFIG_MANAGER', metadata);
+    secureLogger.logConfig('info', `Configuration changed`, metadata, 'CONFIG_MANAGER');
   }
 
   logDatabaseOperation(operation: string, table: string, success: boolean, error?: Error): void {
     const metadata = { operation, table };
     if (success) {
-      this.debug(`Database operation successful`, 'DATABASE', metadata);
+      secureLogger.secureLog('debug', `Database operation successful`, metadata, 'DATABASE');
     } else {
-      this.error(`Database operation failed`, 'DATABASE', error, metadata);
+      secureLogger.secureError(`Database operation failed`, error, 'DATABASE');
     }
   }
 
