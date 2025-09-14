@@ -20,6 +20,7 @@ class AutomationInterface {
 
     initializeApp() {
         try {
+            console.log('Inicializando aplicação...');
             this.setupEventListeners();
             this.setupRouter();
             console.log('Automação de Mensagem de Espera - Interface carregada');
@@ -31,6 +32,11 @@ class AutomationInterface {
     setupEventListeners() {
         // Sidebar navigation
         this.setupSidebarNavigation();
+        
+        // Sidebar toggle functionality - with delay to ensure DOM is ready
+        setTimeout(() => {
+            this.setupSidebarToggle();
+        }, 100);
     }
 
     setupSidebarNavigation() {
@@ -57,6 +63,207 @@ class AutomationInterface {
                 }
             });
         });
+    }
+
+    setupSidebarToggle() {
+        // Sidebar elements
+        const sidebar = document.getElementById('sidebar');
+        const mainContent = document.getElementById('main-content');
+        const sidebarOverlay = document.getElementById('sidebar-overlay');
+        
+        // Toggle buttons
+        const sidebarToggle = document.getElementById('sidebar-toggle');
+        const sidebarOpenBtn = document.getElementById('sidebar-open-btn');
+        const sidebarCloseBtn = document.getElementById('sidebar-close-btn');
+        const mobileSidebarToggle = document.getElementById('mobile-sidebar-toggle');
+
+        console.log('Configurando sidebar toggle...');
+        console.log('Sidebar:', sidebar);
+        console.log('Main content:', mainContent);
+        console.log('Sidebar overlay:', sidebarOverlay);
+        console.log('Sidebar toggle:', sidebarToggle);
+        console.log('Sidebar open btn:', sidebarOpenBtn);
+        console.log('Sidebar close btn:', sidebarCloseBtn);
+        console.log('Mobile sidebar toggle:', mobileSidebarToggle);
+
+        // Function to open sidebar
+        const openSidebar = () => {
+            console.log('Abrindo sidebar...');
+            if (sidebar) {
+                sidebar.classList.remove('collapsed');
+                sidebar.classList.add('show');
+                console.log('Classes da sidebar após abrir:', sidebar.className);
+            }
+            if (mainContent) {
+                mainContent.classList.remove('expanded');
+                console.log('Classes do main-content após abrir:', mainContent.className);
+            }
+            if (sidebarOverlay) {
+                sidebarOverlay.classList.add('show');
+            }
+            
+            // Hide open button when sidebar is open
+            if (sidebarOpenBtn) {
+                sidebarOpenBtn.style.display = 'none';
+            }
+        };
+
+        // Function to close sidebar
+        const closeSidebar = () => {
+            console.log('Fechando sidebar...');
+            if (sidebar) {
+                sidebar.classList.add('collapsed');
+                sidebar.classList.remove('show');
+                console.log('Classes da sidebar após fechar:', sidebar.className);
+            }
+            if (mainContent) {
+                mainContent.classList.add('expanded');
+                console.log('Classes do main-content após fechar:', mainContent.className);
+            }
+            if (sidebarOverlay) {
+                sidebarOverlay.classList.remove('show');
+            }
+            
+            // Show open button when sidebar is closed
+            if (sidebarOpenBtn) {
+                sidebarOpenBtn.style.display = 'inline-flex';
+            }
+        };
+
+        // Function to toggle sidebar
+        const toggleSidebar = () => {
+            if (sidebar && sidebar.classList.contains('collapsed')) {
+                openSidebar();
+            } else {
+                closeSidebar();
+            }
+        };
+
+        // Event listeners for desktop
+        if (sidebarOpenBtn) {
+            console.log('Adicionando event listener para sidebar-open-btn');
+            sidebarOpenBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                console.log('Botão abrir sidebar clicado');
+                openSidebar();
+            });
+        } else {
+            console.warn('sidebar-open-btn não encontrado');
+        }
+
+        if (sidebarCloseBtn) {
+            console.log('Adicionando event listener para sidebar-close-btn');
+            sidebarCloseBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                console.log('Botão fechar sidebar clicado');
+                closeSidebar();
+            });
+        } else {
+            console.warn('sidebar-close-btn não encontrado');
+        }
+
+        // Event listeners for mobile
+        if (sidebarToggle) {
+            console.log('Adicionando event listener para sidebar-toggle');
+            sidebarToggle.addEventListener('click', (e) => {
+                e.preventDefault();
+                console.log('Botão toggle sidebar clicado');
+                toggleSidebar();
+            });
+        } else {
+            console.warn('sidebar-toggle não encontrado');
+        }
+
+        if (mobileSidebarToggle) {
+            console.log('Adicionando event listener para mobile-sidebar-toggle');
+            mobileSidebarToggle.addEventListener('click', (e) => {
+                e.preventDefault();
+                console.log('Botão mobile sidebar toggle clicado');
+                toggleSidebar();
+            });
+        } else {
+            console.warn('mobile-sidebar-toggle não encontrado');
+        }
+
+        // Close sidebar when clicking overlay
+        if (sidebarOverlay) {
+            sidebarOverlay.addEventListener('click', (e) => {
+                e.preventDefault();
+                closeSidebar();
+            });
+        }
+
+        // Close sidebar on window resize if needed
+        window.addEventListener('resize', () => {
+            if (window.innerWidth >= 992) {
+                // Desktop - ensure sidebar is visible
+                if (sidebar) {
+                    sidebar.classList.remove('collapsed', 'show');
+                }
+                if (mainContent) {
+                    mainContent.classList.remove('expanded');
+                }
+                if (sidebarOverlay) {
+                    sidebarOverlay.classList.remove('show');
+                }
+                
+                // Show desktop open button, hide mobile toggle
+                if (sidebarOpenBtn) {
+                    sidebarOpenBtn.style.display = 'inline-flex';
+                }
+                if (mobileSidebarToggle) {
+                    mobileSidebarToggle.style.display = 'none';
+                }
+            } else {
+                // Mobile - ensure sidebar is hidden by default
+                if (sidebar) {
+                    sidebar.classList.add('collapsed');
+                    sidebar.classList.remove('show');
+                }
+                if (mainContent) {
+                    mainContent.classList.add('expanded');
+                }
+                if (sidebarOverlay) {
+                    sidebarOverlay.classList.remove('show');
+                }
+                
+                // Hide desktop open button, show mobile toggle
+                if (sidebarOpenBtn) {
+                    sidebarOpenBtn.style.display = 'none';
+                }
+                if (mobileSidebarToggle) {
+                    mobileSidebarToggle.style.display = 'inline-flex';
+                }
+            }
+        });
+
+        // Initialize sidebar state based on screen size
+        console.log('Inicializando estado da sidebar...');
+        console.log('Largura da tela:', window.innerWidth);
+        
+        if (window.innerWidth < 992) {
+            console.log('Modo mobile - fechando sidebar');
+            closeSidebar();
+            
+            // Hide desktop open button, show mobile toggle
+            if (sidebarOpenBtn) {
+                sidebarOpenBtn.style.display = 'none';
+            }
+            if (mobileSidebarToggle) {
+                mobileSidebarToggle.style.display = 'inline-flex';
+            }
+        } else {
+            console.log('Modo desktop - abrindo sidebar');
+            openSidebar();
+            
+            // Show desktop open button, hide mobile toggle
+            if (sidebarOpenBtn) {
+                sidebarOpenBtn.style.display = 'inline-flex';
+            }
+            if (mobileSidebarToggle) {
+                mobileSidebarToggle.style.display = 'none';
+            }
+        }
     }
 
     navigateToRoute(route) {
