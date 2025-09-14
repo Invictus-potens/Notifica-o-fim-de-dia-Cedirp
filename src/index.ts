@@ -16,6 +16,15 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Middleware de logging básico para requisições
+app.use((req, res, next) => {
+  // Log apenas para requisições de API
+  if (req.url.startsWith('/api/')) {
+    console.log(`${req.method} ${req.url}`);
+  }
+  next();
+});
+
 // Servir arquivos estáticos da interface web
 app.use(express.static(path.join(__dirname, '../public')));
 
@@ -44,6 +53,7 @@ app.get('/api/status', (req, res) => {
     const status = mainController.getStatus();
     res.json(status);
   } catch (error) {
+    console.error('Erro ao obter status do sistema:', error);
     res.status(500).json({ error: 'Erro ao obter status do sistema' });
   }
 });
@@ -54,6 +64,7 @@ app.get('/api/patients', async (req, res) => {
     const detailedStats = mainController.getDetailedStats();
     res.json({ patients: [], stats: detailedStats.monitoring });
   } catch (error) {
+    console.error('Erro ao obter lista de pacientes:', error);
     res.status(500).json({ error: 'Erro ao obter lista de pacientes' });
   }
 });
@@ -63,6 +74,7 @@ app.post('/api/flow/pause', (req, res) => {
     mainController.pauseFlow();
     res.json({ success: true, message: 'Fluxo pausado com sucesso' });
   } catch (error) {
+    console.error('Erro ao pausar fluxo:', error);
     res.status(500).json({ error: 'Erro ao pausar fluxo' });
   }
 });
@@ -72,6 +84,7 @@ app.post('/api/flow/resume', (req, res) => {
     mainController.resumeFlow();
     res.json({ success: true, message: 'Fluxo retomado com sucesso' });
   } catch (error) {
+    console.error('Erro ao retomar fluxo:', error);
     res.status(500).json({ error: 'Erro ao retomar fluxo' });
   }
 });
@@ -81,6 +94,7 @@ app.get('/api/config', (req, res) => {
     const config = mainController.getSystemConfig();
     res.json(config);
   } catch (error) {
+    console.error('Erro ao obter configuração:', error);
     res.status(500).json({ error: 'Erro ao obter configuração' });
   }
 });
@@ -90,6 +104,7 @@ app.post('/api/config', async (req, res) => {
     await mainController.updateSystemConfig(req.body);
     res.json({ success: true, message: 'Configuração atualizada com sucesso' });
   } catch (error) {
+    console.error('Erro ao atualizar configuração:', error);
     res.status(500).json({ error: 'Erro ao atualizar configuração' });
   }
 });
@@ -155,6 +170,7 @@ app.get('/api/logs', (req, res) => {
     
     res.json(formattedLogs);
   } catch (error) {
+    console.error('Erro ao obter logs:', error);
     res.status(500).json({ error: 'Erro ao obter logs' });
   }
 });
@@ -164,6 +180,7 @@ app.post('/api/system/start', async (req, res) => {
     await mainController.start();
     res.json({ success: true, message: 'Sistema iniciado com sucesso' });
   } catch (error) {
+    console.error('Erro ao iniciar sistema:', error);
     res.status(500).json({ error: 'Erro ao iniciar sistema' });
   }
 });
@@ -173,6 +190,7 @@ app.post('/api/system/stop', async (req, res) => {
     await mainController.stop();
     res.json({ success: true, message: 'Sistema parado com sucesso' });
   } catch (error) {
+    console.error('Erro ao parar sistema:', error);
     res.status(500).json({ error: 'Erro ao parar sistema' });
   }
 });
@@ -182,6 +200,7 @@ app.post('/api/logs/clear', (req, res) => {
     mainController.clearLogs();
     res.json({ success: true, message: 'Logs limpos com sucesso' });
   } catch (error) {
+    console.error('Erro ao limpar logs:', error);
     res.status(500).json({ error: 'Erro ao limpar logs' });
   }
 });
@@ -191,6 +210,7 @@ app.get('/api/logs/stats', (req, res) => {
     const stats = mainController.getErrorStats();
     res.json(stats);
   } catch (error) {
+    console.error('Erro ao obter estatísticas de logs:', error);
     res.status(500).json({ error: 'Erro ao obter estatísticas de logs' });
   }
 });
@@ -229,6 +249,7 @@ app.get('/api/metrics', (req, res) => {
     const metrics = mainController.getMetrics();
     res.json(metrics);
   } catch (error) {
+    console.error('Erro ao obter métricas:', error);
     res.status(500).json({ error: 'Erro ao obter métricas' });
   }
 });
@@ -238,6 +259,7 @@ app.get('/api/metrics/alerts', (req, res) => {
     const alerts = mainController.getAlerts();
     res.json(alerts);
   } catch (error) {
+    console.error('Erro ao obter alertas:', error);
     res.status(500).json({ error: 'Erro ao obter alertas' });
   }
 });
