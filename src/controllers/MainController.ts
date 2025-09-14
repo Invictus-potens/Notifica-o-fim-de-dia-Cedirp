@@ -599,6 +599,20 @@ export class MainController implements IMainController {
   }
 
   /**
+   * Executa health check completo
+   */
+  async performHealthCheck() {
+    return await this.healthCheckService.performHealthCheck();
+  }
+
+  /**
+   * Executa health check rápido
+   */
+  async performQuickHealthCheck() {
+    return await this.healthCheckService.performQuickHealthCheck();
+  }
+
+  /**
    * Tratamento global de erros não capturados
    */
   private setupGlobalErrorHandling(): void {
