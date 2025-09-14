@@ -87,9 +87,15 @@ app.get('/api/status', (req, res) => {
 
 app.get('/api/patients', async (req, res) => {
   try {
-    // Obter pacientes em espera através do monitoramento
+    // Obter pacientes em espera usando a nova implementação da API
+    const patients = await mainController.getWaitingPatients();
     const detailedStats = mainController.getDetailedStats();
-    res.json({ patients: [], stats: detailedStats.monitoring });
+    res.json({ 
+      patients: patients, 
+      stats: detailedStats.monitoring,
+      total: patients.length,
+      lastUpdate: new Date().toISOString()
+    });
   } catch (error) {
     console.error('Erro ao obter lista de pacientes:', error);
     res.status(500).json({ error: 'Erro ao obter lista de pacientes' });
@@ -146,20 +152,68 @@ app.get('/api/sectors', (req, res) => {
   ]);
 });
 
-app.get('/api/action-cards', (req, res) => {
-  // Mock data for now - will be implemented when KrolikApiClient is fully integrated
-  res.json([
-    { id: '1', name: 'Mensagem de Espera 30min' },
-    { id: '2', name: 'Mensagem Fim de Expediente' }
-  ]);
+app.get('/api/action-cards', async (req, res) => {
+  try {
+    console.log('📋 API: Buscando cartões de ação...');
+    
+    // Buscar cartões de ação reais da API CAM Krolik
+    const actionCards = await mainController.getActionCards();
+    
+    console.log(`📋 API: Retornando ${actionCards.length} cartões de ação`);
+    res.json({
+      success: true,
+      data: actionCards,
+      total: actionCards.length,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('❌ API: Erro ao obter cartões de ação da API:', error);
+    console.log('🔄 API: Retornando dados mock como fallback...');
+    
+    // Fallback para dados mock quando a API falha
+    const fallbackCards = [
+      { 
+        id: '1', 
+        name: 'Mensagem de Espera 30min',
+        content: 'Template para mensagem de espera após 30 minutos',
+        active: true,
+        type: 'waiting_message'
+      },
+      { 
+        id: '2', 
+        name: 'Mensagem Fim de Expediente',
+        content: 'Template para mensagem de fim de expediente',
+        active: true,
+        type: 'end_of_day_message'
+      }
+    ];
+    
+    res.json({
+      success: false,
+      data: fallbackCards,
+      total: fallbackCards.length,
+      error: error instanceof Error ? error.message : 'Erro desconhecido',
+      fallback: true,
+      timestamp: new Date().toISOString()
+    });
+  }
 });
 
-app.get('/api/templates', (req, res) => {
-  // Mock data for now - will be implemented when KrolikApiClient is fully integrated
-  res.json([
-    { id: '1', name: 'Template Espera 30min' },
-    { id: '2', name: 'Template Fim Expediente' }
-  ]);
+app.get('/api/templates', async (req, res) => {
+  try {
+    // Buscar templates reais da API CAM Krolik
+    const templates = await mainController.getTemplates();
+    res.json(templates);
+  } catch (error) {
+    console.error('Erro ao obter templates da API:', error);
+    console.log('Retornando dados mock como fallback...');
+    
+    // Fallback para dados mock quando a API falha
+    res.json([
+      { id: '1', name: 'Template Espera 30min' },
+      { id: '2', name: 'Template Fim Expediente' }
+    ]);
+  }
 });
 
 app.get('/api/logs', (req, res) => {

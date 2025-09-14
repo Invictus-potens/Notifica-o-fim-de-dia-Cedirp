@@ -27,7 +27,10 @@
     "monitor:production": "pm2 monit",
     "health:check": "curl -f http://localhost:8080/health",
     "metrics:check": "curl -f http://localhost:9090/metrics",
-    "validate:supabase": "node scripts/validate-supabase.js"
+    "validate:supabase": "node scripts/validate-supabase.js",
+    "test:chat-list": "node scripts/test-chat-list.js",
+    "test:action-cards": "node scripts/test-action-cards.js",
+    "example:action-cards": "node examples/action-cards-example.js"
   },
   "keywords": [
     "automation",

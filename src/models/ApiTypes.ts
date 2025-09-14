@@ -1,4 +1,5 @@
 // Tipos específicos para a API do CAM Krolik
+import { WaitingPatient } from './WaitingPatient';
 
 export interface Attendance {
   id: string;
@@ -10,6 +11,74 @@ export interface Attendance {
   channelType: 'normal' | 'api_oficial';
   waitStartTime: string; // ISO string da API
   status: number;
+  typeChat?: number;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface ChatListRequest {
+  typeChat: number;
+  status: number;
+  dateFilters: {
+    startDate?: string;
+    endDate?: string;
+  };
+  page: number;
+  limit?: number;
+}
+
+export interface ChatListResponse {
+  data: WaitingPatient[];
+  total: number;
+  page: number;
+  totalPages?: number;
+}
+
+export interface ChatApiResponse {
+  chats: ChatData[];
+  curPage: number;
+  totalAmountChats: number;
+  amountPage: number;
+  hasNext: boolean;
+  hasPrevius: boolean;
+}
+
+export interface ChatData {
+  attendanceId: string;
+  organizationId: string;
+  sectorId: string;
+  protocol: string;
+  status: number;
+  type: number;
+  origen: number;
+  description: string;
+  secondaryDescription: string;
+  linkImage: string;
+  countUnreadMessages: number;
+  hasTag: boolean;
+  utcDhStartChat: string;
+  contact: {
+    id: string;
+    name: string;
+    secondaryName: string;
+    number: string;
+    linkImage: string;
+    isMe: boolean;
+    tags: any[];
+  };
+  channel: {
+    id: string;
+    type: number;
+    description: string;
+    identifier: string;
+  };
+  textLastMessage: string;
+  lastReceivedMessageDate: string;
+  lastSentMessageDate: string;
+  timeInAutomatic: number;
+  timeInOutOfHour: number;
+  timeInWaiting: number;
+  timeInManual: number;
 }
 
 export interface Sector {
@@ -23,6 +92,15 @@ export interface ActionCard {
   name: string;
   content: string;
   active: boolean;
+  title?: string;
+  description?: string;
+  type?: string;
+  category?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  organizationId?: string;
+  isDefault?: boolean;
+  metadata?: any;
 }
 
 export interface Template {

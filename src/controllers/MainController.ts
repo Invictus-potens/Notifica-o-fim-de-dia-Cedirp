@@ -57,7 +57,7 @@ export class MainController implements IMainController {
     
     // Inicializar KrolikApiClient com configuração padrão
     const defaultApiConfig = {
-      baseUrl: process.env.KROLIK_API_URL || 'https://api.camkrolik.com',
+      baseUrl: process.env.KROLIK_API_URL || 'https://api.camkrolik.com.br',
       apiToken: process.env.KROLIK_API_TOKEN || '',
       timeout: 10000,
       maxRetries: 3,
@@ -596,6 +596,64 @@ export class MainController implements IMainController {
    */
   getAlerts() {
     return metricsService.checkAlerts();
+  }
+
+  /**
+   * Obtém lista de pacientes em espera
+   */
+  async getWaitingPatients() {
+    try {
+      if (!this.krolikApiClient) {
+        throw new Error('Cliente da API não inicializado');
+      }
+      
+      const patients = await this.krolikApiClient.listWaitingAttendances();
+      return patients;
+    } catch (error) {
+      this.errorHandler.logError(error as Error, 'MainController.getWaitingPatients');
+      throw error;
+    }
+  }
+
+  /**
+   * Obtém lista de cartões de ação
+   */
+  async getActionCards() {
+    try {
+      if (!this.krolikApiClient) {
+        throw new Error('Cliente da API não inicializado');
+      }
+      
+      console.log('📋 Buscando cartões de ação...');
+      const actionCards = await this.krolikApiClient.getActionCards();
+      
+      // Filtrar apenas cartões ativos se necessário
+      const activeCards = actionCards.filter(card => card.active !== false);
+      
+      console.log(`📋 Retornando ${activeCards.length} cartões de ação ativos`);
+      return activeCards;
+    } catch (error) {
+      console.error('❌ Erro ao buscar cartões de ação:', error);
+      this.errorHandler.logError(error as Error, 'MainController.getActionCards');
+      throw error;
+    }
+  }
+
+  /**
+   * Obtém lista de templates
+   */
+  async getTemplates() {
+    try {
+      if (!this.krolikApiClient) {
+        throw new Error('Cliente da API não inicializado');
+      }
+      
+      const templates = await this.krolikApiClient.getTemplates();
+      return templates;
+    } catch (error) {
+      this.errorHandler.logError(error as Error, 'MainController.getTemplates');
+      throw error;
+    }
   }
 
   /**

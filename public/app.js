@@ -36,6 +36,7 @@ class AutomationInterface {
         // Sidebar toggle functionality - with delay to ensure DOM is ready
         setTimeout(() => {
             this.setupSidebarToggle();
+            this.setupDataRefreshButtons();
         }, 100);
     }
 
@@ -315,8 +316,465 @@ class AutomationInterface {
             // Update current route
             this.currentRoute = route;
 
+            // Load data for specific routes
+            this.loadRouteData(route);
+
         } catch (error) {
             console.error('Erro na navegação:', error);
+        }
+    }
+
+    setupDataRefreshButtons() {
+        // Refresh patients button
+        const refreshPatientsBtn = document.getElementById('refresh-patients-btn');
+        if (refreshPatientsBtn) {
+            refreshPatientsBtn.addEventListener('click', () => {
+                this.loadPatients();
+            });
+        }
+
+        // Refresh status button
+        const refreshStatusBtn = document.getElementById('refresh-status-btn');
+        if (refreshStatusBtn) {
+            refreshStatusBtn.addEventListener('click', () => {
+                this.loadStatus();
+            });
+        }
+
+        // Refresh metrics button
+        const refreshMetricsBtn = document.getElementById('refresh-metrics-btn');
+        if (refreshMetricsBtn) {
+            refreshMetricsBtn.addEventListener('click', () => {
+                this.loadMetrics();
+            });
+        }
+    }
+
+    loadRouteData(route) {
+        switch (route) {
+            case 'dashboard':
+                this.loadStatus();
+                this.loadMetrics();
+                break;
+            case 'atendimentos':
+                this.loadPatients();
+                break;
+            case 'configuracoes':
+                this.loadActionCards();
+                this.loadTemplates();
+                this.loadSectors();
+                break;
+            case 'metricas':
+                this.loadMetrics();
+                break;
+            case 'logs':
+                this.loadLogs();
+                break;
+        }
+    }
+
+    async loadPatients() {
+        try {
+            console.log('Carregando pacientes...');
+            
+            // Show loading state
+            const loadingElement = document.getElementById('loading-patients');
+            const tableContainer = document.getElementById('patients-table-container');
+            
+            if (loadingElement) loadingElement.classList.remove('d-none');
+            if (tableContainer) tableContainer.classList.add('d-none');
+
+            const response = await fetch('/api/patients');
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.error || 'Erro ao carregar pacientes');
+            }
+
+            this.displayPatients(data.patients || []);
+            
+            // Update total waiting count in dashboard
+            const totalWaitingElement = document.getElementById('total-waiting');
+            if (totalWaitingElement) {
+                totalWaitingElement.textContent = data.total || 0;
+            }
+
+            // Update last check time
+            const lastCheckElement = document.getElementById('last-check');
+            if (lastCheckElement && data.lastUpdate) {
+                const updateTime = new Date(data.lastUpdate);
+                lastCheckElement.textContent = updateTime.toLocaleTimeString();
+            }
+
+        } catch (error) {
+            console.error('Erro ao carregar pacientes:', error);
+            this.showError('Erro ao carregar pacientes: ' + error.message);
+        } finally {
+            // Hide loading state
+            const loadingElement = document.getElementById('loading-patients');
+            const tableContainer = document.getElementById('patients-table-container');
+            
+            if (loadingElement) loadingElement.classList.add('d-none');
+            if (tableContainer) tableContainer.classList.remove('d-none');
+        }
+    }
+
+    displayPatients(patients) {
+        const tbody = document.getElementById('patients-tbody');
+        if (!tbody) return;
+
+        if (patients.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="5" class="text-center text-muted py-4">
+                        Nenhum atendimento em espera
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+
+        tbody.innerHTML = patients.map(patient => `
+            <tr>
+                <td>${this.escapeHtml(patient.name)}</td>
+                <td>${this.escapeHtml(patient.phone)}</td>
+                <td>${this.escapeHtml(patient.sectorName)}</td>
+                <td>${this.formatWaitTime(patient.waitTimeMinutes)}</td>
+                <td>
+                    <span class="badge bg-warning">Aguardando</span>
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    formatWaitTime(minutes) {
+        if (!minutes || minutes < 0) return '--';
+        
+        if (minutes < 60) {
+            return `${minutes} min`;
+        } else {
+            const hours = Math.floor(minutes / 60);
+            const remainingMinutes = minutes % 60;
+            return `${hours}h ${remainingMinutes}min`;
+        }
+    }
+
+    async loadStatus() {
+        try {
+            const response = await fetch('/api/status');
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.error || 'Erro ao carregar status');
+            }
+
+            // Update status elements
+            const systemStatusElement = document.getElementById('system-status');
+            if (systemStatusElement) {
+                systemStatusElement.textContent = data.isRunning ? 'Sistema Ativo' : 'Sistema Pausado';
+                systemStatusElement.className = `badge ${data.isRunning ? 'bg-success' : 'bg-warning'} me-3`;
+            }
+
+            // Update connection status
+            const connectionStatusElement = document.getElementById('connection-status');
+            if (connectionStatusElement) {
+                connectionStatusElement.textContent = data.apiConnected ? 'Online' : 'Offline';
+                connectionStatusElement.className = `badge ${data.apiConnected ? 'bg-success' : 'bg-danger'}`;
+            }
+
+        } catch (error) {
+            console.error('Erro ao carregar status:', error);
+        }
+    }
+
+    async loadMetrics() {
+        try {
+            const response = await fetch('/api/metrics');
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.error || 'Erro ao carregar métricas');
+            }
+
+            // Update metrics elements
+            const messagesSentElement = document.getElementById('metrics-messages-sent');
+            if (messagesSentElement) {
+                messagesSentElement.textContent = data.messagesSent || 0;
+            }
+
+            const apiCallsElement = document.getElementById('metrics-api-calls');
+            if (apiCallsElement) {
+                apiCallsElement.textContent = data.apiCalls || 0;
+            }
+
+            const avgResponseElement = document.getElementById('metrics-avg-response');
+            if (avgResponseElement) {
+                avgResponseElement.textContent = `${data.avgResponseTime || 0}ms`;
+            }
+
+            const errorRateElement = document.getElementById('metrics-error-rate');
+            if (errorRateElement) {
+                errorRateElement.textContent = `${data.errorRate || 0}%`;
+            }
+
+        } catch (error) {
+            console.error('Erro ao carregar métricas:', error);
+        }
+    }
+
+    async loadLogs() {
+        try {
+            const response = await fetch('/api/logs');
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.error || 'Erro ao carregar logs');
+            }
+
+            const logsContainer = document.getElementById('logs-container');
+            if (logsContainer) {
+                if (data.logs && data.logs.length > 0) {
+                    logsContainer.innerHTML = data.logs.map(log => `
+                        <div class="log-entry mb-2 p-2 border rounded">
+                            <div class="d-flex justify-content-between">
+                                <span class="badge bg-${this.getLogLevelColor(log.level)}">${log.level.toUpperCase()}</span>
+                                <small class="text-muted">${new Date(log.timestamp).toLocaleString()}</small>
+                            </div>
+                            <div class="mt-1">${this.escapeHtml(log.message)}</div>
+                        </div>
+                    `).join('');
+                } else {
+                    logsContainer.innerHTML = '<div class="text-muted text-center py-4">Nenhum log disponível</div>';
+                }
+            }
+
+        } catch (error) {
+            console.error('Erro ao carregar logs:', error);
+        }
+    }
+
+    getLogLevelColor(level) {
+        const colors = {
+            'debug': 'secondary',
+            'info': 'primary',
+            'warn': 'warning',
+            'error': 'danger',
+            'critical': 'dark'
+        };
+        return colors[level] || 'secondary';
+    }
+
+    escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    async loadActionCards() {
+        try {
+            console.log('📋 Carregando cartões de ação...');
+            
+            const response = await fetch('/api/action-cards');
+            const result = await response.json();
+
+            if (!response.ok) {
+                throw new Error(result.error || 'Erro ao carregar cartões de ação');
+            }
+
+            // Verificar se é fallback
+            if (result.fallback) {
+                console.warn('⚠️ Usando dados de fallback para cartões de ação');
+                this.showWarning('Usando dados de exemplo - API não disponível');
+            }
+
+            console.log(`📋 Carregados ${result.total || 0} cartões de ação`);
+            this.displayActionCards(result.data || result);
+
+        } catch (error) {
+            console.error('❌ Erro ao carregar cartões de ação:', error);
+            this.showError('Erro ao carregar cartões de ação: ' + error.message);
+        }
+    }
+
+    displayActionCards(actionCards) {
+        const selectElement = document.getElementById('action-card-select');
+        if (!selectElement) return;
+
+        // Clear existing options except the first one
+        selectElement.innerHTML = '<option value="">Selecione um cartão de ação...</option>';
+
+        if (actionCards && actionCards.length > 0) {
+            actionCards.forEach(card => {
+                const option = document.createElement('option');
+                option.value = card.id;
+                
+                // Usar name ou title, com fallback para id
+                const displayName = card.name || card.title || `Cartão ${card.id}`;
+                
+                // Adicionar informações adicionais se disponíveis
+                let optionText = displayName;
+                if (card.type) {
+                    optionText += ` (${card.type})`;
+                }
+                if (card.active === false) {
+                    optionText += ' [Inativo]';
+                }
+                
+                option.textContent = optionText;
+                option.title = card.description || card.content || displayName;
+                
+                selectElement.appendChild(option);
+            });
+            
+            console.log(`📋 Exibindo ${actionCards.length} cartões de ação no seletor`);
+        } else {
+            const option = document.createElement('option');
+            option.value = '';
+            option.textContent = 'Nenhum cartão disponível';
+            selectElement.appendChild(option);
+            console.log('📋 Nenhum cartão de ação encontrado');
+        }
+    }
+
+    async loadTemplates() {
+        try {
+            console.log('Carregando templates...');
+            
+            const response = await fetch('/api/templates');
+            const templates = await response.json();
+
+            if (!response.ok) {
+                throw new Error(templates.error || 'Erro ao carregar templates');
+            }
+
+            this.displayTemplates(templates);
+
+        } catch (error) {
+            console.error('Erro ao carregar templates:', error);
+            this.showError('Erro ao carregar templates: ' + error.message);
+        }
+    }
+
+    displayTemplates(templates) {
+        const selectElement = document.getElementById('template-select');
+        if (!selectElement) return;
+
+        // Clear existing options except the first one
+        selectElement.innerHTML = '<option value="">Selecione um template...</option>';
+
+        if (templates && templates.length > 0) {
+            templates.forEach(template => {
+                const option = document.createElement('option');
+                option.value = template.id;
+                option.textContent = template.name || template.title || `Template ${template.id}`;
+                selectElement.appendChild(option);
+            });
+        } else {
+            const option = document.createElement('option');
+            option.value = '';
+            option.textContent = 'Nenhum template disponível';
+            selectElement.appendChild(option);
+        }
+    }
+
+    async loadSectors() {
+        try {
+            console.log('Carregando setores...');
+            
+            const response = await fetch('/api/sectors');
+            const sectors = await response.json();
+
+            if (!response.ok) {
+                throw new Error(sectors.error || 'Erro ao carregar setores');
+            }
+
+            this.displaySectors(sectors);
+
+        } catch (error) {
+            console.error('Erro ao carregar setores:', error);
+            this.showError('Erro ao carregar setores: ' + error.message);
+        }
+    }
+
+    displaySectors(sectors) {
+        // Update sector filter in atendimentos page
+        const sectorFilter = document.getElementById('sector-filter');
+        if (sectorFilter) {
+            sectorFilter.innerHTML = '<option value="">Todos os Setores</option>';
+            
+            if (sectors && sectors.length > 0) {
+                sectors.forEach(sector => {
+                    const option = document.createElement('option');
+                    option.value = sector.id;
+                    option.textContent = sector.name;
+                    sectorFilter.appendChild(option);
+                });
+            }
+        }
+
+        // Update sector select in configuracoes page
+        const sectorSelect = document.getElementById('sector-select');
+        if (sectorSelect) {
+            sectorSelect.innerHTML = '<option value="">Selecione um setor...</option>';
+            
+            if (sectors && sectors.length > 0) {
+                sectors.forEach(sector => {
+                    const option = document.createElement('option');
+                    option.value = sector.id;
+                    option.textContent = sector.name;
+                    sectorSelect.appendChild(option);
+                });
+            }
+        }
+    }
+
+    showError(message) {
+        // Create toast notification
+        const toastContainer = document.getElementById('toast-container');
+        if (toastContainer) {
+            const toast = document.createElement('div');
+            toast.className = 'toast show';
+            toast.innerHTML = `
+                <div class="toast-header">
+                    <i class="bi bi-exclamation-triangle-fill text-danger me-2"></i>
+                    <strong class="me-auto">Erro</strong>
+                    <button type="button" class="btn-close" data-bs-dismiss="toast"></button>
+                </div>
+                <div class="toast-body">
+                    ${this.escapeHtml(message)}
+                </div>
+            `;
+            toastContainer.appendChild(toast);
+            
+            // Auto remove after 5 seconds
+            setTimeout(() => {
+                toast.remove();
+            }, 5000);
+        }
+    }
+
+    showWarning(message) {
+        // Create toast notification
+        const toastContainer = document.getElementById('toast-container');
+        if (toastContainer) {
+            const toast = document.createElement('div');
+            toast.className = 'toast show';
+            toast.innerHTML = `
+                <div class="toast-header">
+                    <i class="bi bi-exclamation-triangle-fill text-warning me-2"></i>
+                    <strong class="me-auto">Aviso</strong>
+                    <button type="button" class="btn-close" data-bs-dismiss="toast"></button>
+                </div>
+                <div class="toast-body">
+                    ${this.escapeHtml(message)}
+                </div>
+            `;
+            toastContainer.appendChild(toast);
+            
+            // Auto remove after 4 seconds
+            setTimeout(() => {
+                toast.remove();
+            }, 4000);
         }
     }
 

@@ -6,11 +6,17 @@ import {
   Template, 
   ApiResponse, 
   KrolikApiConfig, 
-  ApiError 
+  ApiError,
+  ChatListRequest,
+  ChatListResponse,
+  ChatApiResponse,
+  ChatData
 } from '../models/ApiTypes';
 import { RetryUtils, retryApiCall } from '../utils/RetryUtils';
 import { validateKrolikApiPayload, sanitizeData } from '../utils/ValidationUtils';
 import { WaitingPatient } from '../models/WaitingPatient';
+import { SECTORS_DATA, getSectorById, getAllSectors, sectorExists } from '../data/sectors';
+import { shouldUseStaticData, isLoggingEnabled } from '../config/sectors';
 
 export class KrolikApiClient {
   private axiosInstance: AxiosInstance;
@@ -22,9 +28,9 @@ export class KrolikApiClient {
       baseURL: config.baseUrl,
       timeout: config.timeout,
       headers: {
-        'Authorization': `Bearer ${config.apiToken}`,
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
+        'access-token': config.apiToken,
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
       }
     });
 
@@ -104,21 +110,88 @@ export class KrolikApiClient {
   async listWaitingAttendances(): Promise<WaitingPatient[]> {
     console.log('👥 Listando pacientes aguardando na API CAM Krolik...');
     
+    const payload = {
+      typeChat: 2,
+      status: 1,
+      dateFilters: {},
+      page: 0
+    };
+
     const response = await this.executeWithRetry(() =>
-      this.axiosInstance.get<ApiResponse<Attendance[]>>('/core/v2/api/chats/list-lite', {
-        params: { status: 1 }
+      this.axiosInstance.post<ChatApiResponse>('/core/v2/api/chats/list-lite', payload, {
+        headers: {
+          'Content-Type': 'application/json-patch+json'
+        }
       })
     );
 
-    if (!response.success || !response.data) {
-      console.error('❌ Erro ao listar pacientes aguardando:', response.error);
-      throw new Error(response.error || 'Falha ao listar atendimentos');
+    // Log da resposta para debug (removido para produção)
+    // console.log('🔍 Resposta da API:', JSON.stringify(response, null, 2));
+
+    // Verificar se a resposta tem a estrutura esperada
+    if (!response) {
+      console.error('❌ Resposta inválida da API:', response);
+      throw new Error('Resposta inválida da API');
+    }
+
+    // A API retorna diretamente os dados sem wrapper success/data
+    if (!response.chats || !Array.isArray(response.chats)) {
+      console.error('❌ Dados inválidos na resposta:', response);
+      throw new Error('Dados inválidos na resposta da API');
     }
 
     // Converter dados da API para o modelo interno
-    const patients = response.data.map(attendance => this.convertToWaitingPatient(attendance));
+    const patients = response.chats.map(chat => this.convertChatToWaitingPatient(chat));
     console.log(`👥 Encontrados ${patients.length} pacientes aguardando`);
     return patients;
+  }
+
+  /**
+   * Lista chats com filtros avançados e paginação
+   */
+  async listChatsWithFilters(options: Partial<ChatListRequest> = {}): Promise<ChatListResponse> {
+    console.log('👥 Listando chats com filtros avançados...');
+    
+    const payload: ChatListRequest = {
+      typeChat: options.typeChat || 2,
+      status: options.status || 1,
+      dateFilters: options.dateFilters || {},
+      page: options.page || 0,
+      limit: options.limit || 100
+    };
+
+    const response = await this.executeWithRetry(() =>
+      this.axiosInstance.post<ChatApiResponse>('/core/v2/api/chats/list-lite', payload, {
+        headers: {
+          'Content-Type': 'application/json-patch+json'
+        }
+      })
+    );
+
+    // Verificar se a resposta tem a estrutura esperada
+    if (!response) {
+      console.error('❌ Resposta inválida da API:', response);
+      throw new Error('Resposta inválida da API');
+    }
+
+    // A API retorna diretamente os dados sem wrapper success/data
+    if (!response.chats || !Array.isArray(response.chats)) {
+      console.error('❌ Dados inválidos na resposta:', response);
+      throw new Error('Dados inválidos na resposta da API');
+    }
+
+    // Converter dados da API para o modelo interno
+    const chats = response.chats.map(chat => this.convertChatToWaitingPatient(chat));
+    
+    const result: ChatListResponse = {
+      data: chats,
+      total: response.totalAmountChats || chats.length,
+      page: response.curPage || 0,
+      totalPages: response.amountPage || 1
+    };
+
+    console.log(`👥 Encontrados ${result.data.length} chats (página ${result.page})`);
+    return result;
   }
 
   /**
@@ -217,7 +290,46 @@ export class KrolikApiClient {
    * Lista setores disponíveis
    */
   async getSectors(): Promise<Sector[]> {
-    console.log('📋 Buscando setores da API CAM Krolik...');
+    if (shouldUseStaticData()) {
+      return this.getSectorsFromStaticData();
+    } else {
+      return this.getSectorsFromAPI();
+    }
+  }
+
+  /**
+   * Lista setores usando dados estáticos (mais rápido)
+   */
+  private async getSectorsFromStaticData(): Promise<Sector[]> {
+    if (isLoggingEnabled()) {
+      console.log('📋 Buscando setores (dados estáticos)...');
+    }
+    
+    try {
+      // Converter dados estáticos para o formato da API
+      const sectors: Sector[] = SECTORS_DATA.map(sectorData => ({
+        id: sectorData.id,
+        name: sectorData.name,
+        active: true // Assumir que todos estão ativos
+      }));
+
+      if (isLoggingEnabled()) {
+        console.log(`📋 Encontrados ${sectors.length} setores (dados estáticos)`);
+      }
+      return sectors;
+    } catch (error) {
+      console.error('❌ Erro ao processar setores estáticos:', error);
+      throw new Error('Falha ao processar setores estáticos');
+    }
+  }
+
+  /**
+   * Lista setores consultando a API (fallback)
+   */
+  private async getSectorsFromAPI(): Promise<Sector[]> {
+    if (isLoggingEnabled()) {
+      console.log('📋 Buscando setores da API CAM Krolik...');
+    }
     
     const response = await this.executeWithRetry(() =>
       this.axiosInstance.get<ApiResponse<Sector[]>>('/core/v2/api/sectors')
@@ -228,7 +340,9 @@ export class KrolikApiClient {
       throw new Error(response.error || 'Falha ao listar setores');
     }
 
-    console.log(`📋 Encontrados ${response.data.length} setores`);
+    if (isLoggingEnabled()) {
+      console.log(`📋 Encontrados ${response.data.length} setores`);
+    }
     return response.data;
   }
 
@@ -236,6 +350,52 @@ export class KrolikApiClient {
    * Obtém um setor específico
    */
   async getSector(sectorId: string): Promise<Sector> {
+    if (shouldUseStaticData()) {
+      return this.getSectorFromStaticData(sectorId);
+    } else {
+      return this.getSectorFromAPI(sectorId);
+    }
+  }
+
+  /**
+   * Obtém setor usando dados estáticos (mais rápido)
+   */
+  private async getSectorFromStaticData(sectorId: string): Promise<Sector> {
+    if (isLoggingEnabled()) {
+      console.log(`📋 Buscando setor ${sectorId} (dados estáticos)...`);
+    }
+    
+    try {
+      const sectorData = getSectorById(sectorId);
+      
+      if (!sectorData) {
+        throw new Error(`Setor com ID ${sectorId} não encontrado`);
+      }
+
+      const sector: Sector = {
+        id: sectorData.id,
+        name: sectorData.name,
+        active: true
+      };
+
+      if (isLoggingEnabled()) {
+        console.log(`📋 Setor encontrado: ${sector.name}`);
+      }
+      return sector;
+    } catch (error) {
+      console.error(`❌ Erro ao buscar setor ${sectorId}:`, error);
+      throw new Error(`Falha ao obter setor: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
+    }
+  }
+
+  /**
+   * Obtém setor consultando a API (fallback)
+   */
+  private async getSectorFromAPI(sectorId: string): Promise<Sector> {
+    if (isLoggingEnabled()) {
+      console.log(`📋 Buscando setor ${sectorId} da API...`);
+    }
+    
     const response = await this.executeWithRetry(() =>
       this.axiosInstance.get<ApiResponse<Sector>>(`/core/v2/api/sectors/${sectorId}`)
     );
@@ -244,6 +404,9 @@ export class KrolikApiClient {
       throw new Error(response.error || 'Falha ao obter setor');
     }
 
+    if (isLoggingEnabled()) {
+      console.log(`📋 Setor encontrado: ${response.data.name}`);
+    }
     return response.data;
   }
 
@@ -251,30 +414,49 @@ export class KrolikApiClient {
    * Lista cartões de ação disponíveis
    */
   async getActionCards(): Promise<ActionCard[]> {
+    console.log('📋 Buscando cartões de ação da API CAM Krolik...');
+    
     const response = await this.executeWithRetry(() =>
-      this.axiosInstance.get<ApiResponse<ActionCard[]>>('/core/v2/api/action-cards')
+      this.axiosInstance.get<ActionCard[]>('/core/v2/api/action-cards', {
+        headers: {
+          'accept': 'application/json',
+          'access-token': this.config.apiToken
+        }
+      })
     );
 
-    if (!response.success || !response.data) {
-      throw new Error(response.error || 'Falha ao listar cartões de ação');
+    // A API retorna diretamente os dados sem wrapper success/data
+    if (!response || !Array.isArray(response)) {
+      console.error('❌ Dados inválidos na resposta de action-cards:', response);
+      throw new Error('Dados inválidos na resposta da API');
     }
 
-    return response.data;
+    console.log(`📋 Encontrados ${response.length} cartões de ação`);
+    return response;
   }
 
   /**
    * Obtém um cartão de ação específico
    */
   async getActionCard(cardId: string): Promise<ActionCard> {
+    console.log(`📋 Buscando cartão de ação ${cardId} da API CAM Krolik...`);
+    
     const response = await this.executeWithRetry(() =>
-      this.axiosInstance.get<ApiResponse<ActionCard>>(`/core/v2/api/action-cards/${cardId}`)
+      this.axiosInstance.get<ActionCard>(`/core/v2/api/action-cards/${cardId}`, {
+        headers: {
+          'accept': 'application/json',
+          'access-token': this.config.apiToken
+        }
+      })
     );
 
-    if (!response.success || !response.data) {
-      throw new Error(response.error || 'Falha ao obter cartão de ação');
+    if (!response) {
+      console.error('❌ Cartão de ação não encontrado:', cardId);
+      throw new Error('Cartão de ação não encontrado');
     }
 
-    return response.data;
+    console.log(`📋 Cartão de ação encontrado: ${response.name || response.id}`);
+    return response;
   }
 
   /**
@@ -315,16 +497,73 @@ export class KrolikApiClient {
     const now = new Date();
     const waitTimeMinutes = Math.floor((now.getTime() - waitStartTime.getTime()) / (1000 * 60));
 
+    // Buscar nome do setor nos dados estáticos se não estiver disponível
+    let sectorName = attendance.sectorName;
+    if (!sectorName && attendance.sectorId) {
+      const sectorData = getSectorById(attendance.sectorId);
+      if (sectorData) {
+        sectorName = sectorData.name;
+      }
+    }
+
     return {
       id: attendance.id,
       name: attendance.name,
       phone: attendance.phone,
       sectorId: attendance.sectorId,
-      sectorName: attendance.sectorName,
+      sectorName: sectorName || 'Setor não identificado',
       channelId: attendance.channelId,
       channelType: attendance.channelType,
       waitStartTime,
       waitTimeMinutes
+    };
+  }
+
+  /**
+   * Converte dados de chat da API para o modelo interno WaitingPatient
+   */
+  private convertChatToWaitingPatient(chat: ChatData): WaitingPatient {
+    const waitStartTime = new Date(chat.utcDhStartChat);
+    const now = new Date();
+    const waitTimeMinutes = Math.floor((now.getTime() - waitStartTime.getTime()) / (1000 * 60));
+
+    // Buscar nome do setor nos dados estáticos
+    const sectorData = getSectorById(chat.sectorId);
+    const sectorName = sectorData ? sectorData.name : 'Setor não identificado';
+    
+    return {
+      id: chat.attendanceId,
+      name: chat.description || chat.contact?.name || 'Nome não informado',
+      phone: chat.secondaryDescription || chat.contact?.number || 'Telefone não informado',
+      sectorId: chat.sectorId,
+      sectorName: sectorName,
+      channelId: chat.channel?.id || 'channel-unknown',
+      channelType: chat.channel?.type === 4 ? 'normal' : 'api_oficial',
+      waitStartTime: waitStartTime,
+      waitTimeMinutes: waitTimeMinutes
+    };
+  }
+
+  /**
+   * Verifica se um setor existe (usando dados estáticos)
+   */
+  isSectorValid(sectorId: string): boolean {
+    return sectorExists(sectorId);
+  }
+
+  /**
+   * Obtém informações completas do setor (usando dados estáticos)
+   */
+  getSectorInfo(sectorId: string): { id: string; name: string; organizationId: string } | null {
+    const sectorData = getSectorById(sectorId);
+    if (!sectorData) {
+      return null;
+    }
+
+    return {
+      id: sectorData.id,
+      name: sectorData.name,
+      organizationId: sectorData.organizationId
     };
   }
 
@@ -357,7 +596,7 @@ export class KrolikApiClient {
    */
   updateApiToken(newToken: string): void {
     this.config.apiToken = newToken;
-    this.axiosInstance.defaults.headers['Authorization'] = `Bearer ${newToken}`;
+    this.axiosInstance.defaults.headers['access-token'] = newToken;
   }
 
   /**
@@ -373,7 +612,7 @@ export class KrolikApiClient {
  */
 export function createKrolikApiClient(config: Partial<KrolikApiConfig>): KrolikApiClient {
   const defaultConfig: KrolikApiConfig = {
-    baseUrl: process.env.KROLIK_API_BASE_URL || 'https://api.camkrolik.com',
+    baseUrl: process.env.KROLIK_API_BASE_URL || 'https://api.camkrolik.com.br',
     apiToken: process.env.KROLIK_API_TOKEN || '',
     timeout: 10000, // 10 segundos
     maxRetries: 3,
