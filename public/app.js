@@ -639,38 +639,55 @@ class AutomationInterface {
 
     async loadTemplates() {
         try {
-            console.log('Carregando templates...');
+            console.log('🚀 loadTemplates iniciado...');
             
             const response = await fetch('/api/templates');
-            const templates = await response.json();
+            console.log('📡 Resposta da API recebida:', response.status);
+            
+            const result = await response.json();
+            console.log('📄 Resultado da API:', result);
 
             if (!response.ok) {
-                throw new Error(templates.error || 'Erro ao carregar templates');
+                throw new Error(result.error || 'Erro ao carregar templates');
             }
+
+            // A API agora retorna { success: true, data: [...], total: X }
+            const templates = result.success ? result.data : result;
+            console.log('📋 Templates processados:', templates);
+            console.log('📊 Quantidade de templates:', templates?.length);
 
             this.displayTemplates(templates);
 
         } catch (error) {
-            console.error('Erro ao carregar templates:', error);
+            console.error('❌ Erro ao carregar templates:', error);
             this.showError('Erro ao carregar templates: ' + error.message);
         }
     }
 
     displayTemplates(templates) {
+        console.log('🎯 displayTemplates chamado com:', templates);
+        
         const selectElement = document.getElementById('template-select');
-        if (!selectElement) return;
+        if (!selectElement) {
+            console.error('❌ Elemento template-select não encontrado!');
+            return;
+        }
 
         // Clear existing options except the first one
         selectElement.innerHTML = '<option value="">Selecione um template...</option>';
 
         if (templates && templates.length > 0) {
-            templates.forEach(template => {
+            console.log(`📋 Processando ${templates.length} templates`);
+            templates.forEach((template, index) => {
+                console.log(`Template ${index + 1}:`, template);
                 const option = document.createElement('option');
                 option.value = template.id;
                 option.textContent = template.description || template.name || template.title || `Template ${template.id}`;
                 selectElement.appendChild(option);
             });
+            console.log(`✅ ${templates.length} templates adicionados ao select`);
         } else {
+            console.log('⚠️ Nenhum template encontrado, adicionando opção padrão');
             const option = document.createElement('option');
             option.value = '';
             option.textContent = 'Nenhum template disponível';
