@@ -367,6 +367,7 @@ class AutomationInterface {
                 this.loadTemplates();
                 this.loadSectors();
                 this.loadChannels();
+                this.loadMessageConfig();
                 break;
             case 'metricas':
                 this.loadMetrics();
@@ -855,6 +856,12 @@ class AutomationInterface {
         // Load existing exclusions
         this.loadExcludedSectors();
         this.loadExcludedChannels();
+
+        // Add event listener for save message config button
+        const saveMessageConfigBtn = document.getElementById('save-message-config-btn');
+        if (saveMessageConfigBtn) {
+            saveMessageConfigBtn.addEventListener('click', () => this.saveMessageConfig());
+        }
     }
 
     // Métodos para controle de fluxo
@@ -1209,6 +1216,102 @@ class AutomationInterface {
         }
     }
 
+    async loadMessageConfig() {
+        try {
+            console.log('📋 Carregando configurações de mensagem...');
+            
+            const response = await fetch('/api/config');
+            const result = await response.json();
+            
+            if (response.ok && result) {
+                console.log('📋 Configurações recebidas da API:', result);
+                
+                // Update action card select
+                const actionCardSelect = document.getElementById('action-card-select');
+                if (actionCardSelect) {
+                    if (result.selectedActionCard) {
+                        actionCardSelect.value = result.selectedActionCard;
+                        console.log('✅ Action card selecionado:', result.selectedActionCard);
+                    } else {
+                        console.log('⚠️ Nenhum action card selecionado');
+                    }
+                } else {
+                    console.log('❌ Elemento action-card-select não encontrado');
+                }
+                
+                // Update template select
+                const templateSelect = document.getElementById('template-select');
+                if (templateSelect) {
+                    if (result.selectedTemplate) {
+                        templateSelect.value = result.selectedTemplate;
+                        console.log('✅ Template selecionado:', result.selectedTemplate);
+                    } else {
+                        console.log('⚠️ Nenhum template selecionado');
+                    }
+                } else {
+                    console.log('❌ Elemento template-select não encontrado');
+                }
+                
+                console.log('✅ Configurações de mensagem carregadas:', result);
+            } else {
+                console.log('❌ Erro na resposta da API:', result);
+            }
+            
+        } catch (error) {
+            console.error('❌ Erro ao carregar configurações de mensagem:', error);
+            this.showError('Erro ao carregar configurações: ' + error.message);
+        }
+    }
+
+    async saveMessageConfig() {
+        try {
+            console.log('💾 Salvando configurações de mensagem...');
+            
+            // Get selected values
+            const actionCardSelect = document.getElementById('action-card-select');
+            const templateSelect = document.getElementById('template-select');
+            
+            const selectedActionCard = actionCardSelect ? actionCardSelect.value : '';
+            const selectedTemplate = templateSelect ? templateSelect.value : '';
+            
+            // Validate that at least one is selected
+            if (!selectedActionCard && !selectedTemplate) {
+                this.showError('Selecione pelo menos um cartão de ação ou template');
+                return;
+            }
+            
+            // Prepare configuration data
+            const configData = {
+                selectedActionCard: selectedActionCard || undefined,
+                selectedTemplate: selectedTemplate || undefined
+            };
+            
+            console.log('💾 Dados de configuração:', configData);
+            
+            // Send to API
+            const response = await fetch('/api/config', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(configData)
+            });
+            
+            const result = await response.json();
+            
+            if (response.ok && result.success) {
+                this.showSuccess('Configurações de mensagem salvas com sucesso!');
+                console.log('✅ Configurações salvas:', result);
+            } else {
+                throw new Error(result.error || 'Erro ao salvar configurações');
+            }
+            
+        } catch (error) {
+            console.error('❌ Erro ao salvar configurações de mensagem:', error);
+            this.showError('Erro ao salvar configurações: ' + error.message);
+        }
+    }
+
     showSuccess(message) {
         // Create success toast notification
         const toastContainer = document.getElementById('toast-container');
@@ -1423,12 +1526,15 @@ class AutomationInterface {
         }
     }
 
-    openSendMessageModal() {
+    async openSendMessageModal() {
         if (this.selectedPatients.length === 0) {
             this.showError('Selecione pelo menos um atendimento');
             return;
         }
 
+        // Carregar configurações de mensagem antes de determinar o tipo
+        await this.loadMessageConfig();
+        
         // Determinar tipo de mensagem baseado na configuração
         this.determineMessageType();
         
@@ -1452,20 +1558,27 @@ class AutomationInterface {
         const actionCardSelect = document.getElementById('action-card-select');
         const templateSelect = document.getElementById('template-select');
         
+        console.log('🔍 Verificando tipo de mensagem...');
+        console.log('Action card select:', actionCardSelect ? actionCardSelect.value : 'não encontrado');
+        console.log('Template select:', templateSelect ? templateSelect.value : 'não encontrado');
+        
         if (actionCardSelect && actionCardSelect.value) {
             const selectedOption = actionCardSelect.options[actionCardSelect.selectedIndex];
             messageTypeInfo.innerHTML = `Enviando <strong>Cartão de Ação</strong>: ${selectedOption.textContent}`;
             this.currentMessageType = 'action_card';
             this.currentMessageId = actionCardSelect.value;
+            console.log('✅ Tipo de mensagem definido como action_card:', this.currentMessageId);
         } else if (templateSelect && templateSelect.value) {
             const selectedOption = templateSelect.options[templateSelect.selectedIndex];
             messageTypeInfo.innerHTML = `Enviando <strong>Template</strong>: ${selectedOption.textContent}`;
             this.currentMessageType = 'template';
             this.currentMessageId = templateSelect.value;
+            console.log('✅ Tipo de mensagem definido como template:', this.currentMessageId);
         } else {
             messageTypeInfo.innerHTML = '<span class="text-warning">⚠️ Nenhum cartão de ação ou template selecionado nas configurações</span>';
             this.currentMessageType = null;
             this.currentMessageId = null;
+            console.log('❌ Nenhum tipo de mensagem selecionado');
         }
     }
 
