@@ -24,6 +24,7 @@ class AutomationInterface {
             this.setupEventListeners();
             this.setupRouter();
             this.initializeExclusionLists();
+            this.initializeFlowControl();
             console.log('Automação de Mensagem de Espera - Interface carregada');
         } catch (error) {
             console.error('Erro na inicialização:', error);
@@ -788,6 +789,151 @@ class AutomationInterface {
         // Load existing exclusions
         this.loadExcludedSectors();
         this.loadExcludedChannels();
+    }
+
+    // Métodos para controle de fluxo
+    initializeFlowControl() {
+        // Initialize flow state
+        this.isFlowPaused = false;
+
+        // Add event listeners for flow control buttons
+        const toggleFlowBtn = document.getElementById('toggle-flow-btn');
+        const pauseFlowBtn = document.getElementById('pause-flow-btn');
+        const resumeFlowBtn = document.getElementById('resume-flow-btn');
+
+        if (toggleFlowBtn) {
+            toggleFlowBtn.addEventListener('click', () => this.toggleFlow());
+        }
+
+        if (pauseFlowBtn) {
+            pauseFlowBtn.addEventListener('click', () => this.pauseFlow());
+        }
+
+        if (resumeFlowBtn) {
+            resumeFlowBtn.addEventListener('click', () => this.resumeFlow());
+        }
+
+        // Load current flow state
+        this.loadFlowState();
+    }
+
+    async toggleFlow() {
+        if (this.isFlowPaused) {
+            await this.resumeFlow();
+        } else {
+            await this.pauseFlow();
+        }
+    }
+
+    async pauseFlow() {
+        try {
+            console.log('🔄 Pausando fluxo...');
+            
+            const response = await fetch('/api/flow/pause', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            const result = await response.json();
+
+            if (!response.ok) {
+                throw new Error(result.error || 'Erro ao pausar fluxo');
+            }
+
+            this.isFlowPaused = true;
+            this.updateFlowButtons();
+            this.updateSystemStatus('Sistema Pausado', 'warning');
+            this.showSuccess('Fluxo pausado com sucesso');
+
+        } catch (error) {
+            console.error('❌ Erro ao pausar fluxo:', error);
+            this.showError('Erro ao pausar fluxo: ' + error.message);
+        }
+    }
+
+    async resumeFlow() {
+        try {
+            console.log('▶️ Retomando fluxo...');
+            
+            const response = await fetch('/api/flow/resume', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            const result = await response.json();
+
+            if (!response.ok) {
+                throw new Error(result.error || 'Erro ao retomar fluxo');
+            }
+
+            this.isFlowPaused = false;
+            this.updateFlowButtons();
+            this.updateSystemStatus('Sistema Ativo', 'success');
+            this.showSuccess('Fluxo retomado com sucesso');
+
+        } catch (error) {
+            console.error('❌ Erro ao retomar fluxo:', error);
+            this.showError('Erro ao retomar fluxo: ' + error.message);
+        }
+    }
+
+    updateFlowButtons() {
+        const toggleFlowBtn = document.getElementById('toggle-flow-btn');
+        const pauseFlowBtn = document.getElementById('pause-flow-btn');
+        const resumeFlowBtn = document.getElementById('resume-flow-btn');
+
+        if (toggleFlowBtn) {
+            if (this.isFlowPaused) {
+                toggleFlowBtn.innerHTML = '<i class="bi bi-play-fill"></i> Retomar Fluxo';
+                toggleFlowBtn.className = 'btn btn-success btn-sm';
+            } else {
+                toggleFlowBtn.innerHTML = '<i class="bi bi-pause-fill"></i> Pausar Fluxo';
+                toggleFlowBtn.className = 'btn btn-outline-primary btn-sm';
+            }
+        }
+
+        if (pauseFlowBtn) {
+            pauseFlowBtn.style.display = this.isFlowPaused ? 'none' : 'block';
+        }
+
+        if (resumeFlowBtn) {
+            resumeFlowBtn.style.display = this.isFlowPaused ? 'block' : 'none';
+        }
+    }
+
+    updateSystemStatus(text, type) {
+        const statusElement = document.getElementById('system-status');
+        if (statusElement) {
+            statusElement.textContent = text;
+            statusElement.className = `badge bg-${type} me-3`;
+        }
+    }
+
+    loadFlowState() {
+        // Try to get current flow state from the system
+        this.checkFlowState();
+    }
+
+    async checkFlowState() {
+        try {
+            const response = await fetch('/api/status');
+            const result = await response.json();
+
+            if (response.ok && result.isPaused !== undefined) {
+                this.isFlowPaused = result.isPaused;
+                this.updateFlowButtons();
+                this.updateSystemStatus(
+                    this.isFlowPaused ? 'Sistema Pausado' : 'Sistema Ativo',
+                    this.isFlowPaused ? 'warning' : 'success'
+                );
+            }
+        } catch (error) {
+            console.error('Erro ao verificar estado do fluxo:', error);
+        }
     }
 
     addSectorToExclusion() {
