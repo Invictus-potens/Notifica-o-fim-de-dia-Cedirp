@@ -142,14 +142,29 @@ app.post('/api/config', async (req, res) => {
   }
 });
 
-app.get('/api/sectors', (req, res) => {
-  // Mock data for now - will be implemented when KrolikApiClient is fully integrated
-  res.json([
-    { id: '1', name: 'Recepção' },
-    { id: '2', name: 'Consultório 1' },
-    { id: '3', name: 'Consultório 2' },
-    { id: '4', name: 'Exames' }
-  ]);
+app.get('/api/sectors', async (req, res) => {
+  try {
+    console.log('📋 API: Buscando setores da API CAM Krolik...');
+    
+    // Buscar setores reais da API CAM Krolik
+    const sectors = await mainController.getSectors();
+    
+    console.log(`📋 API: Retornando ${sectors.length} setores`);
+    res.json({
+      success: true,
+      data: sectors,
+      total: sectors.length,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('❌ API: Erro ao obter setores da API:', error);
+    res.status(500).json({ 
+      success: false,
+      error: 'Erro ao obter setores da API',
+      message: error instanceof Error ? error.message : 'Erro desconhecido',
+      timestamp: new Date().toISOString()
+    });
+  }
 });
 
 app.get('/api/action-cards', async (req, res) => {
@@ -168,32 +183,10 @@ app.get('/api/action-cards', async (req, res) => {
     });
   } catch (error) {
     console.error('❌ API: Erro ao obter cartões de ação da API:', error);
-    console.log('🔄 API: Retornando dados mock como fallback...');
-    
-    // Fallback para dados mock quando a API falha
-    const fallbackCards = [
-      { 
-        id: '1', 
-        name: 'Mensagem de Espera 30min',
-        content: 'Template para mensagem de espera após 30 minutos',
-        active: true,
-        type: 'waiting_message'
-      },
-      { 
-        id: '2', 
-        name: 'Mensagem Fim de Expediente',
-        content: 'Template para mensagem de fim de expediente',
-        active: true,
-        type: 'end_of_day_message'
-      }
-    ];
-    
-    res.json({
+    res.status(500).json({ 
       success: false,
-      data: fallbackCards,
-      total: fallbackCards.length,
-      error: error instanceof Error ? error.message : 'Erro desconhecido',
-      fallback: true,
+      error: 'Erro ao obter cartões de ação da API',
+      message: error instanceof Error ? error.message : 'Erro desconhecido',
       timestamp: new Date().toISOString()
     });
   }
@@ -201,18 +194,26 @@ app.get('/api/action-cards', async (req, res) => {
 
 app.get('/api/templates', async (req, res) => {
   try {
+    console.log('📋 API: Buscando templates da API CAM Krolik...');
+    
     // Buscar templates reais da API CAM Krolik
     const templates = await mainController.getTemplates();
-    res.json(templates);
-  } catch (error) {
-    console.error('Erro ao obter templates da API:', error);
-    console.log('Retornando dados mock como fallback...');
     
-    // Fallback para dados mock quando a API falha
-    res.json([
-      { id: '1', name: 'Template Espera 30min' },
-      { id: '2', name: 'Template Fim Expediente' }
-    ]);
+    console.log(`📋 API: Retornando ${templates.length} templates`);
+    res.json({
+      success: true,
+      data: templates,
+      total: templates.length,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('❌ API: Erro ao obter templates da API:', error);
+    res.status(500).json({ 
+      success: false,
+      error: 'Erro ao obter templates da API',
+      message: error instanceof Error ? error.message : 'Erro desconhecido',
+      timestamp: new Date().toISOString()
+    });
   }
 });
 

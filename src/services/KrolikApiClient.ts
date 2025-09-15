@@ -331,19 +331,15 @@ export class KrolikApiClient {
       console.log('📋 Buscando setores da API CAM Krolik...');
     }
     
+    // A API retorna um array direto, não um objeto ApiResponse
     const response = await this.executeWithRetry(() =>
-      this.axiosInstance.get<ApiResponse<Sector[]>>('/core/v2/api/sectors')
+      this.axiosInstance.get<Sector[]>('/core/v2/api/sectors')
     );
 
-    if (!response.success || !response.data) {
-      console.error('❌ Erro ao buscar setores:', response.error);
-      throw new Error(response.error || 'Falha ao listar setores');
-    }
-
     if (isLoggingEnabled()) {
-      console.log(`📋 Encontrados ${response.data.length} setores`);
+      console.log(`📋 Encontrados ${response.length} setores`);
     }
-    return response.data;
+    return response;
   }
 
   /**
@@ -396,18 +392,15 @@ export class KrolikApiClient {
       console.log(`📋 Buscando setor ${sectorId} da API...`);
     }
     
+    // A API retorna um objeto Sector direto, não um ApiResponse
     const response = await this.executeWithRetry(() =>
-      this.axiosInstance.get<ApiResponse<Sector>>(`/core/v2/api/sectors/${sectorId}`)
+      this.axiosInstance.get<Sector>(`/core/v2/api/sectors/${sectorId}`)
     );
 
-    if (!response.success || !response.data) {
-      throw new Error(response.error || 'Falha ao obter setor');
-    }
-
     if (isLoggingEnabled()) {
-      console.log(`📋 Setor encontrado: ${response.data.name}`);
+      console.log(`📋 Setor encontrado: ${response.name}`);
     }
-    return response.data;
+    return response;
   }
 
   /**

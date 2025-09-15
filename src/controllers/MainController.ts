@@ -15,6 +15,7 @@ import { ConsoleMonitor } from '../services/ConsoleMonitor';
 import { HealthCheckService } from '../services/HealthCheckService';
 import { SupabaseClient } from '../services/SupabaseClient';
 import { SimpleConsoleLogger } from '../services/SimpleConsoleLogger';
+import { Sector, ActionCard, Template } from '../models/ApiTypes';
 
 export interface IMainController {
   start(): Promise<void>;
@@ -29,6 +30,9 @@ export interface IMainController {
   getErrorStats(): any;
   getMetrics(): any;
   getAlerts(): any;
+  getSectors(): Promise<Sector[]>;
+  getActionCards(): Promise<ActionCard[]>;
+  getTemplates(): Promise<Template[]>;
 }
 
 export class MainController implements IMainController {
@@ -611,6 +615,27 @@ export class MainController implements IMainController {
       return patients;
     } catch (error) {
       this.errorHandler.logError(error as Error, 'MainController.getWaitingPatients');
+      throw error;
+    }
+  }
+
+  /**
+   * Obtém lista de setores
+   */
+  async getSectors() {
+    try {
+      if (!this.krolikApiClient) {
+        throw new Error('Cliente da API não inicializado');
+      }
+      
+      console.log('📋 Buscando setores...');
+      const sectors = await this.krolikApiClient.getSectors();
+      
+      console.log(`📋 Retornando ${sectors.length} setores`);
+      return sectors;
+    } catch (error) {
+      console.error('❌ Erro ao buscar setores:', error);
+      this.errorHandler.logError(error as Error, 'MainController.getSectors');
       throw error;
     }
   }

@@ -23,6 +23,7 @@ class AutomationInterface {
             console.log('Inicializando aplicação...');
             this.setupEventListeners();
             this.setupRouter();
+            this.initializeExclusionLists();
             console.log('Automação de Mensagem de Espera - Interface carregada');
         } catch (error) {
             console.error('Erro na inicialização:', error);
@@ -682,11 +683,15 @@ class AutomationInterface {
             console.log('Carregando setores...');
             
             const response = await fetch('/api/sectors');
-            const sectors = await response.json();
+            const result = await response.json();
 
             if (!response.ok) {
-                throw new Error(sectors.error || 'Erro ao carregar setores');
+                throw new Error(result.error || 'Erro ao carregar setores');
             }
+
+            // A API agora retorna { success: true, data: [...], total: X }
+            const sectors = result.success ? result.data : result;
+            console.log('Setores carregados:', sectors);
 
             this.displaySectors(sectors);
 
@@ -712,7 +717,7 @@ class AutomationInterface {
             }
         }
 
-        // Update sector select in configuracoes page
+        // Update sector select in configuracoes page (Listas de Exceção)
         const sectorSelect = document.getElementById('sector-select');
         if (sectorSelect) {
             sectorSelect.innerHTML = '<option value="">Selecione um setor...</option>';
@@ -725,6 +730,260 @@ class AutomationInterface {
                     sectorSelect.appendChild(option);
                 });
             }
+        }
+
+        // Store sectors for later use
+        this.availableSectors = sectors || [];
+    }
+
+    // Métodos para gerenciar listas de exclusão
+    initializeExclusionLists() {
+        // Initialize excluded sectors list
+        this.excludedSectors = [];
+        this.excludedChannels = [];
+
+        // Add event listeners
+        const addSectorBtn = document.getElementById('add-sector-btn');
+        const addChannelBtn = document.getElementById('add-channel-btn');
+        const sectorSelect = document.getElementById('sector-select');
+        const channelInput = document.getElementById('channel-input');
+
+        if (addSectorBtn) {
+            addSectorBtn.addEventListener('click', () => this.addSectorToExclusion());
+        }
+
+        if (addChannelBtn) {
+            addChannelBtn.addEventListener('click', () => this.addChannelToExclusion());
+        }
+
+        if (sectorSelect) {
+            sectorSelect.addEventListener('change', () => this.onSectorSelectChange());
+        }
+
+        if (channelInput) {
+            channelInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    this.addChannelToExclusion();
+                }
+            });
+        }
+
+        // Load existing exclusions
+        this.loadExcludedSectors();
+        this.loadExcludedChannels();
+    }
+
+    addSectorToExclusion() {
+        const sectorSelect = document.getElementById('sector-select');
+        const selectedSectorId = sectorSelect.value;
+
+        if (!selectedSectorId) {
+            this.showError('Selecione um setor para adicionar à lista de exclusão');
+            return;
+        }
+
+        // Check if already excluded
+        if (this.excludedSectors.some(sector => sector.id === selectedSectorId)) {
+            this.showError('Este setor já está na lista de exclusão');
+            return;
+        }
+
+        // Find sector details
+        const sector = this.availableSectors.find(s => s.id === selectedSectorId);
+        if (sector) {
+            this.excludedSectors.push(sector);
+            this.updateExcludedSectorsDisplay();
+            this.saveExcludedSectors();
+            
+            // Reset select
+            sectorSelect.value = '';
+            
+            this.showSuccess(`Setor "${sector.name}" adicionado à lista de exclusão`);
+        }
+    }
+
+    addChannelToExclusion() {
+        const channelInput = document.getElementById('channel-input');
+        const channelId = channelInput.value.trim();
+
+        if (!channelId) {
+            this.showError('Digite um ID de canal para adicionar à lista de exclusão');
+            return;
+        }
+
+        // Check if already excluded
+        if (this.excludedChannels.includes(channelId)) {
+            this.showError('Este canal já está na lista de exclusão');
+            return;
+        }
+
+        this.excludedChannels.push(channelId);
+        this.updateExcludedChannelsDisplay();
+        this.saveExcludedChannels();
+        
+        // Reset input
+        channelInput.value = '';
+        
+        this.showSuccess(`Canal "${channelId}" adicionado à lista de exclusão`);
+    }
+
+    removeSectorFromExclusion(sectorId) {
+        console.log('Removendo setor da exclusão:', sectorId);
+        console.log('Setores antes da remoção:', this.excludedSectors);
+        
+        this.excludedSectors = this.excludedSectors.filter(sector => sector.id !== sectorId);
+        
+        console.log('Setores após remoção:', this.excludedSectors);
+        
+        this.updateExcludedSectorsDisplay();
+        this.saveExcludedSectors();
+        this.showSuccess('Setor removido da lista de exclusão');
+    }
+
+    removeChannelFromExclusion(channelId) {
+        this.excludedChannels = this.excludedChannels.filter(id => id !== channelId);
+        this.updateExcludedChannelsDisplay();
+        this.saveExcludedChannels();
+        this.showSuccess('Canal removido da lista de exclusão');
+    }
+
+    updateExcludedSectorsDisplay() {
+        const container = document.getElementById('excluded-sectors-list');
+        if (!container) return;
+
+        if (this.excludedSectors.length === 0) {
+            container.innerHTML = '<small class="text-muted">Nenhum setor excluído</small>';
+            return;
+        }
+
+        // Clear container
+        container.innerHTML = '';
+
+        // Create elements for each excluded sector
+        this.excludedSectors.forEach(sector => {
+            const sectorDiv = document.createElement('div');
+            sectorDiv.className = 'd-flex justify-content-between align-items-center mb-2 p-2 bg-white rounded border';
+            sectorDiv.innerHTML = `
+                <div>
+                    <strong>${this.escapeHtml(sector.name)}</strong>
+                    <br>
+                    <small class="text-muted">ID: ${sector.id}</small>
+                </div>
+                <button class="btn btn-outline-danger btn-sm remove-sector-btn" data-sector-id="${sector.id}">
+                    <i class="bi bi-x"></i>
+                </button>
+            `;
+
+            // Add event listener to the remove button
+            const removeBtn = sectorDiv.querySelector('.remove-sector-btn');
+            removeBtn.addEventListener('click', () => {
+                this.removeSectorFromExclusion(sector.id);
+            });
+
+            container.appendChild(sectorDiv);
+        });
+    }
+
+    updateExcludedChannelsDisplay() {
+        const container = document.getElementById('excluded-channels-list');
+        if (!container) return;
+
+        if (this.excludedChannels.length === 0) {
+            container.innerHTML = '<small class="text-muted">Nenhum canal excluído</small>';
+            return;
+        }
+
+        // Clear container
+        container.innerHTML = '';
+
+        // Create elements for each excluded channel
+        this.excludedChannels.forEach(channelId => {
+            const channelDiv = document.createElement('div');
+            channelDiv.className = 'd-flex justify-content-between align-items-center mb-2 p-2 bg-white rounded border';
+            channelDiv.innerHTML = `
+                <div>
+                    <strong>${this.escapeHtml(channelId)}</strong>
+                </div>
+                <button class="btn btn-outline-danger btn-sm remove-channel-btn" data-channel-id="${channelId}">
+                    <i class="bi bi-x"></i>
+                </button>
+            `;
+
+            // Add event listener to the remove button
+            const removeBtn = channelDiv.querySelector('.remove-channel-btn');
+            removeBtn.addEventListener('click', () => {
+                this.removeChannelFromExclusion(channelId);
+            });
+
+            container.appendChild(channelDiv);
+        });
+    }
+
+    onSectorSelectChange() {
+        const sectorSelect = document.getElementById('sector-select');
+        const addSectorBtn = document.getElementById('add-sector-btn');
+        
+        if (sectorSelect && addSectorBtn) {
+            addSectorBtn.disabled = !sectorSelect.value;
+        }
+    }
+
+    saveExcludedSectors() {
+        localStorage.setItem('excludedSectors', JSON.stringify(this.excludedSectors));
+    }
+
+    saveExcludedChannels() {
+        localStorage.setItem('excludedChannels', JSON.stringify(this.excludedChannels));
+    }
+
+    loadExcludedSectors() {
+        try {
+            const saved = localStorage.getItem('excludedSectors');
+            if (saved) {
+                this.excludedSectors = JSON.parse(saved);
+                this.updateExcludedSectorsDisplay();
+            }
+        } catch (error) {
+            console.error('Erro ao carregar setores excluídos:', error);
+        }
+    }
+
+    loadExcludedChannels() {
+        try {
+            const saved = localStorage.getItem('excludedChannels');
+            if (saved) {
+                this.excludedChannels = JSON.parse(saved);
+                this.updateExcludedChannelsDisplay();
+            }
+        } catch (error) {
+            console.error('Erro ao carregar canais excluídos:', error);
+        }
+    }
+
+    showSuccess(message) {
+        // Create success toast notification
+        const toastContainer = document.getElementById('toast-container');
+        if (toastContainer) {
+            const toast = document.createElement('div');
+            toast.className = 'toast show';
+            toast.innerHTML = `
+                <div class="toast-header">
+                    <i class="bi bi-check-circle-fill text-success me-2"></i>
+                    <strong class="me-auto">Sucesso</strong>
+                    <button type="button" class="btn-close" data-bs-dismiss="toast"></button>
+                </div>
+                <div class="toast-body">
+                    ${this.escapeHtml(message)}
+                </div>
+            `;
+            toastContainer.appendChild(toast);
+            
+            // Auto remove after 3 seconds
+            setTimeout(() => {
+                if (toast.parentNode) {
+                    toast.parentNode.removeChild(toast);
+                }
+            }, 3000);
         }
     }
 

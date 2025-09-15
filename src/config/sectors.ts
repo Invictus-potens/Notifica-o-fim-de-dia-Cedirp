@@ -1,13 +1,13 @@
 // Configuração dos setores
 export const SECTORS_CONFIG = {
-  // Usar dados estáticos em vez de consultar a API
-  USE_STATIC_DATA: true,
+  // Usar dados da API em vez de dados estáticos
+  USE_STATIC_DATA: false,
   
   // Cache de setores (em segundos)
   CACHE_TTL: 3600, // 1 hora
   
-  // Atualizar dados estáticos automaticamente
-  AUTO_UPDATE: false,
+  // Atualizar dados da API automaticamente
+  AUTO_UPDATE: true,
   
   // Log de operações com setores
   ENABLE_LOGGING: true
