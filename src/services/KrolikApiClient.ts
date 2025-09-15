@@ -65,22 +65,51 @@ export class KrolikApiClient {
     requestFn: () => Promise<AxiosResponse<T>>,
     retries: number = this.config.maxRetries
   ): Promise<T> {
-    const result = await retryApiCall(
-      async () => {
-        const response = await requestFn();
-        return response.data;
-      },
-      {
-        maxRetries: retries,
-        baseDelay: this.config.retryDelay,
-        retryCondition: (error: any) => this.shouldRetry(error as ApiError)
-      }
-    );
+    try {
+      const result = await retryApiCall(
+        async () => {
+          try {
+            const response = await requestFn();
+            console.log(`📡 Status HTTP: ${response.status} ${response.statusText}`);
+            console.log(`📡 Headers da resposta:`, response.headers);
+            return response.data;
+          } catch (error: any) {
+            console.error(`❌ Erro na requisição HTTP:`, {
+              message: error.message,
+              code: error.code,
+              status: error.response?.status,
+              statusText: error.response?.statusText,
+              data: error.response?.data,
+              config: {
+                url: error.config?.url,
+                method: error.config?.method,
+                headers: error.config?.headers
+              }
+            });
+            throw error;
+          }
+        },
+        {
+          maxRetries: retries,
+          baseDelay: this.config.retryDelay,
+          retryCondition: (error: any) => this.shouldRetry(error as ApiError)
+        }
+      );
 
-    if (result.success) {
-      return result.data!;
-    } else {
-      throw result.error;
+      if (result.success) {
+        return result.data!;
+      } else {
+        console.error(`❌ Erro no retry:`, result.error);
+        throw result.error;
+      }
+    } catch (error: any) {
+      console.error(`❌ Erro final no executeWithRetry:`, {
+        message: error.message,
+        stack: error.stack,
+        name: error.name,
+        code: error.code
+      });
+      throw error;
     }
   }
 
@@ -244,14 +273,38 @@ export class KrolikApiClient {
     try {
       console.log(`📤 Enviando cartão de ação (${actionCardId}) para ${number} (${contactId})...`);
       
-      // Validar payload
+      // Formato correto da API para Action Card
+      console.log(`🔍 Número original recebido: "${number}"`);
+      
+      // Remover código do país se presente (55) e adicionar novamente
+      let phoneNumber = number;
+      console.log(`🔍 Número antes da formatação: "${phoneNumber}"`);
+      
+      if (phoneNumber.startsWith('55')) {
+        phoneNumber = phoneNumber.substring(2);
+        console.log(`🔍 Número após remover código do país: "${phoneNumber}"`);
+      }
+      
+      // Garantir que o número tenha 11 dígitos (DDD + 9 dígitos)
+      if (phoneNumber.length === 10) {
+        phoneNumber = phoneNumber.substring(0, 2) + '9' + phoneNumber.substring(2);
+        console.log(`🔍 Número após adicionar 9: "${phoneNumber}"`);
+      }
+      
+      console.log(`🔍 Número final formatado: "${phoneNumber}"`);
+      
       const payload = { 
-        number, 
-        contactId, 
-        action_card_id: actionCardId 
+        number: phoneNumber, // Número de telefone formatado
+        contactId: contactId, // ID do contato/chat
+        action_card_id: actionCardId,
+        forceSend: true,
+        verifyContact: true
       };
       
+      console.log(`📤 Payload para Action Card ANTES da validação:`, payload);
+      
       const validation = validateKrolikApiPayload(payload, 'send-action-card-by-phone');
+      console.log(`🔍 Resultado da validação:`, validation);
       
       if (!validation.isValid) {
         console.error('❌ Payload inválido para send-action-card-by-phone:', validation.errors);
@@ -260,15 +313,34 @@ export class KrolikApiClient {
 
       // Sanitizar dados
       const sanitizedPayload = sanitizeData(payload);
+      console.log(`🧹 Payload sanitizado para Action Card:`, sanitizedPayload);
+      console.log(`🔍 Comparação - ANTES da sanitização:`, JSON.stringify(payload, null, 2));
+      console.log(`🔍 Comparação - DEPOIS da sanitização:`, JSON.stringify(sanitizedPayload, null, 2));
 
-      const response = await this.executeWithRetry(() =>
-        this.axiosInstance.post<ApiResponse<any>>('/core/v2/api/chats/send-action-card', sanitizedPayload)
-      );
+      const response = await this.executeWithRetry(() => {
+        console.log(`🚀 Fazendo requisição POST para: ${this.config.baseUrl}/core/v2/api/chats/send-action-card`);
+        console.log(`🚀 Headers da requisição:`, {
+          'access-token': this.config.apiToken,
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        });
+        console.log(`🚀 Body da requisição:`, JSON.stringify(sanitizedPayload, null, 2));
+        
+        return this.axiosInstance.post<ApiResponse<any>>('/core/v2/api/chats/send-action-card', sanitizedPayload);
+      });
+
+      console.log(`📡 Resposta completa da API para Action Card:`, JSON.stringify(response, null, 2));
 
       if (response.success) {
         console.log(`✅ Cartão de ação enviado com sucesso para ${number}`);
       } else {
         console.log(`❌ Falha ao enviar cartão de ação para ${number}`);
+        console.log(`❌ Detalhes da falha:`, {
+          success: response.success,
+          message: response.message,
+          data: response.data,
+          error: response.error
+        });
       }
 
       return response.success;
@@ -313,13 +385,27 @@ export class KrolikApiClient {
     try {
       console.log(`📤 Enviando template (${templateId}) para ${number} (${contactId})...`);
       
-      // Validar payload
+      // Formato correto da API para Template
+      // Remover código do país se presente (55) e adicionar novamente
+      let phoneNumber = number;
+      if (phoneNumber.startsWith('55')) {
+        phoneNumber = phoneNumber.substring(2);
+      }
+      // Garantir que o número tenha 11 dígitos (DDD + 9 dígitos)
+      if (phoneNumber.length === 10) {
+        phoneNumber = phoneNumber.substring(0, 2) + '9' + phoneNumber.substring(2);
+      }
+      
       const payload = { 
-        number, 
-        contactId, 
+        number: phoneNumber, // Número de telefone formatado
+        contactId: contactId, // ID do contato/chat
         templateId,
-        templateComponents
+        templateComponents,
+        forceSend: true,
+        verifyContact: true
       };
+      
+      console.log(`📤 Payload para Template:`, payload);
       
       const validation = validateKrolikApiPayload(payload, 'send-template-by-phone');
       
@@ -330,15 +416,24 @@ export class KrolikApiClient {
 
       // Sanitizar dados
       const sanitizedPayload = sanitizeData(payload);
+      console.log(`🧹 Payload sanitizado para Template:`, sanitizedPayload);
 
       const response = await this.executeWithRetry(() =>
         this.axiosInstance.post<ApiResponse<any>>('/core/v2/api/chats/send-template', sanitizedPayload)
       );
 
+      console.log(`📡 Resposta completa da API para Template:`, JSON.stringify(response, null, 2));
+
       if (response.success) {
         console.log(`✅ Template enviado com sucesso para ${number}`);
       } else {
         console.log(`❌ Falha ao enviar template para ${number}`);
+        console.log(`❌ Detalhes da falha:`, {
+          success: response.success,
+          message: response.message,
+          data: response.data,
+          error: response.error
+        });
       }
 
       return response.success;

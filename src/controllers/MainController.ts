@@ -722,13 +722,21 @@ export class MainController implements IMainController {
 
       for (const patient of patients) {
         try {
+          console.log(`🔍 Processando paciente: ${patient.number} (${patient.contactId})`);
+          console.log(`🔍 Action Card ID: ${actionCardId}`);
+          
           const payload = {
             number: patient.number,
             contactId: patient.contactId,
             action_card_id: actionCardId
           };
 
+          console.log(`📤 Payload para envio:`, payload);
+
           const success = await this.krolikApiClient.sendActionCardByPhone(patient.number, patient.contactId, actionCardId);
+          
+          console.log(`📊 Resultado do envio para ${patient.number}: ${success ? 'SUCESSO' : 'FALHA'}`);
+          
           results.push({
             contactId: patient.contactId,
             number: patient.number,
@@ -741,17 +749,22 @@ export class MainController implements IMainController {
             console.log(`✅ Cartão enviado para ${patient.number} (${patient.contactId})`);
           } else {
             failedCount++;
-            console.log(`❌ Falha ao enviar cartão para ${patient.number} (${patient.contactId})`);
+            console.log(`❌ Falha ao enviar cartão para ${patient.number} (${patient.contactId}) - Verifique se o Action Card ID existe na API`);
           }
         } catch (error) {
           failedCount++;
+          const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+          console.error(`❌ ERRO DETALHADO ao enviar cartão para ${patient.number} (${patient.contactId}):`);
+          console.error(`   - Tipo do erro: ${error instanceof Error ? error.constructor.name : 'Unknown'}`);
+          console.error(`   - Mensagem: ${errorMessage}`);
+          console.error(`   - Stack trace:`, error instanceof Error ? error.stack : 'N/A');
+          
           results.push({
             contactId: patient.contactId,
             number: patient.number,
             success: false,
-            message: `Erro: ${error instanceof Error ? error.message : 'Erro desconhecido'}`
+            message: `Erro: ${errorMessage}`
           });
-          console.error(`❌ Erro ao enviar cartão para ${patient.number} (${patient.contactId}):`, error);
         }
       }
 
@@ -786,6 +799,9 @@ export class MainController implements IMainController {
 
       for (const patient of patients) {
         try {
+          console.log(`🔍 Processando paciente: ${patient.number} (${patient.contactId})`);
+          console.log(`🔍 Template ID: ${templateId}`);
+          
           const payload = {
             number: patient.number,
             contactId: patient.contactId,
@@ -793,7 +809,12 @@ export class MainController implements IMainController {
             templateComponents: templateComponents || []
           };
 
+          console.log(`📤 Payload para envio:`, payload);
+
           const success = await this.krolikApiClient.sendTemplateByPhone(patient.number, patient.contactId, templateId, templateComponents);
+          
+          console.log(`📊 Resultado do envio para ${patient.number}: ${success ? 'SUCESSO' : 'FALHA'}`);
+          
           results.push({
             contactId: patient.contactId,
             number: patient.number,
@@ -806,17 +827,22 @@ export class MainController implements IMainController {
             console.log(`✅ Template enviado para ${patient.number} (${patient.contactId})`);
           } else {
             failedCount++;
-            console.log(`❌ Falha ao enviar template para ${patient.number} (${patient.contactId})`);
+            console.log(`❌ Falha ao enviar template para ${patient.number} (${patient.contactId}) - Verifique se o Template ID existe na API`);
           }
         } catch (error) {
           failedCount++;
+          const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+          console.error(`❌ ERRO DETALHADO ao enviar template para ${patient.number} (${patient.contactId}):`);
+          console.error(`   - Tipo do erro: ${error instanceof Error ? error.constructor.name : 'Unknown'}`);
+          console.error(`   - Mensagem: ${errorMessage}`);
+          console.error(`   - Stack trace:`, error instanceof Error ? error.stack : 'N/A');
+          
           results.push({
             contactId: patient.contactId,
             number: patient.number,
             success: false,
-            message: `Erro: ${error instanceof Error ? error.message : 'Erro desconhecido'}`
+            message: `Erro: ${errorMessage}`
           });
-          console.error(`❌ Erro ao enviar template para ${patient.number} (${patient.contactId}):`, error);
         }
       }
 

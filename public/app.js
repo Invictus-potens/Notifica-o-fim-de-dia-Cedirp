@@ -1694,6 +1694,8 @@ class AutomationInterface {
                     patients,
                     action_card_id: this.currentMessageId
                 };
+                console.log('🔍 Action Card ID sendo enviado:', this.currentMessageId);
+                console.log('🔍 Payload completo:', payload);
             } else if (this.currentMessageType === 'template') {
                 endpoint = '/api/messages/send-template';
                 payload = {

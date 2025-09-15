@@ -43,14 +43,6 @@ app.use((req, res, next) => {
   next();
 });
 
-// Servir arquivos estáticos da interface web
-app.use(express.static(path.join(__dirname, '../public')));
-
-// Rota principal
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, '../public/index.html'));
-});
-
 // Importar MainController e Logger
 import { MainController } from './controllers/MainController';
 import { logger } from './services/Logger';
@@ -671,6 +663,14 @@ app.get('/api/health', async (req, res) => {
     
     res.status(503).json(errorResponse);
   }
+});
+
+// Servir arquivos estáticos da interface web (DEPOIS das rotas da API)
+app.use(express.static(path.join(__dirname, '../public')));
+
+// Rota principal
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, '../public/index.html'));
 });
 
 // Iniciar servidor

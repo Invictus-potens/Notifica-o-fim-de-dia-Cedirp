@@ -2,5 +2,6 @@
   "excludedSectors": "[]",
   "endOfDayTime": "18:00",
   "excludedChannels": "[]",
-  "flowPaused": "true"
+  "flowPaused": "true",
+  "selectedActionCard": "633d8fadab671674331b0cde"
 }
