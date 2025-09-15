@@ -608,8 +608,8 @@ class AutomationInterface {
                 const option = document.createElement('option');
                 option.value = card.id;
                 
-                // Usar name ou title, com fallback para id
-                const displayName = card.name || card.title || `Cartão ${card.id}`;
+                // Usar description, name ou title, com fallback para id
+                const displayName = card.description || card.name || card.title || `Cartão ${card.id}`;
                 
                 // Adicionar informações adicionais se disponíveis
                 let optionText = displayName;
@@ -666,7 +666,7 @@ class AutomationInterface {
             templates.forEach(template => {
                 const option = document.createElement('option');
                 option.value = template.id;
-                option.textContent = template.name || template.title || `Template ${template.id}`;
+                option.textContent = template.description || template.name || template.title || `Template ${template.id}`;
                 selectElement.appendChild(option);
             });
         } else {

@@ -464,14 +464,17 @@ export class KrolikApiClient {
    */
   async getTemplates(): Promise<Template[]> {
     const response = await this.executeWithRetry(() =>
-      this.axiosInstance.get<ApiResponse<Template[]>>('/core/v2/api/action-cards/templates')
+      this.axiosInstance.get<Template[]>('/core/v2/api/action-cards/templates')
     );
 
-    if (!response.success || !response.data) {
-      throw new Error(response.error || 'Falha ao listar templates');
+    // A API retorna diretamente um array de templates, não um wrapper ApiResponse
+    if (!response || !Array.isArray(response)) {
+      console.error('❌ Dados inválidos na resposta de templates:', response);
+      throw new Error('Dados inválidos na resposta da API');
     }
 
-    return response.data;
+    console.log(`📋 Encontrados ${response.length} templates`);
+    return response;
   }
 
   /**
@@ -479,14 +482,16 @@ export class KrolikApiClient {
    */
   async getTemplate(templateId: string): Promise<Template> {
     const response = await this.executeWithRetry(() =>
-      this.axiosInstance.get<ApiResponse<Template>>(`/core/v2/api/action-cards/templates/${templateId}`)
+      this.axiosInstance.get<Template>(`/core/v2/api/action-cards/templates/${templateId}`)
     );
 
-    if (!response.success || !response.data) {
-      throw new Error(response.error || 'Falha ao obter template');
+    if (!response) {
+      console.error('❌ Template não encontrado:', templateId);
+      throw new Error('Template não encontrado');
     }
 
-    return response.data;
+    console.log(`📋 Template encontrado: ${response.name || response.id}`);
+    return response;
   }
 
   /**

@@ -89,11 +89,23 @@ export interface Sector {
 
 export interface ActionCard {
   id: string;
-  name: string;
-  content: string;
-  active: boolean;
+  description: string;
+  messages: Array<{
+    id: string;
+    typeMessage: number;
+    typeFile: number;
+    text: string;
+    order: number;
+    typeEvent: number;
+    extension?: string;
+    file?: string;
+    scriptId?: string;
+  }>;
+  // Propriedades opcionais para compatibilidade
+  name?: string;
+  content?: string;
+  active?: boolean;
   title?: string;
-  description?: string;
   type?: string;
   category?: string;
   createdAt?: string;
@@ -105,9 +117,25 @@ export interface ActionCard {
 
 export interface Template {
   id: string;
-  name: string;
-  content: string;
-  active: boolean;
+  description: string;
+  canEdit: boolean;
+  staticComponents: Array<{
+    type: string;
+    text: string;
+    format?: string;
+    buttons?: Array<{
+      type: string;
+      text: string;
+    }>;
+  }>;
+  dynamicComponents: Array<{
+    type: string;
+    text: string;
+  }>;
+  // Propriedades opcionais para compatibilidade
+  name?: string;
+  content?: string;
+  active?: boolean;
 }
 
 export interface ApiResponse<T> {
