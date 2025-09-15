@@ -10,104 +10,104 @@ export interface SectorData {
 
 export const SECTORS_DATA: SectorData[] = [
   {
-    "id": "65eb53aa0e74e281e12ba594",
-    "name": "Grupos WhatsApp/Setor geral",
-    "organizationId": "65eb53aa0e74e281e12ba2bc",
-    "serviceTimeRuleId": "65eb53aa0e74e281e12ba568"
+    "id": "631f2b4f307d23f46ac80a1c",
+    "name": "Comercial",
+    "organizationId": "631f2b4f307d23f46ac80a12",
+    "serviceTimeRuleId": "631f2b4f307d23f46ac80a15"
   },
   {
-    "id": "65eb5a0e681c0098402e5839",
-    "name": "Ressonância Magnética",
-    "organizationId": "65eb53aa0e74e281e12ba2bc",
-    "serviceTimeRuleId": "65eb53aa0e74e281e12ba568"
+    "id": "631f7d27307d23f46af88983",
+    "name": "Administrativo/Financeiro",
+    "organizationId": "631f2b4f307d23f46ac80a12",
+    "serviceTimeRuleId": "631f2b4f307d23f46ac80a15"
   },
   {
-    "id": "65eb5a1a01515baa7f9c6b9f",
-    "name": "Tomografia Computadorizada",
-    "organizationId": "65eb53aa0e74e281e12ba2bc",
-    "serviceTimeRuleId": "65eb53aa0e74e281e12ba568"
+    "id": "63440c6e7400be926a5237d1",
+    "name": "Grupo",
+    "organizationId": "631f2b4f307d23f46ac80a12",
+    "serviceTimeRuleId": "631f2b4f307d23f46ac80a15"
   },
   {
-    "id": "65eb5a217b2ad8749ef7aa42",
-    "name": "Ultrassom",
-    "organizationId": "65eb53aa0e74e281e12ba2bc",
-    "serviceTimeRuleId": "65eb53aa0e74e281e12ba568"
+    "id": "6400efb5343817d4ddbb2a4c",
+    "name": "Suporte CAM",
+    "organizationId": "631f2b4f307d23f46ac80a12",
+    "serviceTimeRuleId": "631f2b4f307d23f46ac80a15"
   },
   {
-    "id": "65eb5a270c00c6ae4943cdc6",
-    "name": "Mamografia",
-    "organizationId": "65eb53aa0e74e281e12ba2bc",
-    "serviceTimeRuleId": "65eb53aa0e74e281e12ba568"
+    "id": "6401f4f49b1ff8512b525e9c",
+    "name": "Suporte Telefonia",
+    "organizationId": "631f2b4f307d23f46ac80a12",
+    "serviceTimeRuleId": "631f2b4f307d23f46ac80a15"
   },
   {
-    "id": "65eb5a3501515baa7fa15ef8",
-    "name": "Densitometria Óssea",
-    "organizationId": "65eb53aa0e74e281e12ba2bc",
-    "serviceTimeRuleId": "65eb53aa0e74e281e12ba568"
+    "id": "6492095a2071b73706a3bda9",
+    "name": "Servidor",
+    "organizationId": "631f2b4f307d23f46ac80a12",
+    "serviceTimeRuleId": "631f2b4f307d23f46ac80a15"
   },
   {
-    "id": "65eb5a3c01515baa7fa25c4a",
-    "name": "Cardiologia",
-    "organizationId": "65eb53aa0e74e281e12ba2bc",
-    "serviceTimeRuleId": "65eb53aa0e74e281e12ba568"
+    "id": "64d4db384f04cb80ac059912",
+    "name": "Suporte Geral",
+    "organizationId": "631f2b4f307d23f46ac80a12",
+    "serviceTimeRuleId": "631f2b4f307d23f46ac80a15"
   },
   {
-    "id": "65eb5a420c00c6ae49486316",
-    "name": "Raio X",
-    "organizationId": "65eb53aa0e74e281e12ba2bc",
-    "serviceTimeRuleId": "65eb53aa0e74e281e12ba568"
+    "id": "65720e7b991a54728a27c0db",
+    "name": "Avaliação",
+    "organizationId": "631f2b4f307d23f46ac80a12",
+    "serviceTimeRuleId": "631f2b4f307d23f46ac80a15"
   },
   {
-    "id": "65eb5a4d973bd0cedb32efa2",
-    "name": "Biopsias e Procedimentos",
-    "organizationId": "65eb53aa0e74e281e12ba2bc",
-    "serviceTimeRuleId": "65eb53aa0e74e281e12ba568"
+    "id": "6634ed287a52f05462cb028c",
+    "name": "NPS",
+    "organizationId": "631f2b4f307d23f46ac80a12",
+    "serviceTimeRuleId": "631f2b4f307d23f46ac80a15"
   },
   {
-    "id": "65eb5a52973bd0cedb33df0d",
-    "name": "Outros",
-    "organizationId": "65eb53aa0e74e281e12ba2bc",
-    "serviceTimeRuleId": "65eb53aa0e74e281e12ba568"
+    "id": "668c2f2ac46b84967464c5f2",
+    "name": "Suporte TI (Manutenção/Infrastrutura)",
+    "organizationId": "631f2b4f307d23f46ac80a12",
+    "serviceTimeRuleId": "631f2b4f307d23f46ac80a15"
   },
   {
-    "id": "65ef29cf867543e1d040ec9f",
-    "name": "Outras informações",
-    "organizationId": "65eb53aa0e74e281e12ba2bc",
-    "serviceTimeRuleId": "65eb53aa0e74e281e12ba568"
+    "id": "674f0858a37c238610154000",
+    "name": "Sucesso do Cliente",
+    "organizationId": "631f2b4f307d23f46ac80a12",
+    "serviceTimeRuleId": "631f2b4f307d23f46ac80a15"
   },
   {
-    "id": "65f0a689746a222fbccc906c",
-    "name": "Anexo",
-    "organizationId": "65eb53aa0e74e281e12ba2bc"
+    "id": "674f0bb23759129539a542fd",
+    "name": "Auditoria",
+    "organizationId": "631f2b4f307d23f46ac80a12",
+    "serviceTimeRuleId": "631f2b4f307d23f46ac80a15"
   },
   {
-    "id": "6627fab80f0dbc5420282b2b",
-    "name": "Resultados",
-    "organizationId": "65eb53aa0e74e281e12ba2bc",
-    "serviceTimeRuleId": "65eb53aa0e74e281e12ba568"
+    "id": "679cb8a027182216928c6bd6",
+    "name": "Comunicado",
+    "organizationId": "631f2b4f307d23f46ac80a12"
   },
   {
-    "id": "6627fac62c6fb7d3c7fb7aba",
-    "name": "Impressão de exame",
-    "organizationId": "65eb53aa0e74e281e12ba2bc",
-    "serviceTimeRuleId": "65eb53aa0e74e281e12ba568"
+    "id": "67a3ca664d0be50c658c2d79",
+    "name": "Indique e Ganhe",
+    "organizationId": "631f2b4f307d23f46ac80a12",
+    "serviceTimeRuleId": "631f2b4f307d23f46ac80a15"
   },
   {
-    "id": "6627fad02c6fb7d3c7fd6d78",
-    "name": "Orçamento",
-    "organizationId": "65eb53aa0e74e281e12ba2bc",
-    "serviceTimeRuleId": "65eb53aa0e74e281e12ba568"
+    "id": "67ae3aceda37153290847530",
+    "name": "Desenvolvimento",
+    "organizationId": "631f2b4f307d23f46ac80a12",
+    "serviceTimeRuleId": ""
   },
   {
-    "id": "665090aef00af9d07c2a5e97",
-    "name": "Cancelar agendamento",
-    "organizationId": "65eb53aa0e74e281e12ba2bc",
-    "serviceTimeRuleId": "65eb53aa0e74e281e12ba568"
+    "id": "67b4707ab84af8f53a3c320d",
+    "name": "Campanha contratação",
+    "organizationId": "631f2b4f307d23f46ac80a12",
+    "serviceTimeRuleId": "631f2b4f307d23f46ac80a15"
   },
   {
-    "id": "682739784933d4656bf60583",
-    "name": "Confirmação",
-    "organizationId": "65eb53aa0e74e281e12ba2bc"
+    "id": "68c1d1fb712a4302650d8008",
+    "name": "Campanhas Comercial",
+    "organizationId": "631f2b4f307d23f46ac80a12"
   }
 ];
 
