@@ -235,6 +235,23 @@
                             </div>
                         </div>
                         <div class="card-body">
+                            <!-- Botões de Ação para Atendimentos Selecionados -->
+                            <div id="selected-patients-actions" class="mb-3 d-none">
+                                <div class="alert alert-info d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <i class="bi bi-info-circle me-2"></i>
+                                        <span id="selected-count">0</span> atendimento(s) selecionado(s)
+                                    </div>
+                                    <div class="d-flex gap-2">
+                                        <button id="send-message-btn" class="btn btn-primary btn-sm">
+                                            <i class="bi bi-send me-1"></i>Enviar Mensagem
+                                        </button>
+                                        <button id="clear-selection-btn" class="btn btn-outline-secondary btn-sm">
+                                            <i class="bi bi-x me-1"></i>Limpar Seleção
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
                             <div id="loading-patients" class="text-center py-4 d-none">
                                 <div class="spinner-border text-primary" role="status">
                                     <span class="visually-hidden">Carregando...</span>
@@ -246,6 +263,9 @@
                                     <table class="table table-hover">
                                         <thead class="table-light">
                                             <tr>
+                                                <th width="50">
+                                                    <input type="checkbox" id="select-all-patients" class="form-check-input">
+                                                </th>
                                                 <th>Nome</th>
                                                 <th>Telefone</th>
                                                 <th>Setor</th>
@@ -255,7 +275,7 @@
                                         </thead>
                                         <tbody id="patients-tbody">
                                             <tr>
-                                                <td colspan="5" class="text-center text-muted py-4">
+                                                <td colspan="6" class="text-center text-muted py-4">
                                                     Nenhum atendimento em espera
                                                 </td>
                                             </tr>
@@ -326,7 +346,9 @@
                             <div>
                                 <label class="form-label fw-bold">Canais Excluídos</label>
                                 <div class="d-flex gap-2 mb-2">
-                                    <input type="text" id="channel-input" class="form-control form-control-sm" placeholder="ID do canal...">
+                                    <select id="channel-select" class="form-select form-select-sm">
+                                        <option value="">Selecione um canal...</option>
+                                    </select>
                                     <button id="add-channel-btn" class="btn btn-outline-primary btn-sm">
                                         <i class="bi bi-plus"></i>
                                     </button>
@@ -784,6 +806,41 @@
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Send Message Modal -->
+        <div class="modal fade" id="sendMessageModal" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">
+                            <i class="bi bi-send me-2"></i>Enviar Mensagem
+                        </h5>
+                        <button type="button" class="btn-close" id="close-send-message-modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Tipo de Mensagem</label>
+                            <div class="alert alert-info">
+                                <i class="bi bi-info-circle me-2"></i>
+                                <span id="message-type-info">Carregando configuração...</span>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Atendimentos Selecionados</label>
+                            <div id="selected-patients-list" class="border rounded p-3" style="max-height: 200px; overflow-y: auto;">
+                                <!-- Lista de pacientes selecionados será inserida aqui -->
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" id="cancel-send-message-btn">Cancelar</button>
+                        <button type="button" class="btn btn-primary" id="confirm-send-message-btn">
+                            <i class="bi bi-send me-1"></i>Enviar Mensagem
+                        </button>
                     </div>
                 </div>
             </div>

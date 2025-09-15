@@ -25,6 +25,7 @@ class AutomationInterface {
             this.setupRouter();
             this.initializeExclusionLists();
             this.initializeFlowControl();
+            this.initializePatientSelection();
             console.log('Automação de Mensagem de Espera - Interface carregada');
         } catch (error) {
             console.error('Erro na inicialização:', error);
@@ -365,6 +366,7 @@ class AutomationInterface {
                 this.loadActionCards();
                 this.loadTemplates();
                 this.loadSectors();
+                this.loadChannels();
                 break;
             case 'metricas':
                 this.loadMetrics();
@@ -428,7 +430,7 @@ class AutomationInterface {
         if (patients.length === 0) {
             tbody.innerHTML = `
                 <tr>
-                    <td colspan="5" class="text-center text-muted py-4">
+                    <td colspan="6" class="text-center text-muted py-4">
                         Nenhum atendimento em espera
                     </td>
                 </tr>
@@ -438,8 +440,14 @@ class AutomationInterface {
 
         tbody.innerHTML = patients.map(patient => `
             <tr>
+                <td>
+                    <input type="checkbox" class="form-check-input patient-checkbox" 
+                           data-patient-id="${patient.id}" 
+                           data-patient-name="${this.escapeHtml(patient.name)}"
+                           data-patient-phone="${this.escapeHtml(patient.phone || patient.number || '')}">
+                </td>
                 <td>${this.escapeHtml(patient.name)}</td>
-                <td>${this.escapeHtml(patient.phone)}</td>
+                <td>${this.escapeHtml(patient.phone || patient.number || '')}</td>
                 <td>${this.escapeHtml(patient.sectorName)}</td>
                 <td>${this.formatWaitTime(patient.waitTimeMinutes)}</td>
                 <td>
@@ -447,6 +455,9 @@ class AutomationInterface {
                 </td>
             </tr>
         `).join('');
+
+        // Adicionar event listeners para os checkboxes
+        this.setupPatientSelection();
     }
 
     formatWaitTime(minutes) {
@@ -754,17 +765,76 @@ class AutomationInterface {
         this.availableSectors = sectors || [];
     }
 
+    async loadChannels() {
+        try {
+            console.log('📋 Carregando canais...');
+            
+            const response = await fetch('/api/channels');
+            const result = await response.json();
+
+            if (!response.ok) {
+                throw new Error(result.error || 'Erro ao carregar canais');
+            }
+
+            // A API retorna { success: true, data: [...], total: X }
+            const channels = result.success ? result.data : result;
+            console.log('Canais carregados:', channels);
+
+            this.displayChannels(channels);
+
+        } catch (error) {
+            console.error('Erro ao carregar canais:', error);
+            this.showError('Erro ao carregar canais: ' + error.message);
+        }
+    }
+
+    displayChannels(channels) {
+        // Update channel select in configuracoes page (Listas de Exceção)
+        const channelSelect = document.getElementById('channel-select');
+        if (channelSelect) {
+            channelSelect.innerHTML = '<option value="">Selecione um canal...</option>';
+            
+            if (channels && channels.length > 0) {
+                channels.forEach(channel => {
+                    const option = document.createElement('option');
+                    option.value = channel.id;
+                    
+                    // Usar description, identifier ou id para exibição
+                    const displayName = channel.description || channel.identifier || `Canal ${channel.id}`;
+                    
+                    // Adicionar informações adicionais se disponíveis
+                    let optionText = displayName;
+                    if (channel.type) {
+                        optionText += ` (Tipo: ${channel.type})`;
+                    }
+                    if (channel.active === false) {
+                        optionText += ' [Inativo]';
+                    }
+                    
+                    option.textContent = optionText;
+                    option.title = channel.description || channel.identifier || displayName;
+                    
+                    channelSelect.appendChild(option);
+                });
+            }
+        }
+
+        // Store channels for later use
+        this.availableChannels = channels || [];
+    }
+
     // Métodos para gerenciar listas de exclusão
     initializeExclusionLists() {
         // Initialize excluded sectors list
         this.excludedSectors = [];
         this.excludedChannels = [];
+        this.availableChannels = [];
 
         // Add event listeners
         const addSectorBtn = document.getElementById('add-sector-btn');
         const addChannelBtn = document.getElementById('add-channel-btn');
         const sectorSelect = document.getElementById('sector-select');
-        const channelInput = document.getElementById('channel-input');
+        const channelSelect = document.getElementById('channel-select');
 
         if (addSectorBtn) {
             addSectorBtn.addEventListener('click', () => this.addSectorToExclusion());
@@ -778,12 +848,8 @@ class AutomationInterface {
             sectorSelect.addEventListener('change', () => this.onSectorSelectChange());
         }
 
-        if (channelInput) {
-            channelInput.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') {
-                    this.addChannelToExclusion();
-                }
-            });
+        if (channelSelect) {
+            channelSelect.addEventListener('change', () => this.onChannelSelectChange());
         }
 
         // Load existing exclusions
@@ -966,28 +1032,33 @@ class AutomationInterface {
     }
 
     addChannelToExclusion() {
-        const channelInput = document.getElementById('channel-input');
-        const channelId = channelInput.value.trim();
+        const channelSelect = document.getElementById('channel-select');
+        const selectedChannelId = channelSelect.value;
 
-        if (!channelId) {
-            this.showError('Digite um ID de canal para adicionar à lista de exclusão');
+        if (!selectedChannelId) {
+            this.showError('Selecione um canal para adicionar à lista de exclusão');
             return;
         }
 
         // Check if already excluded
-        if (this.excludedChannels.includes(channelId)) {
+        if (this.excludedChannels.some(channel => channel.id === selectedChannelId)) {
             this.showError('Este canal já está na lista de exclusão');
             return;
         }
 
-        this.excludedChannels.push(channelId);
-        this.updateExcludedChannelsDisplay();
-        this.saveExcludedChannels();
-        
-        // Reset input
-        channelInput.value = '';
-        
-        this.showSuccess(`Canal "${channelId}" adicionado à lista de exclusão`);
+        // Find channel details
+        const channel = this.availableChannels.find(c => c.id === selectedChannelId);
+        if (channel) {
+            this.excludedChannels.push(channel);
+            this.updateExcludedChannelsDisplay();
+            this.saveExcludedChannels();
+            
+            // Reset select
+            channelSelect.value = '';
+            
+            const displayName = channel.description || channel.identifier || `Canal ${channel.id}`;
+            this.showSuccess(`Canal "${displayName}" adicionado à lista de exclusão`);
+        }
     }
 
     removeSectorFromExclusion(sectorId) {
@@ -1004,7 +1075,7 @@ class AutomationInterface {
     }
 
     removeChannelFromExclusion(channelId) {
-        this.excludedChannels = this.excludedChannels.filter(id => id !== channelId);
+        this.excludedChannels = this.excludedChannels.filter(channel => channel.id !== channelId);
         this.updateExcludedChannelsDisplay();
         this.saveExcludedChannels();
         this.showSuccess('Canal removido da lista de exclusão');
@@ -1060,14 +1131,20 @@ class AutomationInterface {
         container.innerHTML = '';
 
         // Create elements for each excluded channel
-        this.excludedChannels.forEach(channelId => {
+        this.excludedChannels.forEach(channel => {
             const channelDiv = document.createElement('div');
             channelDiv.className = 'd-flex justify-content-between align-items-center mb-2 p-2 bg-white rounded border';
+            
+            const displayName = channel.description || channel.identifier || `Canal ${channel.id}`;
+            const typeInfo = channel.type ? ` (Tipo: ${channel.type})` : '';
+            
             channelDiv.innerHTML = `
                 <div>
-                    <strong>${this.escapeHtml(channelId)}</strong>
+                    <strong>${this.escapeHtml(displayName)}</strong>
+                    <br>
+                    <small class="text-muted">ID: ${channel.id}${typeInfo}</small>
                 </div>
-                <button class="btn btn-outline-danger btn-sm remove-channel-btn" data-channel-id="${channelId}">
+                <button class="btn btn-outline-danger btn-sm remove-channel-btn" data-channel-id="${channel.id}">
                     <i class="bi bi-x"></i>
                 </button>
             `;
@@ -1075,7 +1152,7 @@ class AutomationInterface {
             // Add event listener to the remove button
             const removeBtn = channelDiv.querySelector('.remove-channel-btn');
             removeBtn.addEventListener('click', () => {
-                this.removeChannelFromExclusion(channelId);
+                this.removeChannelFromExclusion(channel.id);
             });
 
             container.appendChild(channelDiv);
@@ -1088,6 +1165,15 @@ class AutomationInterface {
         
         if (sectorSelect && addSectorBtn) {
             addSectorBtn.disabled = !sectorSelect.value;
+        }
+    }
+
+    onChannelSelectChange() {
+        const channelSelect = document.getElementById('channel-select');
+        const addChannelBtn = document.getElementById('add-channel-btn');
+        
+        if (channelSelect && addChannelBtn) {
+            addChannelBtn.disabled = !channelSelect.value;
         }
     }
 
@@ -1220,6 +1306,320 @@ class AutomationInterface {
         } catch (error) {
             console.error('Erro na inicialização do router:', error);
             this.navigateToRoute('dashboard');
+        }
+    }
+
+    // Métodos para gerenciar seleção de pacientes
+    initializePatientSelection() {
+        this.selectedPatients = [];
+        this.setupPatientSelectionButtons();
+    }
+
+    setupPatientSelectionButtons() {
+        // Botão "Selecionar Todos"
+        const selectAllCheckbox = document.getElementById('select-all-patients');
+        if (selectAllCheckbox) {
+            selectAllCheckbox.addEventListener('change', (e) => {
+                this.toggleAllPatients(e.target.checked);
+            });
+        }
+
+        // Botões de ação
+        const sendMessageBtn = document.getElementById('send-message-btn');
+        const clearSelectionBtn = document.getElementById('clear-selection-btn');
+
+        if (sendMessageBtn) {
+            sendMessageBtn.addEventListener('click', () => this.openSendMessageModal());
+        }
+
+        if (clearSelectionBtn) {
+            clearSelectionBtn.addEventListener('click', () => this.clearSelection());
+        }
+
+        // Event listeners para o modal de envio de mensagem
+        this.setupModalEventListeners();
+    }
+
+    setupPatientSelection() {
+        const checkboxes = document.querySelectorAll('.patient-checkbox');
+        checkboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', () => {
+                this.updatePatientSelection();
+            });
+        });
+    }
+
+    toggleAllPatients(checked) {
+        const checkboxes = document.querySelectorAll('.patient-checkbox');
+        checkboxes.forEach(checkbox => {
+            checkbox.checked = checked;
+        });
+        this.updatePatientSelection();
+    }
+
+    updatePatientSelection() {
+        const checkboxes = document.querySelectorAll('.patient-checkbox:checked');
+        this.selectedPatients = Array.from(checkboxes).map(checkbox => ({
+            id: checkbox.dataset.patientId,
+            name: checkbox.dataset.patientName,
+            phone: checkbox.dataset.patientPhone || '', // Garantir que sempre tenha um valor
+            number: checkbox.dataset.patientPhone || '' // Para compatibilidade
+        }));
+
+        const actionsContainer = document.getElementById('selected-patients-actions');
+        const selectedCount = document.getElementById('selected-count');
+        const selectAllCheckbox = document.getElementById('select-all-patients');
+
+        if (actionsContainer && selectedCount) {
+            if (this.selectedPatients.length > 0) {
+                actionsContainer.classList.remove('d-none');
+                selectedCount.textContent = this.selectedPatients.length;
+            } else {
+                actionsContainer.classList.add('d-none');
+            }
+        }
+
+        // Atualizar checkbox "Selecionar Todos"
+        if (selectAllCheckbox) {
+            const totalCheckboxes = document.querySelectorAll('.patient-checkbox').length;
+            const checkedCheckboxes = document.querySelectorAll('.patient-checkbox:checked').length;
+            selectAllCheckbox.checked = checkedCheckboxes === totalCheckboxes && totalCheckboxes > 0;
+            selectAllCheckbox.indeterminate = checkedCheckboxes > 0 && checkedCheckboxes < totalCheckboxes;
+        }
+    }
+
+    clearSelection() {
+        const checkboxes = document.querySelectorAll('.patient-checkbox');
+        checkboxes.forEach(checkbox => {
+            checkbox.checked = false;
+        });
+        
+        const selectAllCheckbox = document.getElementById('select-all-patients');
+        if (selectAllCheckbox) {
+            selectAllCheckbox.checked = false;
+            selectAllCheckbox.indeterminate = false;
+        }
+
+        this.updatePatientSelection();
+    }
+
+    setupModalEventListeners() {
+        // Botão de fechar modal
+        const closeModalBtn = document.getElementById('close-send-message-modal');
+        if (closeModalBtn) {
+            closeModalBtn.addEventListener('click', () => this.hideModal('sendMessageModal'));
+        }
+
+        // Botão de cancelar
+        const cancelBtn = document.getElementById('cancel-send-message-btn');
+        if (cancelBtn) {
+            cancelBtn.addEventListener('click', () => this.hideModal('sendMessageModal'));
+        }
+
+        // Botão de confirmar envio
+        const confirmBtn = document.getElementById('confirm-send-message-btn');
+        if (confirmBtn) {
+            confirmBtn.addEventListener('click', () => this.sendMessageToSelectedPatients());
+        }
+    }
+
+    openSendMessageModal() {
+        if (this.selectedPatients.length === 0) {
+            this.showError('Selecione pelo menos um atendimento');
+            return;
+        }
+
+        // Determinar tipo de mensagem baseado na configuração
+        this.determineMessageType();
+        
+        // Atualizar lista de pacientes selecionados
+        this.updateSelectedPatientsList('selected-patients-list');
+
+        // Mostrar modal
+        const modal = document.getElementById('sendMessageModal');
+        if (modal) {
+            modal.style.display = 'block';
+            modal.classList.add('show');
+            document.body.classList.add('modal-open');
+        }
+    }
+
+    determineMessageType() {
+        const messageTypeInfo = document.getElementById('message-type-info');
+        if (!messageTypeInfo) return;
+
+        // Verificar qual tipo está selecionado nas configurações
+        const actionCardSelect = document.getElementById('action-card-select');
+        const templateSelect = document.getElementById('template-select');
+        
+        if (actionCardSelect && actionCardSelect.value) {
+            const selectedOption = actionCardSelect.options[actionCardSelect.selectedIndex];
+            messageTypeInfo.innerHTML = `Enviando <strong>Cartão de Ação</strong>: ${selectedOption.textContent}`;
+            this.currentMessageType = 'action_card';
+            this.currentMessageId = actionCardSelect.value;
+        } else if (templateSelect && templateSelect.value) {
+            const selectedOption = templateSelect.options[templateSelect.selectedIndex];
+            messageTypeInfo.innerHTML = `Enviando <strong>Template</strong>: ${selectedOption.textContent}`;
+            this.currentMessageType = 'template';
+            this.currentMessageId = templateSelect.value;
+        } else {
+            messageTypeInfo.innerHTML = '<span class="text-warning">⚠️ Nenhum cartão de ação ou template selecionado nas configurações</span>';
+            this.currentMessageType = null;
+            this.currentMessageId = null;
+        }
+    }
+
+    loadActionCardsForModal(selectId) {
+        const selectElement = document.getElementById(selectId);
+        if (!selectElement) return;
+
+        selectElement.innerHTML = '<option value="">Carregando cartões...</option>';
+
+        // Usar os cartões já carregados ou carregar novamente
+        if (this.availableActionCards && this.availableActionCards.length > 0) {
+            this.populateActionCardSelect(selectElement, this.availableActionCards);
+        } else {
+            this.loadActionCards().then(() => {
+                this.populateActionCardSelect(selectElement, this.availableActionCards || []);
+            });
+        }
+    }
+
+    loadTemplatesForModal(selectId) {
+        const selectElement = document.getElementById(selectId);
+        if (!selectElement) return;
+
+        selectElement.innerHTML = '<option value="">Carregando templates...</option>';
+
+        // Usar os templates já carregados ou carregar novamente
+        if (this.availableTemplates && this.availableTemplates.length > 0) {
+            this.populateTemplateSelect(selectElement, this.availableTemplates);
+        } else {
+            this.loadTemplates().then(() => {
+                this.populateTemplateSelect(selectElement, this.availableTemplates || []);
+            });
+        }
+    }
+
+    populateActionCardSelect(selectElement, actionCards) {
+        selectElement.innerHTML = '<option value="">Selecione um cartão de ação...</option>';
+        
+        if (actionCards && actionCards.length > 0) {
+            actionCards.forEach(card => {
+                const option = document.createElement('option');
+                option.value = card.id;
+                const displayName = card.description || card.name || card.title || `Cartão ${card.id}`;
+                option.textContent = displayName;
+                selectElement.appendChild(option);
+            });
+        }
+    }
+
+    populateTemplateSelect(selectElement, templates) {
+        selectElement.innerHTML = '<option value="">Selecione um template...</option>';
+        
+        if (templates && templates.length > 0) {
+            templates.forEach(template => {
+                const option = document.createElement('option');
+                option.value = template.id;
+                option.textContent = template.description || template.name || template.title || `Template ${template.id}`;
+                selectElement.appendChild(option);
+            });
+        }
+    }
+
+    updateSelectedPatientsList(containerId) {
+        const container = document.getElementById(containerId);
+        if (!container) return;
+
+        if (this.selectedPatients.length === 0) {
+            container.innerHTML = '<div class="text-muted">Nenhum atendimento selecionado</div>';
+            return;
+        }
+
+        container.innerHTML = this.selectedPatients.map(patient => `
+            <div class="d-flex justify-content-between align-items-center mb-2 p-2 bg-light rounded">
+                <div>
+                    <strong>${this.escapeHtml(patient.name)}</strong>
+                    <br>
+                    <small class="text-muted">Telefone: ${this.escapeHtml(patient.phone || 'Não informado')}</small>
+                    <br>
+                    <small class="text-muted">ID: ${patient.id}</small>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    async sendMessageToSelectedPatients() {
+        if (!this.currentMessageType || !this.currentMessageId) {
+            this.showError('Configure um cartão de ação ou template nas configurações primeiro');
+            return;
+        }
+
+        const patients = this.selectedPatients.map(p => ({
+            number: p.phone, // Número de telefone do paciente
+            contactId: p.id   // ID do chat/atendimento
+        }));
+
+        // Validar se todos os pacientes têm número de telefone
+        const patientsWithoutPhone = patients.filter(p => !p.number || p.number.trim() === '');
+        if (patientsWithoutPhone.length > 0) {
+            this.showError('Alguns pacientes selecionados não possuem número de telefone válido');
+            return;
+        }
+
+        // Log para debug
+        console.log('📤 Enviando mensagem para pacientes:', patients);
+        console.log('📤 Dados detalhados dos pacientes selecionados:', this.selectedPatients);
+        
+        try {
+            let endpoint, payload;
+            
+            if (this.currentMessageType === 'action_card') {
+                endpoint = '/api/messages/send-action-card';
+                payload = {
+                    patients,
+                    action_card_id: this.currentMessageId
+                };
+            } else if (this.currentMessageType === 'template') {
+                endpoint = '/api/messages/send-template';
+                payload = {
+                    patients,
+                    templateId: this.currentMessageId,
+                    templateComponents: [] // Será preenchido pelo backend se necessário
+                };
+            }
+
+            const response = await fetch(endpoint, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payload)
+            });
+
+            const result = await response.json();
+
+            if (response.ok && result.success) {
+                const messageType = this.currentMessageType === 'action_card' ? 'Cartão de Ação' : 'Template';
+                this.showSuccess(`${messageType} enviado: ${result.data.success} sucessos, ${result.data.failed} falhas`);
+                this.clearSelection();
+                this.hideModal('sendMessageModal');
+            } else {
+                this.showError(result.message || `Erro ao enviar ${this.currentMessageType}`);
+            }
+        } catch (error) {
+            console.error('Erro ao enviar mensagem:', error);
+            this.showError('Erro ao enviar mensagem: ' + error.message);
+        }
+    }
+
+    hideModal(modalId) {
+        const modal = document.getElementById(modalId);
+        if (modal) {
+            modal.style.display = 'none';
+            modal.classList.remove('show');
+            document.body.classList.remove('modal-open');
         }
     }
 }

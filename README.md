@@ -269,5 +269,96 @@ O sistema utiliza variáveis de ambiente para configuração. Consulte o arquivo
 
 - `GET /` - Interface web principal
 - `GET /api/status` - Status do sistema
+- `GET /api/patients` - Lista pacientes em espera
+- `GET /api/sectors` - Lista setores disponíveis
+- `GET /api/action-cards` - Lista cartões de ação
+- `GET /api/templates` - Lista templates disponíveis
+- `GET /api/channels` - Lista canais disponíveis
+- `GET /api/logs` - Logs do sistema
+- `GET /api/metrics` - Métricas do sistema
+- `GET /api/health` - Health check do sistema
+- `POST /api/messages/send-action-card` - Envio manual de cartões de ação
+- `POST /api/messages/send-template` - Envio manual de templates
 
-Mais endpoints serão adicionados durante a implementação.
+## Funcionalidade de Canais
+
+O sistema agora inclui funcionalidade completa para listar e gerenciar canais da API CAM Krolik:
+
+### Endpoint da API
+```bash
+curl -X 'GET' \
+  'https://api.camkrolik.com.br/core/v2/api/channel/list' \
+  -H 'accept: application/json' \
+  -H 'access-token: 63e68f168a48875131856df8'
+```
+
+### Interface Web
+- **Página de Configurações**: Lista de canais disponíveis para exclusão
+- **Seletor de Canais**: Dropdown com todos os canais carregados da API
+- **Informações Detalhadas**: Exibe ID, descrição, tipo e status do canal
+
+### Exemplos de Uso
+```bash
+# Testar funcionalidade de canais
+node scripts/test-channel-list.js
+
+# Exemplo de listagem de canais
+node examples/channel-list-example.js
+```
+
+## Funcionalidade de Seleção e Envio Manual
+
+O sistema agora permite selecionar atendimentos específicos e enviar mensagens manualmente:
+
+### Interface Web
+- **Checkboxes de Seleção**: Cada atendimento na tabela possui um checkbox para seleção
+- **Seleção em Massa**: Checkbox "Selecionar Todos" para selecionar todos os atendimentos
+- **Botões de Ação**: Aparecem quando há atendimentos selecionados
+- **Modais de Confirmação**: Interface para selecionar cartão de ação ou template
+
+### Endpoints da API
+```bash
+# Enviar cartão de ação para pacientes selecionados
+curl -X POST http://localhost:3000/api/messages/send-action-card \
+  -H "Content-Type: application/json" \
+  -d '{
+    "patients": [
+      {
+        "number": "+5511999999999",
+        "contactId": "patient-id-1"
+      },
+      {
+        "number": "+5511888888888", 
+        "contactId": "patient-id-2"
+      }
+    ],
+    "action_card_id": "action-card-id"
+  }'
+
+# Enviar template para pacientes selecionados
+curl -X POST http://localhost:3000/api/messages/send-template \
+  -H "Content-Type: application/json" \
+  -d '{
+    "patients": [
+      {
+        "number": "+5511999999999",
+        "contactId": "patient-id-1"
+      },
+      {
+        "number": "+5511888888888",
+        "contactId": "patient-id-2"
+      }
+    ],
+    "templateId": "template-id",
+    "templateComponents": []
+  }'
+```
+
+### Exemplos de Uso
+```bash
+# Testar endpoints de envio de mensagens (schema atualizado)
+node examples/test-updated-send-messages.js
+
+# Testar endpoints de envio de mensagens (schema antigo)
+node examples/test-send-messages-example.js
+```

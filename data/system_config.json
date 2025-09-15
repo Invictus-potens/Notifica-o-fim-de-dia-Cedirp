@@ -1,4 +1,5 @@
 {
   "excludedSectors": "[]",
-  "endOfDayTime": "18:00"
+  "endOfDayTime": "18:00",
+  "excludedChannels": "[]"
 }

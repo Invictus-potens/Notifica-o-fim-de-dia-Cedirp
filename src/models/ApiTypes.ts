@@ -170,6 +170,22 @@ export interface ErrorStatistics {
   };
 }
 
+export interface Channel {
+  id: string;
+  description: string;
+  identifier: string;
+  type: number;
+  active?: boolean;
+  organizationId?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface ChannelListResponse {
+  channels: Channel[];
+  total?: number;
+}
+
 export interface SystemStatus {
   isRunning: boolean;
   isPaused: boolean;

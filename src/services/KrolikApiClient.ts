@@ -10,7 +10,9 @@ import {
   ChatListRequest,
   ChatListResponse,
   ChatApiResponse,
-  ChatData
+  ChatData,
+  Channel,
+  ChannelListResponse
 } from '../models/ApiTypes';
 import { RetryUtils, retryApiCall } from '../utils/RetryUtils';
 import { validateKrolikApiPayload, sanitizeData } from '../utils/ValidationUtils';
@@ -111,8 +113,13 @@ export class KrolikApiClient {
     console.log('👥 Listando pacientes aguardando na API CAM Krolik...');
     
     const payload = {
+      sectorId: "", // Buscar em todos os setores
+      userId: "", // Buscar para todos os usuários
+      number: "", // Buscar todos os números
+      contactId: "", // Buscar todos os contatos
+      protocol: "", // Buscar todos os protocolos
       typeChat: 2,
-      status: 1,
+      status: 1, // Status 1 conforme schema fornecido
       dateFilters: {},
       page: 0
     };
@@ -231,6 +238,47 @@ export class KrolikApiClient {
   }
 
   /**
+   * Envia cartão de ação usando número de telefone e contactId
+   */
+  async sendActionCardByPhone(number: string, contactId: string, actionCardId: string): Promise<boolean> {
+    try {
+      console.log(`📤 Enviando cartão de ação (${actionCardId}) para ${number} (${contactId})...`);
+      
+      // Validar payload
+      const payload = { 
+        number, 
+        contactId, 
+        action_card_id: actionCardId 
+      };
+      
+      const validation = validateKrolikApiPayload(payload, 'send-action-card-by-phone');
+      
+      if (!validation.isValid) {
+        console.error('❌ Payload inválido para send-action-card-by-phone:', validation.errors);
+        return false;
+      }
+
+      // Sanitizar dados
+      const sanitizedPayload = sanitizeData(payload);
+
+      const response = await this.executeWithRetry(() =>
+        this.axiosInstance.post<ApiResponse<any>>('/core/v2/api/chats/send-action-card', sanitizedPayload)
+      );
+
+      if (response.success) {
+        console.log(`✅ Cartão de ação enviado com sucesso para ${number}`);
+      } else {
+        console.log(`❌ Falha ao enviar cartão de ação para ${number}`);
+      }
+
+      return response.success;
+    } catch (error) {
+      console.error(`❌ Erro ao enviar cartão de ação para ${number}:`, error);
+      return false;
+    }
+  }
+
+  /**
    * Envia template para canal API oficial
    */
   async sendTemplate(chatId: string, templateId: string): Promise<boolean> {
@@ -254,6 +302,48 @@ export class KrolikApiClient {
       return response.success;
     } catch (error) {
       console.error(`Erro ao enviar template para chat ${chatId}:`, error);
+      return false;
+    }
+  }
+
+  /**
+   * Envia template usando número de telefone e contactId
+   */
+  async sendTemplateByPhone(number: string, contactId: string, templateId: string, templateComponents: any[] = []): Promise<boolean> {
+    try {
+      console.log(`📤 Enviando template (${templateId}) para ${number} (${contactId})...`);
+      
+      // Validar payload
+      const payload = { 
+        number, 
+        contactId, 
+        templateId,
+        templateComponents
+      };
+      
+      const validation = validateKrolikApiPayload(payload, 'send-template-by-phone');
+      
+      if (!validation.isValid) {
+        console.error('❌ Payload inválido para send-template-by-phone:', validation.errors);
+        return false;
+      }
+
+      // Sanitizar dados
+      const sanitizedPayload = sanitizeData(payload);
+
+      const response = await this.executeWithRetry(() =>
+        this.axiosInstance.post<ApiResponse<any>>('/core/v2/api/chats/send-template', sanitizedPayload)
+      );
+
+      if (response.success) {
+        console.log(`✅ Template enviado com sucesso para ${number}`);
+      } else {
+        console.log(`❌ Falha ao enviar template para ${number}`);
+      }
+
+      return response.success;
+    } catch (error) {
+      console.error(`❌ Erro ao enviar template para ${number}:`, error);
       return false;
     }
   }
@@ -488,6 +578,62 @@ export class KrolikApiClient {
   }
 
   /**
+   * Lista canais disponíveis
+   */
+  async getChannels(): Promise<Channel[]> {
+    console.log('📋 Buscando canais da API CAM Krolik...');
+    
+    try {
+      const response = await this.executeWithRetry(() =>
+        this.axiosInstance.get<Channel[]>('/core/v2/api/channel/list', {
+          headers: {
+            'accept': 'application/json',
+            'access-token': this.config.apiToken
+          }
+        })
+      );
+
+      console.log('📋 Resposta bruta da API:', JSON.stringify(response, null, 2));
+
+      // A API retorna diretamente um array de canais
+      if (!response || !Array.isArray(response)) {
+        console.error('❌ Dados inválidos na resposta de channels:', response);
+        throw new Error('Dados inválidos na resposta da API');
+      }
+
+      console.log(`📋 Encontrados ${response.length} canais`);
+      return response;
+    } catch (error) {
+      console.error('❌ Erro detalhado ao buscar canais:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Obtém um canal específico
+   */
+  async getChannel(channelId: string): Promise<Channel> {
+    console.log(`📋 Buscando canal ${channelId} da API CAM Krolik...`);
+    
+    const response = await this.executeWithRetry(() =>
+      this.axiosInstance.get<Channel>(`/core/v2/api/channel/${channelId}`, {
+        headers: {
+          'accept': 'application/json',
+          'access-token': this.config.apiToken
+        }
+      })
+    );
+
+    if (!response) {
+      console.error('❌ Canal não encontrado:', channelId);
+      throw new Error('Canal não encontrado');
+    }
+
+    console.log(`📋 Canal encontrado: ${response.description || response.id}`);
+    return response;
+  }
+
+  /**
    * Converte dados da API para o modelo interno WaitingPatient
    */
   private convertToWaitingPatient(attendance: Attendance): WaitingPatient {
@@ -529,17 +675,36 @@ export class KrolikApiClient {
     const sectorData = getSectorById(chat.sectorId);
     const sectorName = sectorData ? sectorData.name : 'Setor não identificado';
     
-    return {
+    // Debug: Log dos dados do chat para identificar o problema
+    console.log('🔍 Debug - Dados do chat:', {
+      attendanceId: chat.attendanceId,
+      description: chat.description,
+      secondaryDescription: chat.secondaryDescription,
+      contactNumber: chat.contact?.number,
+      contactId: chat.contact?.id
+    });
+    
+    const patient: WaitingPatient = {
       id: chat.attendanceId,
       name: chat.description || chat.contact?.name || 'Nome não informado',
-      phone: chat.secondaryDescription || chat.contact?.number || 'Telefone não informado',
+      phone: chat.contact?.number || chat.secondaryDescription || 'Telefone não informado',
       sectorId: chat.sectorId,
       sectorName: sectorName,
       channelId: chat.channel?.id || 'channel-unknown',
-      channelType: chat.channel?.type === 4 ? 'normal' : 'api_oficial',
+      channelType: chat.channel?.type === 4 ? 'normal' as const : 'api_oficial' as const,
       waitStartTime: waitStartTime,
       waitTimeMinutes: waitTimeMinutes
     };
+    
+    // Debug: Log do paciente convertido
+    console.log('🔍 Debug - Paciente convertido:', {
+      id: patient.id,
+      name: patient.name,
+      phone: patient.phone,
+      source: chat.contact?.number ? 'contactNumber' : 'secondaryDescription'
+    });
+    
+    return patient;
   }
 
   /**
