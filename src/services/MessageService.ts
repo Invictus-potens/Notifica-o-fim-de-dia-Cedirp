@@ -164,9 +164,6 @@ export class MessageService implements IMessageService {
       if (patient.channelType === 'normal') {
         // Canal normal usa cartão de ação (Requisito 6.1)
         return await this.sendActionCardMessage(patient, messageType, config);
-      } else if (patient.channelType === 'api_oficial') {
-        // Canal API oficial usa template (Requisito 6.2)
-        return await this.sendTemplateMessage(patient, messageType, config);
       } else {
         // Tipo de canal desconhecido
         this.errorHandler.logError(
@@ -247,67 +244,6 @@ export class MessageService implements IMessageService {
     }
   }
 
-  /**
-   * Envia mensagem via template para canais API oficial
-   * Requisito: 6.2
-   */
-  private async sendTemplateMessage(
-    patient: WaitingPatient,
-    messageType: '30min' | 'end_of_day',
-    config: any
-  ): Promise<boolean> {
-    try {
-      // Verificar se há template configurado
-      if (!config.selectedTemplate) {
-        this.errorHandler.logError(
-          new Error('Nenhum template configurado para canais API oficial'),
-          `MessageService.sendTemplateMessage - Patient: ${patient.id}`
-        );
-        return false;
-      }
-
-      // Enviar template através da API com retry e fallback
-      const result = await executeWithFallback(
-        async () => {
-          const retryResult = await retryApiCall(async () => {
-            return await this.krolikApiClient.sendTemplate(
-              patient.channelId,
-              config.selectedTemplate
-            );
-          });
-          
-          if (!retryResult.success) {
-            throw new Error(retryResult.error?.message || 'API call failed');
-          }
-          
-          return retryResult.data;
-        },
-        async () => {
-          // Fallback: tentar enviar mensagem de texto simples
-          const fallbackMessage = `Mensagem automática: Sua consulta está aguardando há mais de 30 minutos. Em breve você será atendido.`;
-          return await this.krolikApiClient.sendTextMessage(patient.id, fallbackMessage);
-        }
-      );
-
-      const success = result.success && result.data;
-
-      if (!success) {
-        this.errorHandler.logError(
-          new Error(`Falha ao enviar template para canal ${patient.channelId}`),
-          `MessageService.sendTemplateMessage - Patient: ${patient.id}`
-        );
-      }
-
-      return success || false;
-    } catch (error) {
-      // Tratamento de erro específico para template (Requisito 6.5)
-      this.errorHandler.logError(
-        error as Error,
-        `MessageService.sendTemplateMessage - Patient: ${patient.id}, Channel: ${patient.channelId}`
-      );
-      return false;
-    }
-  }
 
   /**
    * Verifica se é horário de fim de expediente (18h) em dia útil

@@ -364,7 +364,6 @@ class AutomationInterface {
                 break;
             case 'configuracoes':
                 this.loadActionCards();
-                this.loadTemplates();
                 this.loadSectors();
                 this.loadChannels();
                 this.loadMessageConfig();
@@ -650,63 +649,7 @@ class AutomationInterface {
         }
     }
 
-    async loadTemplates() {
-        try {
-            console.log('🚀 loadTemplates iniciado...');
-            
-            const response = await fetch('/api/templates');
-            console.log('📡 Resposta da API recebida:', response.status);
-            
-            const result = await response.json();
-            console.log('📄 Resultado da API:', result);
 
-            if (!response.ok) {
-                throw new Error(result.error || 'Erro ao carregar templates');
-            }
-
-            // A API agora retorna { success: true, data: [...], total: X }
-            const templates = result.success ? result.data : result;
-            console.log('📋 Templates processados:', templates);
-            console.log('📊 Quantidade de templates:', templates?.length);
-
-            this.displayTemplates(templates);
-
-        } catch (error) {
-            console.error('❌ Erro ao carregar templates:', error);
-            this.showError('Erro ao carregar templates: ' + error.message);
-        }
-    }
-
-    displayTemplates(templates) {
-        console.log('🎯 displayTemplates chamado com:', templates);
-        
-        const selectElement = document.getElementById('template-select');
-        if (!selectElement) {
-            console.error('❌ Elemento template-select não encontrado!');
-            return;
-        }
-
-        // Clear existing options except the first one
-        selectElement.innerHTML = '<option value="">Selecione um template...</option>';
-
-        if (templates && templates.length > 0) {
-            console.log(`📋 Processando ${templates.length} templates`);
-            templates.forEach((template, index) => {
-                console.log(`Template ${index + 1}:`, template);
-                const option = document.createElement('option');
-                option.value = template.id;
-                option.textContent = template.description || template.name || template.title || `Template ${template.id}`;
-                selectElement.appendChild(option);
-            });
-            console.log(`✅ ${templates.length} templates adicionados ao select`);
-        } else {
-            console.log('⚠️ Nenhum template encontrado, adicionando opção padrão');
-            const option = document.createElement('option');
-            option.value = '';
-            option.textContent = 'Nenhum template disponível';
-            selectElement.appendChild(option);
-        }
-    }
 
     async loadSectors() {
         try {
@@ -1239,18 +1182,6 @@ class AutomationInterface {
                     console.log('❌ Elemento action-card-select não encontrado');
                 }
                 
-                // Update template select
-                const templateSelect = document.getElementById('template-select');
-                if (templateSelect) {
-                    if (result.selectedTemplate) {
-                        templateSelect.value = result.selectedTemplate;
-                        console.log('✅ Template selecionado:', result.selectedTemplate);
-                    } else {
-                        console.log('⚠️ Nenhum template selecionado');
-                    }
-                } else {
-                    console.log('❌ Elemento template-select não encontrado');
-                }
                 
                 console.log('✅ Configurações de mensagem carregadas:', result);
             } else {
@@ -1269,21 +1200,18 @@ class AutomationInterface {
             
             // Get selected values
             const actionCardSelect = document.getElementById('action-card-select');
-            const templateSelect = document.getElementById('template-select');
             
             const selectedActionCard = actionCardSelect ? actionCardSelect.value : '';
-            const selectedTemplate = templateSelect ? templateSelect.value : '';
             
             // Validate that at least one is selected
-            if (!selectedActionCard && !selectedTemplate) {
-                this.showError('Selecione pelo menos um cartão de ação ou template');
+            if (!selectedActionCard) {
+                this.showError('Selecione pelo menos um cartão de ação');
                 return;
             }
             
             // Prepare configuration data
             const configData = {
-                selectedActionCard: selectedActionCard || undefined,
-                selectedTemplate: selectedTemplate || undefined
+                selectedActionCard: selectedActionCard || undefined
             };
             
             console.log('💾 Dados de configuração:', configData);
@@ -1556,11 +1484,9 @@ class AutomationInterface {
 
         // Verificar qual tipo está selecionado nas configurações
         const actionCardSelect = document.getElementById('action-card-select');
-        const templateSelect = document.getElementById('template-select');
         
         console.log('🔍 Verificando tipo de mensagem...');
         console.log('Action card select:', actionCardSelect ? actionCardSelect.value : 'não encontrado');
-        console.log('Template select:', templateSelect ? templateSelect.value : 'não encontrado');
         
         if (actionCardSelect && actionCardSelect.value) {
             const selectedOption = actionCardSelect.options[actionCardSelect.selectedIndex];
@@ -1568,14 +1494,8 @@ class AutomationInterface {
             this.currentMessageType = 'action_card';
             this.currentMessageId = actionCardSelect.value;
             console.log('✅ Tipo de mensagem definido como action_card:', this.currentMessageId);
-        } else if (templateSelect && templateSelect.value) {
-            const selectedOption = templateSelect.options[templateSelect.selectedIndex];
-            messageTypeInfo.innerHTML = `Enviando <strong>Template</strong>: ${selectedOption.textContent}`;
-            this.currentMessageType = 'template';
-            this.currentMessageId = templateSelect.value;
-            console.log('✅ Tipo de mensagem definido como template:', this.currentMessageId);
         } else {
-            messageTypeInfo.innerHTML = '<span class="text-warning">⚠️ Nenhum cartão de ação ou template selecionado nas configurações</span>';
+            messageTypeInfo.innerHTML = '<span class="text-warning">⚠️ Nenhum cartão de ação selecionado nas configurações</span>';
             this.currentMessageType = null;
             this.currentMessageId = null;
             console.log('❌ Nenhum tipo de mensagem selecionado');
@@ -1598,21 +1518,6 @@ class AutomationInterface {
         }
     }
 
-    loadTemplatesForModal(selectId) {
-        const selectElement = document.getElementById(selectId);
-        if (!selectElement) return;
-
-        selectElement.innerHTML = '<option value="">Carregando templates...</option>';
-
-        // Usar os templates já carregados ou carregar novamente
-        if (this.availableTemplates && this.availableTemplates.length > 0) {
-            this.populateTemplateSelect(selectElement, this.availableTemplates);
-        } else {
-            this.loadTemplates().then(() => {
-                this.populateTemplateSelect(selectElement, this.availableTemplates || []);
-            });
-        }
-    }
 
     populateActionCardSelect(selectElement, actionCards) {
         selectElement.innerHTML = '<option value="">Selecione um cartão de ação...</option>';
@@ -1628,18 +1533,6 @@ class AutomationInterface {
         }
     }
 
-    populateTemplateSelect(selectElement, templates) {
-        selectElement.innerHTML = '<option value="">Selecione um template...</option>';
-        
-        if (templates && templates.length > 0) {
-            templates.forEach(template => {
-                const option = document.createElement('option');
-                option.value = template.id;
-                option.textContent = template.description || template.name || template.title || `Template ${template.id}`;
-                selectElement.appendChild(option);
-            });
-        }
-    }
 
     updateSelectedPatientsList(containerId) {
         const container = document.getElementById(containerId);
@@ -1665,7 +1558,7 @@ class AutomationInterface {
 
     async sendMessageToSelectedPatients() {
         if (!this.currentMessageType || !this.currentMessageId) {
-            this.showError('Configure um cartão de ação ou template nas configurações primeiro');
+            this.showError('Configure um cartão de ação nas configurações primeiro');
             return;
         }
 
@@ -1696,13 +1589,6 @@ class AutomationInterface {
                 };
                 console.log('🔍 Action Card ID sendo enviado:', this.currentMessageId);
                 console.log('🔍 Payload completo:', payload);
-            } else if (this.currentMessageType === 'template') {
-                endpoint = '/api/messages/send-template';
-                payload = {
-                    patients,
-                    templateId: this.currentMessageId,
-                    templateComponents: [] // Será preenchido pelo backend se necessário
-                };
             }
 
             const response = await fetch(endpoint, {
@@ -1716,7 +1602,7 @@ class AutomationInterface {
             const result = await response.json();
 
             if (response.ok && result.success) {
-                const messageType = this.currentMessageType === 'action_card' ? 'Cartão de Ação' : 'Template';
+                const messageType = 'Cartão de Ação';
                 this.showSuccess(`${messageType} enviado: ${result.data.success} sucessos, ${result.data.failed} falhas`);
                 this.clearSelection();
                 this.hideModal('sendMessageModal');

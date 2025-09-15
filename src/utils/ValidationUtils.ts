@@ -524,29 +524,15 @@ export class ValidationUtils {
         );
         break;
 
-      case 'send-template':
-        rules.push(
-          { field: 'chatId', type: 'string', required: true, minLength: 1 },
-          { field: 'templateId', type: 'string', required: true, minLength: 1 }
-        );
-        break;
 
       case 'send-action-card-by-phone':
         rules.push(
           { field: 'number', type: 'string', required: true, minLength: 1 },
-          { field: 'contactId', type: 'string', required: true, minLength: 1 },
-          { field: 'action_card_id', type: 'string', required: true, minLength: 1 }
+          { field: 'action_card_id', type: 'string', required: true, minLength: 1 },
+          { field: 'forceSend', type: 'boolean', required: false }
         );
         break;
 
-      case 'send-template-by-phone':
-        rules.push(
-          { field: 'number', type: 'string', required: true, minLength: 1 },
-          { field: 'contactId', type: 'string', required: true, minLength: 1 },
-          { field: 'templateId', type: 'string', required: true, minLength: 1 },
-          { field: 'templateComponents', type: 'array', required: false }
-        );
-        break;
 
       case 'list-lite':
         rules.push(

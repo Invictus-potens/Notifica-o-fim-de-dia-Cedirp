@@ -184,30 +184,6 @@ app.get('/api/action-cards', async (req, res) => {
   }
 });
 
-app.get('/api/templates', async (req, res) => {
-  try {
-    console.log('📋 API: Buscando templates da API CAM Krolik...');
-    
-    // Buscar templates reais da API CAM Krolik
-    const templates = await mainController.getTemplates();
-    
-    console.log(`📋 API: Retornando ${templates.length} templates`);
-    res.json({
-      success: true,
-      data: templates,
-      total: templates.length,
-      timestamp: new Date().toISOString()
-    });
-  } catch (error) {
-    console.error('❌ API: Erro ao obter templates da API:', error);
-    res.status(500).json({ 
-      success: false,
-      error: 'Erro ao obter templates da API',
-      message: error instanceof Error ? error.message : 'Erro desconhecido',
-      timestamp: new Date().toISOString()
-    });
-  }
-});
 
 app.get('/api/channels', async (req, res) => {
   try {
@@ -351,52 +327,6 @@ app.post('/api/messages/send-action-card', async (req, res) => {
   }
 });
 
-// Endpoint para envio manual de templates
-app.post('/api/messages/send-template', async (req, res) => {
-  try {
-    const { patients, templateId, templateComponents } = req.body;
-
-    if (!patients || !Array.isArray(patients) || patients.length === 0) {
-      res.status(400).json({
-        success: false,
-        error: 'Lista de pacientes é obrigatória',
-        message: 'Forneça uma lista válida de pacientes com number e contactId'
-      });
-      return;
-    }
-
-    if (!templateId) {
-      res.status(400).json({
-        success: false,
-        error: 'ID do template é obrigatório',
-        message: 'Forneça um ID válido de template'
-      });
-      return;
-    }
-
-    console.log(`📤 API: Enviando template ${templateId} para ${patients.length} pacientes...`);
-    
-    const result = await mainController.sendTemplateToPatients(patients, templateId, templateComponents);
-    
-    console.log(`📊 API: Resultado do envio - ${result.success} sucessos, ${result.failed} falhas`);
-    
-    res.json({
-      success: true,
-      data: result,
-      message: `Template enviado: ${result.success} sucessos, ${result.failed} falhas`,
-      timestamp: new Date().toISOString()
-    });
-
-  } catch (error) {
-    console.error('❌ API: Erro ao enviar template:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Erro ao enviar template',
-      message: error instanceof Error ? error.message : 'Erro desconhecido',
-      timestamp: new Date().toISOString()
-    });
-  }
-});
 
 app.get('/api/logs/stats', (req, res) => {
   try {

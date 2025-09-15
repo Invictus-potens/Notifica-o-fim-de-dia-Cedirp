@@ -3,7 +3,6 @@ import {
   Attendance, 
   Sector, 
   ActionCard, 
-  Template, 
   ApiResponse, 
   KrolikApiConfig, 
   ApiError,
@@ -267,11 +266,11 @@ export class KrolikApiClient {
   }
 
   /**
-   * Envia cartão de ação usando número de telefone e contactId
+   * Envia cartão de ação usando número de telefone
    */
-  async sendActionCardByPhone(number: string, contactId: string, actionCardId: string): Promise<boolean> {
+  async sendActionCardByPhone(number: string, actionCardId: string): Promise<boolean> {
     try {
-      console.log(`📤 Enviando cartão de ação (${actionCardId}) para ${number} (${contactId})...`);
+      console.log(`📤 Enviando cartão de ação (${actionCardId}) para ${number}...`);
       
       // Formato correto da API para Action Card
       console.log(`🔍 Número original recebido: "${number}"`);
@@ -295,10 +294,8 @@ export class KrolikApiClient {
       
       const payload = { 
         number: phoneNumber, // Número de telefone formatado
-        contactId: contactId, // ID do contato/chat
         action_card_id: actionCardId,
-        forceSend: true,
-        verifyContact: true
+        forceSend: true
       };
       
       console.log(`📤 Payload para Action Card ANTES da validação:`, payload);
@@ -331,117 +328,28 @@ export class KrolikApiClient {
 
       console.log(`📡 Resposta completa da API para Action Card:`, JSON.stringify(response, null, 2));
 
-      if (response.success) {
+      // Verificar se a mensagem foi adicionada à fila de transmissão (status 202)
+      if ((response as any).status === "202" || (response as any).status === 202) {
         console.log(`✅ Cartão de ação enviado com sucesso para ${number}`);
+        console.log(`📋 Mensagem adicionada à fila de transmissão`);
+        return true;
       } else {
         console.log(`❌ Falha ao enviar cartão de ação para ${number}`);
         console.log(`❌ Detalhes da falha:`, {
-          success: response.success,
-          message: response.message,
-          data: response.data,
-          error: response.error
+          status: (response as any).status,
+          message: (response as any).msg,
+          data: (response as any).data,
+          error: (response as any).error
         });
+        return false;
       }
-
-      return response.success;
     } catch (error) {
       console.error(`❌ Erro ao enviar cartão de ação para ${number}:`, error);
       return false;
     }
   }
 
-  /**
-   * Envia template para canal API oficial
-   */
-  async sendTemplate(chatId: string, templateId: string): Promise<boolean> {
-    try {
-      // Validar payload
-      const payload = { chatId, templateId };
-      const validation = validateKrolikApiPayload(payload, 'send-template');
-      
-      if (!validation.isValid) {
-        console.error('Payload inválido para send-template:', validation.errors);
-        return false;
-      }
 
-      // Sanitizar dados
-      const sanitizedPayload = sanitizeData(payload);
-
-      const response = await this.executeWithRetry(() =>
-        this.axiosInstance.post<ApiResponse<any>>('/core/v2/api/chats/send-template', sanitizedPayload)
-      );
-
-      return response.success;
-    } catch (error) {
-      console.error(`Erro ao enviar template para chat ${chatId}:`, error);
-      return false;
-    }
-  }
-
-  /**
-   * Envia template usando número de telefone e contactId
-   */
-  async sendTemplateByPhone(number: string, contactId: string, templateId: string, templateComponents: any[] = []): Promise<boolean> {
-    try {
-      console.log(`📤 Enviando template (${templateId}) para ${number} (${contactId})...`);
-      
-      // Formato correto da API para Template
-      // Remover código do país se presente (55) e adicionar novamente
-      let phoneNumber = number;
-      if (phoneNumber.startsWith('55')) {
-        phoneNumber = phoneNumber.substring(2);
-      }
-      // Garantir que o número tenha 11 dígitos (DDD + 9 dígitos)
-      if (phoneNumber.length === 10) {
-        phoneNumber = phoneNumber.substring(0, 2) + '9' + phoneNumber.substring(2);
-      }
-      
-      const payload = { 
-        number: phoneNumber, // Número de telefone formatado
-        contactId: contactId, // ID do contato/chat
-        templateId,
-        templateComponents,
-        forceSend: true,
-        verifyContact: true
-      };
-      
-      console.log(`📤 Payload para Template:`, payload);
-      
-      const validation = validateKrolikApiPayload(payload, 'send-template-by-phone');
-      
-      if (!validation.isValid) {
-        console.error('❌ Payload inválido para send-template-by-phone:', validation.errors);
-        return false;
-      }
-
-      // Sanitizar dados
-      const sanitizedPayload = sanitizeData(payload);
-      console.log(`🧹 Payload sanitizado para Template:`, sanitizedPayload);
-
-      const response = await this.executeWithRetry(() =>
-        this.axiosInstance.post<ApiResponse<any>>('/core/v2/api/chats/send-template', sanitizedPayload)
-      );
-
-      console.log(`📡 Resposta completa da API para Template:`, JSON.stringify(response, null, 2));
-
-      if (response.success) {
-        console.log(`✅ Template enviado com sucesso para ${number}`);
-      } else {
-        console.log(`❌ Falha ao enviar template para ${number}`);
-        console.log(`❌ Detalhes da falha:`, {
-          success: response.success,
-          message: response.message,
-          data: response.data,
-          error: response.error
-        });
-      }
-
-      return response.success;
-    } catch (error) {
-      console.error(`❌ Erro ao enviar template para ${number}:`, error);
-      return false;
-    }
-  }
 
   /**
    * Envia mensagem de texto simples
@@ -637,40 +545,7 @@ export class KrolikApiClient {
     return response;
   }
 
-  /**
-   * Lista templates disponíveis
-   */
-  async getTemplates(): Promise<Template[]> {
-    const response = await this.executeWithRetry(() =>
-      this.axiosInstance.get<Template[]>('/core/v2/api/action-cards/templates')
-    );
 
-    // A API retorna diretamente um array de templates, não um wrapper ApiResponse
-    if (!response || !Array.isArray(response)) {
-      console.error('❌ Dados inválidos na resposta de templates:', response);
-      throw new Error('Dados inválidos na resposta da API');
-    }
-
-    console.log(`📋 Encontrados ${response.length} templates`);
-    return response;
-  }
-
-  /**
-   * Obtém um template específico
-   */
-  async getTemplate(templateId: string): Promise<Template> {
-    const response = await this.executeWithRetry(() =>
-      this.axiosInstance.get<Template>(`/core/v2/api/action-cards/templates/${templateId}`)
-    );
-
-    if (!response) {
-      console.error('❌ Template não encontrado:', templateId);
-      throw new Error('Template não encontrado');
-    }
-
-    console.log(`📋 Template encontrado: ${response.name || response.id}`);
-    return response;
-  }
 
   /**
    * Lista canais disponíveis

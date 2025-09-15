@@ -15,7 +15,7 @@ import { ConsoleMonitor } from '../services/ConsoleMonitor';
 import { HealthCheckService } from '../services/HealthCheckService';
 import { SupabaseClient } from '../services/SupabaseClient';
 import { SimpleConsoleLogger } from '../services/SimpleConsoleLogger';
-import { Sector, ActionCard, Template, Channel } from '../models/ApiTypes';
+import { Sector, ActionCard, Channel } from '../models/ApiTypes';
 
 export interface IMainController {
   start(): Promise<void>;
@@ -32,10 +32,8 @@ export interface IMainController {
   getAlerts(): any;
   getSectors(): Promise<Sector[]>;
   getActionCards(): Promise<ActionCard[]>;
-  getTemplates(): Promise<Template[]>;
   getChannels(): Promise<Channel[]>;
   sendActionCardToPatients(patients: Array<{number: string, contactId: string}>, actionCardId: string): Promise<{success: number, failed: number, results: any[]}>;
-  sendTemplateToPatients(patients: Array<{number: string, contactId: string}>, templateId: string, templateComponents?: any[]): Promise<{success: number, failed: number, results: any[]}>;
 }
 
 export class MainController implements IMainController {
@@ -667,22 +665,6 @@ export class MainController implements IMainController {
     }
   }
 
-  /**
-   * Obtém lista de templates
-   */
-  async getTemplates() {
-    try {
-      if (!this.krolikApiClient) {
-        throw new Error('Cliente da API não inicializado');
-      }
-      
-      const templates = await this.krolikApiClient.getTemplates();
-      return templates;
-    } catch (error) {
-      this.errorHandler.logError(error as Error, 'MainController.getTemplates');
-      throw error;
-    }
-  }
 
   /**
    * Obtém lista de canais
@@ -733,7 +715,7 @@ export class MainController implements IMainController {
 
           console.log(`📤 Payload para envio:`, payload);
 
-          const success = await this.krolikApiClient.sendActionCardByPhone(patient.number, patient.contactId, actionCardId);
+          const success = await this.krolikApiClient.sendActionCardByPhone(patient.number, actionCardId);
           
           console.log(`📊 Resultado do envio para ${patient.number}: ${success ? 'SUCESSO' : 'FALHA'}`);
           
@@ -782,83 +764,6 @@ export class MainController implements IMainController {
     }
   }
 
-  /**
-   * Envia template para pacientes selecionados
-   */
-  async sendTemplateToPatients(patients: Array<{number: string, contactId: string}>, templateId: string, templateComponents?: any[]) {
-    try {
-      if (!this.krolikApiClient) {
-        throw new Error('Cliente da API não inicializado');
-      }
-
-      console.log(`📤 Enviando template ${templateId} para ${patients.length} pacientes...`);
-      
-      const results = [];
-      let successCount = 0;
-      let failedCount = 0;
-
-      for (const patient of patients) {
-        try {
-          console.log(`🔍 Processando paciente: ${patient.number} (${patient.contactId})`);
-          console.log(`🔍 Template ID: ${templateId}`);
-          
-          const payload = {
-            number: patient.number,
-            contactId: patient.contactId,
-            templateId: templateId,
-            templateComponents: templateComponents || []
-          };
-
-          console.log(`📤 Payload para envio:`, payload);
-
-          const success = await this.krolikApiClient.sendTemplateByPhone(patient.number, patient.contactId, templateId, templateComponents);
-          
-          console.log(`📊 Resultado do envio para ${patient.number}: ${success ? 'SUCESSO' : 'FALHA'}`);
-          
-          results.push({
-            contactId: patient.contactId,
-            number: patient.number,
-            success,
-            message: success ? 'Template enviado com sucesso' : 'Falha ao enviar template'
-          });
-          
-          if (success) {
-            successCount++;
-            console.log(`✅ Template enviado para ${patient.number} (${patient.contactId})`);
-          } else {
-            failedCount++;
-            console.log(`❌ Falha ao enviar template para ${patient.number} (${patient.contactId}) - Verifique se o Template ID existe na API`);
-          }
-        } catch (error) {
-          failedCount++;
-          const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-          console.error(`❌ ERRO DETALHADO ao enviar template para ${patient.number} (${patient.contactId}):`);
-          console.error(`   - Tipo do erro: ${error instanceof Error ? error.constructor.name : 'Unknown'}`);
-          console.error(`   - Mensagem: ${errorMessage}`);
-          console.error(`   - Stack trace:`, error instanceof Error ? error.stack : 'N/A');
-          
-          results.push({
-            contactId: patient.contactId,
-            number: patient.number,
-            success: false,
-            message: `Erro: ${errorMessage}`
-          });
-        }
-      }
-
-      console.log(`📊 Resultado: ${successCount} sucessos, ${failedCount} falhas`);
-      
-      return {
-        success: successCount,
-        failed: failedCount,
-        results
-      };
-    } catch (error) {
-      console.error('❌ Erro ao enviar templates:', error);
-      this.errorHandler.logError(error as Error, 'MainController.sendTemplateToPatients');
-      throw error;
-    }
-  }
 
   /**
    * Executa health check completo
