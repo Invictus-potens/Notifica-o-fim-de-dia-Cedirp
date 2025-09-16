@@ -6,6 +6,7 @@ import { TimeUtils } from '../utils/TimeUtils';
 import { retryApiCall, retryCriticalOperation } from '../utils/RetryUtils';
 import { executeWithFallback, executeWithDefaultFallback } from '../utils/FallbackUtils';
 import { logsService } from './LogsService';
+import { metricsService } from './MetricsService';
 
 export interface IMessageService {
   send30MinuteMessage(patient: WaitingPatient): Promise<boolean>;
@@ -34,6 +35,8 @@ export class MessageService implements IMessageService {
    * Requisitos: 1.1, 1.2, 2.1, 2.2, 2.3, 6.4
    */
   async send30MinuteMessage(patient: WaitingPatient): Promise<boolean> {
+    const startTime = Date.now();
+    
     try {
       // Verificar se o fluxo está pausado (Requisito 1.4)
       if (this.configManager.isFlowPaused()) {
@@ -63,10 +66,20 @@ export class MessageService implements IMessageService {
 
       // Enviar mensagem baseada no tipo de canal (Requisito 6.4)
       const messageSent = await this.sendMessageByChannelType(patient, '30min');
+      const responseTime = Date.now() - startTime;
 
       if (messageSent) {
         // Adicionar à lista de exclusão para evitar mensagens duplicadas (Requisito 1.2)
         await this.configManager.addToExclusionList(patient.id, '30min');
+        
+        // Registrar métrica de sucesso
+        metricsService.recordMessageSent(
+          true, 
+          '30min', 
+          patient.sectorId, 
+          patient.channelId, 
+          responseTime
+        );
         
         // Log de sucesso para o usuário
         logsService.addLog('info', 
@@ -82,6 +95,15 @@ export class MessageService implements IMessageService {
         
         return true;
       } else {
+        // Registrar métrica de falha
+        metricsService.recordMessageSent(
+          false, 
+          '30min', 
+          patient.sectorId, 
+          patient.channelId, 
+          responseTime
+        );
+        
         // Log de erro para o usuário
         logsService.addLog('error', 
           `Falha ao enviar mensagem de 30min para ${patient.name}`, 
@@ -97,6 +119,17 @@ export class MessageService implements IMessageService {
 
       return false;
     } catch (error) {
+      const responseTime = Date.now() - startTime;
+      
+      // Registrar métrica de erro
+      metricsService.recordMessageSent(
+        false, 
+        '30min', 
+        patient.sectorId, 
+        patient.channelId, 
+        responseTime
+      );
+      
       this.errorHandler.logError(
         error as Error,
         `MessageService.send30MinuteMessage - Patient: ${patient.id}`
@@ -143,10 +176,23 @@ export class MessageService implements IMessageService {
 
       // Enviar mensagens para pacientes elegíveis
       const sendPromises = eligiblePatients.map(async (patient) => {
+        const startTime = Date.now();
+        
         try {
           const messageSent = await this.sendMessageByChannelType(patient, 'end_of_day');
+          const responseTime = Date.now() - startTime;
+          
           if (messageSent) {
             await this.configManager.addToExclusionList(patient.id, 'end_of_day');
+            
+            // Registrar métrica de sucesso
+            metricsService.recordMessageSent(
+              true, 
+              'end_of_day', 
+              patient.sectorId, 
+              patient.channelId, 
+              responseTime
+            );
             
             // Log de sucesso para o usuário
             logsService.addLog('info', 
@@ -160,6 +206,15 @@ export class MessageService implements IMessageService {
               }
             );
           } else {
+            // Registrar métrica de falha
+            metricsService.recordMessageSent(
+              false, 
+              'end_of_day', 
+              patient.sectorId, 
+              patient.channelId, 
+              responseTime
+            );
+            
             // Log de erro para o usuário
             logsService.addLog('error', 
               `Falha ao enviar mensagem de fim de dia para ${patient.name}`, 
@@ -174,6 +229,17 @@ export class MessageService implements IMessageService {
           }
           return messageSent;
         } catch (error) {
+          const responseTime = Date.now() - startTime;
+          
+          // Registrar métrica de erro
+          metricsService.recordMessageSent(
+            false, 
+            'end_of_day', 
+            patient.sectorId, 
+            patient.channelId, 
+            responseTime
+          );
+          
           this.errorHandler.logError(
             error as Error,
             `MessageService.sendEndOfDayMessages - Patient: ${patient.id}`

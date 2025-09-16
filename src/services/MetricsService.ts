@@ -38,7 +38,6 @@ export interface AlertThresholds {
   maxApiFailureRate: number; // percentage
   maxResponseTime: number; // milliseconds
   maxErrorsPerHour: number;
-  maxMemoryUsage: number; // percentage
 }
 
 export class MetricsService {
@@ -84,8 +83,7 @@ export class MetricsService {
     this.alertThresholds = {
       maxApiFailureRate: 10, // 10%
       maxResponseTime: 5000, // 5 seconds
-      maxErrorsPerHour: 50,
-      maxMemoryUsage: 80 // 80%
+      maxErrorsPerHour: 50
     };
   }
 
@@ -285,17 +283,7 @@ export class MetricsService {
       });
     }
 
-    // Check memory usage
-    if (this.systemMetrics.memoryUsage) {
-      const memoryUsagePercent = (this.systemMetrics.memoryUsage.heapUsed / this.systemMetrics.memoryUsage.heapTotal) * 100;
-      if (memoryUsagePercent > this.alertThresholds.maxMemoryUsage) {
-        alerts.push({
-          type: 'high_memory_usage',
-          message: `Uso de memória está em ${memoryUsagePercent.toFixed(1)}% (limite: ${this.alertThresholds.maxMemoryUsage}%)`,
-          severity: memoryUsagePercent > 95 ? 'critical' : 'warning'
-        });
-      }
-    }
+    // Memory usage check removed to prevent spam logs
 
     // Log alerts if any
     if (alerts.length > 0) {

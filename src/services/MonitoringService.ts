@@ -2,6 +2,7 @@ import { WaitingPatient } from '../models/WaitingPatient';
 import { KrolikApiClient } from './KrolikApiClient';
 import { IConfigManager } from './ConfigManager';
 import { TimeUtils } from '../utils/TimeUtils';
+import { metricsService } from './MetricsService';
 
 export interface IMonitoringService {
   checkWaitingPatients(): Promise<WaitingPatient[]>;
@@ -36,6 +37,7 @@ export class MonitoringService implements IMonitoringService {
    * Implementa cache para evitar requisições excessivas
    */
   async checkWaitingPatients(): Promise<WaitingPatient[]> {
+    const startTime = Date.now();
     const now = new Date();
     
     // Usar cache se ainda válido
@@ -55,8 +57,28 @@ export class MonitoringService implements IMonitoringService {
       });
       
       this.lastUpdate = now;
+      
+      // Registrar métrica de ciclo de monitoramento
+      const duration = Date.now() - startTime;
+      metricsService.recordMonitoringCycle(
+        duration,
+        patients.length,
+        0, // messagesEligible será calculado pelos filtros
+        0  // errors
+      );
+      
       return Array.from(this.cachedPatients.values());
     } catch (error) {
+      const duration = Date.now() - startTime;
+      
+      // Registrar métrica de erro
+      metricsService.recordMonitoringCycle(
+        duration,
+        0,
+        0,
+        1 // error count
+      );
+      
       console.error('Erro ao verificar atendimentos em espera:', error);
       
       // Retornar cache existente em caso de erro, mas atualizar tempos

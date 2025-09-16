@@ -247,8 +247,17 @@ export class SecureLogger {
     const maskedData = data ? this.maskObject(data) : undefined;
     const maskedMessage = this.maskSensitiveData(message);
     
-    // Formatação melhorada para logs
-    const timestamp = new Date().toISOString();
+    // Formatação melhorada para logs com horário local
+    const timestamp = new Date().toLocaleString('pt-BR', { 
+      timeZone: 'America/Sao_Paulo',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false
+    });
     const contextStr = context ? `[${context}]` : '';
     const levelStr = level.toUpperCase().padEnd(5);
     

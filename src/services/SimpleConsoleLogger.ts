@@ -83,20 +83,38 @@ export class SimpleConsoleLogger {
    * Log de mensagem enviada
    */
   logMessageSent(type: '30min' | 'end_of_day', count: number): void {
-    const now = TimeUtils.toBrasiliaTime(new Date());
+    const timestamp = new Date().toLocaleString('pt-BR', { 
+      timeZone: 'America/Sao_Paulo',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false
+    });
     const icon = type === '30min' ? '⏰' : '🌅';
     const typeText = type === '30min' ? '30min' : 'fim do dia';
-    console.log(`${icon} ${now.toFormat('HH:mm:ss')} | ${count} mensagens ${typeText} enviadas`);
+    console.log(`${timestamp} INFO  [SimpleConsoleLogger] ${icon} ${count} mensagens ${typeText} enviadas`);
   }
 
   /**
    * Log de erro
    */
   logError(message: string, error?: Error): void {
-    const now = TimeUtils.toBrasiliaTime(new Date());
-    console.log(`❌ ${now.toFormat('HH:mm:ss')} | ${message}`);
+    const timestamp = new Date().toLocaleString('pt-BR', { 
+      timeZone: 'America/Sao_Paulo',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false
+    });
+    console.log(`${timestamp} ERROR [SimpleConsoleLogger] ❌ ${message}`);
     if (error) {
-      console.log(`   Erro: ${error.message}`);
+      console.log(`${timestamp} ERROR [SimpleConsoleLogger]    Erro: ${error.message}`);
     }
   }
 
@@ -104,30 +122,57 @@ export class SimpleConsoleLogger {
    * Log de info
    */
   logInfo(message: string): void {
-    const now = TimeUtils.toBrasiliaTime(new Date());
-    console.log(`ℹ️  ${now.toFormat('HH:mm:ss')} | ${message}`);
+    const timestamp = new Date().toLocaleString('pt-BR', { 
+      timeZone: 'America/Sao_Paulo',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false
+    });
+    console.log(`${timestamp} INFO  [SimpleConsoleLogger] ${message}`);
   }
 
   /**
    * Log de warning
    */
   logWarning(message: string): void {
-    const now = TimeUtils.toBrasiliaTime(new Date());
-    console.log(`⚠️  ${now.toFormat('HH:mm:ss')} | ${message}`);
+    const timestamp = new Date().toLocaleString('pt-BR', { 
+      timeZone: 'America/Sao_Paulo',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false
+    });
+    console.log(`${timestamp} WARN  [SimpleConsoleLogger] ${message}`);
   }
 
   /**
    * Log de health check
    */
   logHealthCheck(status: 'healthy' | 'degraded' | 'unhealthy', details?: string): void {
-    const now = TimeUtils.toBrasiliaTime(new Date());
+    const timestamp = new Date().toLocaleString('pt-BR', { 
+      timeZone: 'America/Sao_Paulo',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false
+    });
     const icon = status === 'healthy' ? '✅' : status === 'degraded' ? '⚠️' : '❌';
     const statusText = status === 'healthy' ? 'SAUDÁVEL' : 
                       status === 'degraded' ? 'DEGRADADO' : 'PROBLEMA';
     
-    console.log(`${icon} ${now.toFormat('HH:mm:ss')} | Health: ${statusText}`);
+    console.log(`${timestamp} INFO  [SimpleConsoleLogger] ${icon} Health: ${statusText}`);
     if (details) {
-      console.log(`   ${details}`);
+      console.log(`${timestamp} INFO  [SimpleConsoleLogger]    Detalhes: ${details}`);
     }
   }
 }

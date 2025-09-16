@@ -195,7 +195,17 @@ export class ConsoleMonitor {
    * Mostra componente inicializado
    */
   showComponentInitialized(component: string): void {
-    console.log(`   ✅ ${component} inicializado`);
+    const timestamp = new Date().toLocaleString('pt-BR', { 
+      timeZone: 'America/Sao_Paulo',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false
+    });
+    console.log(`${timestamp} INFO  [ConsoleMonitor] ✅ ${component} inicializado`);
   }
 
   /**

@@ -18,6 +18,7 @@ import { validateKrolikApiPayload, sanitizeData } from '../utils/ValidationUtils
 import { WaitingPatient } from '../models/WaitingPatient';
 import { SECTORS_DATA, getSectorById, getAllSectors, sectorExists } from '../data/sectors';
 import { shouldUseStaticData, isLoggingEnabled } from '../config/sectors';
+import { metricsService } from './MetricsService';
 
 export class KrolikApiClient {
   private axiosInstance: AxiosInstance;
@@ -137,47 +138,62 @@ export class KrolikApiClient {
    * Lista atendimentos aguardando (status=1)
    */
   async listWaitingAttendances(): Promise<WaitingPatient[]> {
+    const startTime = Date.now();
     console.log('👥 Listando pacientes aguardando na API CAM Krolik...');
     
-    const payload = {
-      sectorId: "", // Buscar em todos os setores
-      userId: "", // Buscar para todos os usuários
-      number: "", // Buscar todos os números
-      contactId: "", // Buscar todos os contatos
-      protocol: "", // Buscar todos os protocolos
-      typeChat: 2,
-      status: 1, // Status 1 conforme schema fornecido
-      dateFilters: {},
-      page: 0
-    };
+    try {
+      const payload = {
+        sectorId: "", // Buscar em todos os setores
+        userId: "", // Buscar para todos os usuários
+        number: "", // Buscar todos os números
+        contactId: "", // Buscar todos os contatos
+        protocol: "", // Buscar todos os protocolos
+        typeChat: 2,
+        status: 1, // Status 1 conforme schema fornecido
+        dateFilters: {},
+        page: 0
+      };
 
-    const response = await this.executeWithRetry(() =>
-      this.axiosInstance.post<ChatApiResponse>('/core/v2/api/chats/list-lite', payload, {
-        headers: {
-          'Content-Type': 'application/json-patch+json'
-        }
-      })
-    );
+      const response = await this.executeWithRetry(() =>
+        this.axiosInstance.post<ChatApiResponse>('/core/v2/api/chats/list-lite', payload, {
+          headers: {
+            'Content-Type': 'application/json-patch+json'
+          }
+        })
+      );
 
-    // Log da resposta para debug (removido para produção)
-    // console.log('🔍 Resposta da API:', JSON.stringify(response, null, 2));
+      const responseTime = Date.now() - startTime;
 
-    // Verificar se a resposta tem a estrutura esperada
-    if (!response) {
-      console.error('❌ Resposta inválida da API:', response);
-      throw new Error('Resposta inválida da API');
+      // Registrar métrica de sucesso
+      metricsService.recordApiCall(true, responseTime, '/core/v2/api/chats/list-lite');
+
+      // Log da resposta para debug (removido para produção)
+      // console.log('🔍 Resposta da API:', JSON.stringify(response, null, 2));
+
+      // Verificar se a resposta tem a estrutura esperada
+      if (!response) {
+        console.error('❌ Resposta inválida da API:', response);
+        throw new Error('Resposta inválida da API');
+      }
+
+      // A API retorna diretamente os dados sem wrapper success/data
+      if (!response.chats || !Array.isArray(response.chats)) {
+        console.error('❌ Dados inválidos na resposta:', response);
+        throw new Error('Dados inválidos na resposta da API');
+      }
+
+      // Converter dados da API para o modelo interno
+      const patients = response.chats.map(chat => this.convertChatToWaitingPatient(chat));
+      console.log(`👥 Encontrados ${patients.length} pacientes aguardando`);
+      return patients;
+    } catch (error) {
+      const responseTime = Date.now() - startTime;
+      
+      // Registrar métrica de falha
+      metricsService.recordApiCall(false, responseTime, '/core/v2/api/chats/list-lite');
+      
+      throw error;
     }
-
-    // A API retorna diretamente os dados sem wrapper success/data
-    if (!response.chats || !Array.isArray(response.chats)) {
-      console.error('❌ Dados inválidos na resposta:', response);
-      throw new Error('Dados inválidos na resposta da API');
-    }
-
-    // Converter dados da API para o modelo interno
-    const patients = response.chats.map(chat => this.convertChatToWaitingPatient(chat));
-    console.log(`👥 Encontrados ${patients.length} pacientes aguardando`);
-    return patients;
   }
 
   /**
@@ -268,6 +284,8 @@ export class KrolikApiClient {
    * Envia cartão de ação usando número de telefone
    */
   async sendActionCardByPhone(number: string, actionCardId: string): Promise<boolean> {
+    const startTime = Date.now();
+    
     try {
       console.log(`📤 Enviando cartão de ação (${actionCardId}) para ${number}...`);
       
@@ -304,6 +322,8 @@ export class KrolikApiClient {
       
       if (!validation.isValid) {
         console.error('❌ Payload inválido para send-action-card-by-phone:', validation.errors);
+        const responseTime = Date.now() - startTime;
+        metricsService.recordApiCall(false, responseTime, '/core/v2/api/chats/send-action-card');
         return false;
       }
 
@@ -325,12 +345,18 @@ export class KrolikApiClient {
         return this.axiosInstance.post<ApiResponse<any>>('/core/v2/api/chats/send-action-card', sanitizedPayload);
       });
 
+      const responseTime = Date.now() - startTime;
+
       console.log(`📡 Resposta completa da API para Action Card:`, JSON.stringify(response, null, 2));
 
       // Verificar se a mensagem foi adicionada à fila de transmissão (status 202)
       if ((response as any).status === "202" || (response as any).status === 202) {
         console.log(`✅ Cartão de ação enviado com sucesso para ${number}`);
         console.log(`📋 Mensagem adicionada à fila de transmissão`);
+        
+        // Registrar métrica de sucesso
+        metricsService.recordApiCall(true, responseTime, '/core/v2/api/chats/send-action-card');
+        
         return true;
       } else {
         console.log(`❌ Falha ao enviar cartão de ação para ${number}`);
@@ -340,9 +366,18 @@ export class KrolikApiClient {
           data: (response as any).data,
           error: (response as any).error
         });
+        
+        // Registrar métrica de falha
+        metricsService.recordApiCall(false, responseTime, '/core/v2/api/chats/send-action-card');
+        
         return false;
       }
     } catch (error) {
+      const responseTime = Date.now() - startTime;
+      
+      // Registrar métrica de erro
+      metricsService.recordApiCall(false, responseTime, '/core/v2/api/chats/send-action-card');
+      
       console.error(`❌ Erro ao enviar cartão de ação para ${number}:`, error);
       return false;
     }

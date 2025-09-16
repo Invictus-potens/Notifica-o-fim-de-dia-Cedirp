@@ -1,5 +1,6 @@
 import { IMonitoringService } from './MonitoringService';
 import { IConfigManager } from './ConfigManager';
+import { metricsService } from './MetricsService';
 
 export interface IScheduler {
   start(): void;
@@ -231,10 +232,16 @@ export class MonitoringScheduler {
    * Executa ciclo completo de monitoramento
    */
   private async executeMonitoringCycle(): Promise<void> {
+    const startTime = Date.now();
+    let patientsFound = 0;
+    let messagesEligible = 0;
+    let errors = 0;
+    
     try {
       // SEMPRE atualizar cache de pacientes (independente do horário)
       // Isso garante que o "Total Aguardando" seja sempre atualizado
-      await this.monitoringService.checkWaitingPatients();
+      const patients = await this.monitoringService.checkWaitingPatients();
+      patientsFound = patients.length;
 
       // Verificar se fluxo está pausado no ConfigManager
       if (this.configManager.isFlowPaused()) {
@@ -249,6 +256,7 @@ export class MonitoringScheduler {
 
       // Buscar pacientes elegíveis para mensagem de 30 minutos
       const eligiblePatients = await this.monitoringService.getEligiblePatientsFor30MinMessage();
+      messagesEligible += eligiblePatients.length;
       
       if (eligiblePatients.length > 0 && this.onPatientCheck) {
         await this.onPatientCheck(eligiblePatients);
@@ -256,13 +264,24 @@ export class MonitoringScheduler {
 
       // Verificar se é horário de fim de expediente (18h)
       const endOfDayPatients = await this.monitoringService.getEligiblePatientsForEndOfDayMessage();
+      messagesEligible += endOfDayPatients.length;
       
       if (endOfDayPatients.length > 0 && this.onPatientCheck) {
         await this.onPatientCheck(endOfDayPatients);
       }
 
     } catch (error) {
+      errors = 1;
       console.error('Erro no ciclo de monitoramento:', error);
+    } finally {
+      // Registrar métrica do ciclo de execução
+      const duration = Date.now() - startTime;
+      metricsService.recordMonitoringCycle(
+        duration,
+        patientsFound,
+        messagesEligible,
+        errors
+      );
     }
   }
 
