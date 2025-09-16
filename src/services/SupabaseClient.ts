@@ -190,17 +190,50 @@ export class SupabaseClient {
     }
 
     try {
-      const { error } = await this.client
+      // Primeiro, verificar se a chave já existe
+      const { data: existingData, error: selectError } = await this.client
         .from('system_config')
-        .upsert({
-          key,
-          value,
-          updated_at: new Date().toISOString()
-        });
+        .select('id')
+        .eq('key', key)
+        .single();
 
-      if (error) {
-        this.errorHandler.logError(error, 'SupabaseClient.setConfigValue');
+      if (selectError && selectError.code !== 'PGRST116') {
+        // Erro diferente de "não encontrado"
+        this.errorHandler.logError(selectError, 'SupabaseClient.setConfigValue - select');
         return false;
+      }
+
+      const now = new Date().toISOString();
+
+      if (existingData) {
+        // Atualizar registro existente
+        const { error: updateError } = await this.client
+          .from('system_config')
+          .update({
+            value,
+            updated_at: now
+          })
+          .eq('key', key);
+
+        if (updateError) {
+          this.errorHandler.logError(updateError, 'SupabaseClient.setConfigValue - update');
+          return false;
+        }
+      } else {
+        // Inserir novo registro
+        const { error: insertError } = await this.client
+          .from('system_config')
+          .insert({
+            key,
+            value,
+            updated_at: now,
+            created_at: now
+          });
+
+        if (insertError) {
+          this.errorHandler.logError(insertError, 'SupabaseClient.setConfigValue - insert');
+          return false;
+        }
       }
 
       return true;
@@ -233,6 +266,78 @@ export class SupabaseClient {
     } catch (error) {
       this.errorHandler.logError(error as Error, 'SupabaseClient.getConfigValue');
       return null;
+    }
+  }
+
+  /**
+   * Limpa registros duplicados na tabela system_config
+   * Mantém apenas o registro mais recente para cada chave
+   */
+  async cleanupDuplicateConfigKeys(): Promise<number> {
+    if (!this.connectionStatus) {
+      return 0;
+    }
+
+    try {
+      // Buscar todas as chaves com múltiplos registros
+      const { data: duplicates, error: selectError } = await this.client
+        .from('system_config')
+        .select('key, id, updated_at')
+        .order('key')
+        .order('updated_at', { ascending: false });
+
+      if (selectError) {
+        this.errorHandler.logError(selectError, 'SupabaseClient.cleanupDuplicateConfigKeys - select');
+        return 0;
+      }
+
+      if (!duplicates || duplicates.length === 0) {
+        return 0;
+      }
+
+      // Agrupar por chave e identificar duplicatas
+      const keyGroups: { [key: string]: any[] } = {};
+      duplicates.forEach(record => {
+        if (!keyGroups[record.key]) {
+          keyGroups[record.key] = [];
+        }
+        keyGroups[record.key].push(record);
+      });
+
+      let deletedCount = 0;
+
+      // Para cada chave com múltiplos registros, manter apenas o mais recente
+      for (const [key, records] of Object.entries(keyGroups)) {
+        if (records.length > 1) {
+          // Ordenar por updated_at (mais recente primeiro)
+          records.sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime());
+          
+          // Manter o primeiro (mais recente) e deletar os outros
+          const toDelete = records.slice(1);
+          
+          for (const record of toDelete) {
+            const { error: deleteError } = await this.client
+              .from('system_config')
+              .delete()
+              .eq('id', record.id);
+
+            if (deleteError) {
+              this.errorHandler.logError(deleteError, `SupabaseClient.cleanupDuplicateConfigKeys - delete ${key}`);
+            } else {
+              deletedCount++;
+            }
+          }
+        }
+      }
+
+      if (deletedCount > 0) {
+        console.log(`🧹 Limpeza de chaves duplicadas: ${deletedCount} registros removidos`);
+      }
+
+      return deletedCount;
+    } catch (error) {
+      this.errorHandler.logError(error as Error, 'SupabaseClient.cleanupDuplicateConfigKeys');
+      return 0;
     }
   }
 

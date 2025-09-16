@@ -232,10 +232,13 @@ export class MonitoringScheduler {
    */
   private async executeMonitoringCycle(): Promise<void> {
     try {
+      // SEMPRE atualizar cache de pacientes (independente do horário)
+      // Isso garante que o "Total Aguardando" seja sempre atualizado
+      await this.monitoringService.checkWaitingPatients();
+
       // Verificar se fluxo está pausado no ConfigManager
       if (this.configManager.isFlowPaused()) {
         // Continuar monitorando mas não processar (Requisito 1.4)
-        await this.monitoringService.checkWaitingPatients();
         return;
       }
 
