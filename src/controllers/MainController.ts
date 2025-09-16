@@ -16,6 +16,7 @@ import { HealthCheckService } from '../services/HealthCheckService';
 import { SupabaseClient } from '../services/SupabaseClient';
 import { SimpleConsoleLogger } from '../services/SimpleConsoleLogger';
 import { Sector, ActionCard, Channel } from '../models/ApiTypes';
+import { logsService } from '../services/LogsService';
 
 export interface IMainController {
   start(): Promise<void>;

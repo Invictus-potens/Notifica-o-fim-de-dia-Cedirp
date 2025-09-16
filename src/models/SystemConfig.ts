@@ -3,6 +3,8 @@ export interface SystemConfig {
   excludedSectors: string[];
   excludedChannels: string[];
   selectedActionCard?: string;
+  selectedActionCard30Min?: string;
+  selectedActionCardEndDay?: string;
   selectedTemplate?: string;
   endOfDayTime: string; // "18:00"
 }
@@ -38,6 +40,16 @@ export function validateSystemConfig(config: any): config is SystemConfig {
     return false;
   }
 
+  // Validar selectedActionCard30Min (opcional)
+  if (config.selectedActionCard30Min !== undefined && typeof config.selectedActionCard30Min !== 'string') {
+    return false;
+  }
+
+  // Validar selectedActionCardEndDay (opcional)
+  if (config.selectedActionCardEndDay !== undefined && typeof config.selectedActionCardEndDay !== 'string') {
+    return false;
+  }
+
   // Validar selectedTemplate (opcional)
   if (config.selectedTemplate !== undefined && typeof config.selectedTemplate !== 'string') {
     return false;
@@ -61,6 +73,8 @@ export function createDefaultSystemConfig(): SystemConfig {
     excludedSectors: [],
     excludedChannels: [],
     selectedActionCard: undefined,
+    selectedActionCard30Min: undefined,
+    selectedActionCardEndDay: undefined,
     selectedTemplate: undefined,
     endOfDayTime: '18:00'
   };

@@ -342,6 +342,16 @@ class AutomationInterface {
             // Update current route
             this.currentRoute = route;
 
+            // Show/hide real-time timer based on route
+            const realtimeTimer = document.getElementById('realtime-timer');
+            if (realtimeTimer) {
+                if (route === 'dashboard') {
+                    realtimeTimer.style.display = 'block';
+                } else {
+                    realtimeTimer.style.display = 'none';
+                }
+            }
+
             // Load data for specific routes
             this.loadRouteData(route);
 
@@ -372,6 +382,94 @@ class AutomationInterface {
         if (refreshMetricsBtn) {
             refreshMetricsBtn.addEventListener('click', () => {
                 this.loadMetrics();
+            });
+        }
+
+        // Logs buttons
+        const exportLogsBtn = document.getElementById('export-logs-btn');
+        if (exportLogsBtn) {
+            exportLogsBtn.addEventListener('click', () => {
+                this.exportLogs();
+            });
+        }
+
+        const clearLogsBtn = document.getElementById('clear-logs-btn');
+        if (clearLogsBtn) {
+            clearLogsBtn.addEventListener('click', () => {
+                this.clearLogs();
+            });
+        }
+
+        const logLevelFilter = document.getElementById('log-level-filter');
+        if (logLevelFilter) {
+            logLevelFilter.addEventListener('change', () => {
+                this.loadLogs();
+            });
+        }
+
+        // Action card selection - 30 minutos
+        const actionCard30MinSelect = document.getElementById('action-card-30min-select');
+        if (actionCard30MinSelect) {
+            actionCard30MinSelect.addEventListener('change', (e) => {
+                const selectedCardId = e.target.value;
+                if (selectedCardId) {
+                    const selectedOption = e.target.selectedOptions[0];
+                    const cardName = selectedOption.textContent;
+                    
+                    this.addUserActionLog('info', 
+                        `Card de ação 30min selecionado: ${cardName}`, 
+                        'Seleção de Card',
+                        { 
+                            cardId: selectedCardId,
+                            cardName: cardName,
+                            type: '30min'
+                        }
+                    );
+                }
+            });
+        }
+
+        // Action card selection - fim de expediente
+        const actionCardEndDaySelect = document.getElementById('action-card-endday-select');
+        if (actionCardEndDaySelect) {
+            actionCardEndDaySelect.addEventListener('change', (e) => {
+                const selectedCardId = e.target.value;
+                if (selectedCardId) {
+                    const selectedOption = e.target.selectedOptions[0];
+                    const cardName = selectedOption.textContent;
+                    
+                    this.addUserActionLog('info', 
+                        `Card de ação fim de dia selecionado: ${cardName}`, 
+                        'Seleção de Card',
+                        { 
+                            cardId: selectedCardId,
+                            cardName: cardName,
+                            type: 'endday'
+                        }
+                    );
+                }
+            });
+        }
+
+        // Action card selection - geral (legacy)
+        const actionCardSelect = document.getElementById('action-card-select');
+        if (actionCardSelect) {
+            actionCardSelect.addEventListener('change', (e) => {
+                const selectedCardId = e.target.value;
+                if (selectedCardId) {
+                    const selectedOption = e.target.selectedOptions[0];
+                    const cardName = selectedOption.textContent;
+                    
+                    this.addUserActionLog('info', 
+                        `Card de ação geral selecionado: ${cardName}`, 
+                        'Seleção de Card',
+                        { 
+                            cardId: selectedCardId,
+                            cardName: cardName,
+                            type: 'general'
+                        }
+                    );
+                }
             });
         }
     }
@@ -738,43 +836,51 @@ class AutomationInterface {
     }
 
     displayActionCards(actionCards) {
-        const selectElement = document.getElementById('action-card-select');
-        if (!selectElement) return;
+        // Função para popular um select com action cards
+        const populateSelect = (selectId, placeholder) => {
+            const selectElement = document.getElementById(selectId);
+            if (!selectElement) return;
 
-        // Clear existing options except the first one
-        selectElement.innerHTML = '<option value="">Selecione um cartão de ação...</option>';
+            // Clear existing options
+            selectElement.innerHTML = `<option value="">${placeholder}</option>`;
 
-        if (actionCards && actionCards.length > 0) {
-            actionCards.forEach(card => {
+            if (actionCards && actionCards.length > 0) {
+                actionCards.forEach(card => {
+                    const option = document.createElement('option');
+                    option.value = card.id;
+                    
+                    // Usar description, name ou title, com fallback para id
+                    const displayName = card.description || card.name || card.title || `Cartão ${card.id}`;
+                    
+                    // Adicionar informações adicionais se disponíveis
+                    let optionText = displayName;
+                    if (card.type) {
+                        optionText += ` (${card.type})`;
+                    }
+                    if (card.active === false) {
+                        optionText += ' [Inativo]';
+                    }
+                    
+                    option.textContent = optionText;
+                    option.title = card.description || card.content || displayName;
+                    
+                    selectElement.appendChild(option);
+                });
+                
+                console.log(`📋 Exibindo ${actionCards.length} cartões de ação no seletor ${selectId}`);
+            } else {
                 const option = document.createElement('option');
-                option.value = card.id;
-                
-                // Usar description, name ou title, com fallback para id
-                const displayName = card.description || card.name || card.title || `Cartão ${card.id}`;
-                
-                // Adicionar informações adicionais se disponíveis
-                let optionText = displayName;
-                if (card.type) {
-                    optionText += ` (${card.type})`;
-                }
-                if (card.active === false) {
-                    optionText += ' [Inativo]';
-                }
-                
-                option.textContent = optionText;
-                option.title = card.description || card.content || displayName;
-                
+                option.value = '';
+                option.textContent = 'Nenhum cartão disponível';
                 selectElement.appendChild(option);
-            });
-            
-            console.log(`📋 Exibindo ${actionCards.length} cartões de ação no seletor`);
-        } else {
-            const option = document.createElement('option');
-            option.value = '';
-            option.textContent = 'Nenhum cartão disponível';
-            selectElement.appendChild(option);
-            console.log('📋 Nenhum cartão de ação encontrado');
-        }
+                console.log(`📋 Nenhum cartão de ação encontrado para ${selectId}`);
+            }
+        };
+
+        // Popular os três selects
+        populateSelect('action-card-30min-select', 'Selecione cartão para 30min...');
+        populateSelect('action-card-endday-select', 'Selecione cartão para fim de dia...');
+        populateSelect('action-card-select', 'Selecione cartão geral...');
     }
 
 
@@ -991,6 +1097,13 @@ class AutomationInterface {
             this.updateFlowButtons();
             this.updateSystemStatus('Sistema Pausado', 'warning');
             this.showSuccess('Fluxo pausado com sucesso');
+            
+            // Log de ação do usuário
+            this.addUserActionLog('info', 
+                'Fluxo de mensagens pausado pelo usuário', 
+                'Controle de Fluxo',
+                { action: 'pause' }
+            );
 
         } catch (error) {
             console.error('❌ Erro ao pausar fluxo:', error);
@@ -1019,6 +1132,13 @@ class AutomationInterface {
             this.updateFlowButtons();
             this.updateSystemStatus('Sistema Ativo', 'success');
             this.showSuccess('Fluxo retomado com sucesso');
+            
+            // Log de ação do usuário
+            this.addUserActionLog('info', 
+                'Fluxo de mensagens retomado pelo usuário', 
+                'Controle de Fluxo',
+                { action: 'resume' }
+            );
 
         } catch (error) {
             console.error('❌ Erro ao retomar fluxo:', error);
@@ -1298,17 +1418,42 @@ class AutomationInterface {
             if (response.ok && result) {
                 console.log('📋 Configurações recebidas da API:', result);
                 
-                // Update action card select
+                // Update action card selects
                 const actionCardSelect = document.getElementById('action-card-select');
+                const actionCard30MinSelect = document.getElementById('action-card-30min-select');
+                const actionCardEndDaySelect = document.getElementById('action-card-endday-select');
+                
                 if (actionCardSelect) {
                     if (result.selectedActionCard) {
                         actionCardSelect.value = result.selectedActionCard;
-                        console.log('✅ Action card selecionado:', result.selectedActionCard);
+                        console.log('✅ Action card geral selecionado:', result.selectedActionCard);
                     } else {
-                        console.log('⚠️ Nenhum action card selecionado');
+                        console.log('⚠️ Nenhum action card geral selecionado');
                     }
                 } else {
                     console.log('❌ Elemento action-card-select não encontrado');
+                }
+
+                if (actionCard30MinSelect) {
+                    if (result.selectedActionCard30Min) {
+                        actionCard30MinSelect.value = result.selectedActionCard30Min;
+                        console.log('✅ Action card 30min selecionado:', result.selectedActionCard30Min);
+                    } else {
+                        console.log('⚠️ Nenhum action card 30min selecionado');
+                    }
+                } else {
+                    console.log('❌ Elemento action-card-30min-select não encontrado');
+                }
+
+                if (actionCardEndDaySelect) {
+                    if (result.selectedActionCardEndDay) {
+                        actionCardEndDaySelect.value = result.selectedActionCardEndDay;
+                        console.log('✅ Action card fim de dia selecionado:', result.selectedActionCardEndDay);
+                    } else {
+                        console.log('⚠️ Nenhum action card fim de dia selecionado');
+                    }
+                } else {
+                    console.log('❌ Elemento action-card-endday-select não encontrado');
                 }
                 
                 
@@ -1329,18 +1474,24 @@ class AutomationInterface {
             
             // Get selected values
             const actionCardSelect = document.getElementById('action-card-select');
+            const actionCard30MinSelect = document.getElementById('action-card-30min-select');
+            const actionCardEndDaySelect = document.getElementById('action-card-endday-select');
             
             const selectedActionCard = actionCardSelect ? actionCardSelect.value : '';
+            const selectedActionCard30Min = actionCard30MinSelect ? actionCard30MinSelect.value : '';
+            const selectedActionCardEndDay = actionCardEndDaySelect ? actionCardEndDaySelect.value : '';
             
             // Validate that at least one is selected
-            if (!selectedActionCard) {
+            if (!selectedActionCard && !selectedActionCard30Min && !selectedActionCardEndDay) {
                 this.showError('Selecione pelo menos um cartão de ação');
                 return;
             }
             
             // Prepare configuration data
             const configData = {
-                selectedActionCard: selectedActionCard || undefined
+                selectedActionCard: selectedActionCard || undefined,
+                selectedActionCard30Min: selectedActionCard30Min || undefined,
+                selectedActionCardEndDay: selectedActionCardEndDay || undefined
             };
             
             console.log('💾 Dados de configuração:', configData);
@@ -1733,10 +1884,36 @@ class AutomationInterface {
             if (response.ok && result.success) {
                 const messageType = 'Cartão de Ação';
                 this.showSuccess(`${messageType} enviado: ${result.data.success} sucessos, ${result.data.failed} falhas`);
+                
+                // Log de sucesso para o usuário
+                this.addUserActionLog('info', 
+                    `Mensagem manual enviada com sucesso para ${patients.length} pacientes`, 
+                    'Envio Manual',
+                    { 
+                        messageType: this.currentMessageType,
+                        messageId: this.currentMessageId,
+                        totalPatients: patients.length,
+                        successCount: result.data.success,
+                        failedCount: result.data.failed
+                    }
+                );
+                
                 this.clearSelection();
                 this.hideModal('sendMessageModal');
             } else {
                 this.showError(result.message || `Erro ao enviar ${this.currentMessageType}`);
+                
+                // Log de erro para o usuário
+                this.addUserActionLog('error', 
+                    `Falha ao enviar mensagem manual: ${result.message || 'Erro desconhecido'}`, 
+                    'Envio Manual',
+                    { 
+                        messageType: this.currentMessageType,
+                        messageId: this.currentMessageId,
+                        totalPatients: patients.length,
+                        error: result.message
+                    }
+                );
             }
         } catch (error) {
             console.error('Erro ao enviar mensagem:', error);
@@ -1819,6 +1996,200 @@ class AutomationInterface {
         };
         
         return date.toLocaleDateString('pt-BR', options);
+    }
+
+    /**
+     * Carrega logs do sistema
+     */
+    async loadLogs() {
+        try {
+            const level = document.getElementById('log-level-filter')?.value || '';
+            const url = level ? `/api/logs?level=${encodeURIComponent(level)}` : '/api/logs';
+            
+            const response = await fetch(url);
+            
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                this.displayLogs(data.data);
+            } else {
+                console.error('Erro ao carregar logs:', data.error || 'Erro desconhecido');
+                this.displayLogs([]); // Exibir lista vazia em caso de erro
+            }
+        } catch (error) {
+            console.error('Erro ao carregar logs:', error.message || error);
+            this.displayLogs([]); // Exibir lista vazia em caso de erro
+        }
+    }
+
+    /**
+     * Exibe logs no container
+     */
+    displayLogs(logs) {
+        const container = document.getElementById('logs-container');
+        if (!container) return;
+
+        if (logs.length === 0) {
+            container.innerHTML = '<div class="text-muted text-center py-4">Nenhum log disponível</div>';
+            return;
+        }
+
+        const logsHtml = logs.map(log => {
+            const levelClass = this.getLogLevelClass(log.level);
+            const levelIcon = this.getLogLevelIcon(log.level);
+            const timestamp = new Date(log.timestamp).toLocaleString('pt-BR');
+            
+            let metadataHtml = '';
+            if (log.metadata && Object.keys(log.metadata).length > 0) {
+                metadataHtml = `<div class="log-metadata text-muted small mt-1">${JSON.stringify(log.metadata)}</div>`;
+            }
+
+            let stackHtml = '';
+            if (log.stack) {
+                stackHtml = `<div class="log-stack text-danger small mt-1"><pre>${log.stack}</pre></div>`;
+            }
+
+            return `
+                <div class="log-entry mb-2 p-2 border-start border-3 ${levelClass}">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div class="flex-grow-1">
+                            <div class="d-flex align-items-center mb-1">
+                                <i class="bi ${levelIcon} me-2"></i>
+                                <span class="fw-bold log-level">${log.level.toUpperCase()}</span>
+                                <span class="text-muted ms-2 small">${timestamp}</span>
+                                <span class="badge bg-secondary ms-2">${log.context}</span>
+                            </div>
+                            <div class="log-message">${this.escapeHtml(log.message)}</div>
+                            ${metadataHtml}
+                            ${stackHtml}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+        container.innerHTML = logsHtml;
+    }
+
+    /**
+     * Obtém classe CSS para o nível do log
+     */
+    getLogLevelClass(level) {
+        const classes = {
+            'debug': 'border-info',
+            'info': 'border-primary',
+            'warn': 'border-warning',
+            'error': 'border-danger',
+            'critical': 'border-danger bg-danger bg-opacity-10'
+        };
+        return classes[level] || 'border-secondary';
+    }
+
+    /**
+     * Obtém ícone para o nível do log
+     */
+    getLogLevelIcon(level) {
+        const icons = {
+            'debug': 'bi-bug',
+            'info': 'bi-info-circle',
+            'warn': 'bi-exclamation-triangle',
+            'error': 'bi-x-circle',
+            'critical': 'bi-x-octagon'
+        };
+        return icons[level] || 'bi-circle';
+    }
+
+    /**
+     * Escapa HTML para segurança
+     */
+    escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    /**
+     * Limpa todos os logs
+     */
+    async clearLogs() {
+        if (!confirm('Tem certeza que deseja limpar todos os logs?')) {
+            return;
+        }
+
+        try {
+            const response = await fetch('/api/logs', {
+                method: 'DELETE'
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                this.showAlert('Logs limpos com sucesso', 'success');
+                this.loadLogs(); // Recarrega a lista vazia
+            } else {
+                this.showAlert('Erro ao limpar logs: ' + data.error, 'danger');
+            }
+        } catch (error) {
+            console.error('Erro ao limpar logs:', error);
+            this.showAlert('Erro ao limpar logs', 'danger');
+        }
+    }
+
+    /**
+     * Exporta logs
+     */
+    async exportLogs() {
+        try {
+            const level = document.getElementById('log-level-filter')?.value || '';
+            const url = level ? `/api/logs/export?format=json&level=${encodeURIComponent(level)}` : '/api/logs/export?format=json';
+            
+            const response = await fetch(url);
+            
+            if (response.ok) {
+                const blob = await response.blob();
+                const downloadUrl = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = downloadUrl;
+                a.download = `logs_${new Date().toISOString().split('T')[0]}.json`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(downloadUrl);
+                
+                this.showAlert('Logs exportados com sucesso', 'success');
+            } else {
+                this.showAlert('Erro ao exportar logs', 'danger');
+            }
+        } catch (error) {
+            console.error('Erro ao exportar logs:', error);
+            this.showAlert('Erro ao exportar logs', 'danger');
+        }
+    }
+
+    /**
+     * Adiciona log de ação do usuário
+     */
+    async addUserActionLog(level, message, context, metadata = {}) {
+        try {
+            await fetch('/api/logs', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    level,
+                    message,
+                    context,
+                    metadata
+                })
+            });
+        } catch (error) {
+            console.error('Erro ao adicionar log de ação do usuário:', error);
+        }
     }
 }
 

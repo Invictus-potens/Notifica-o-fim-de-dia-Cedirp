@@ -46,6 +46,7 @@ app.use((req, res, next) => {
 // Importar MainController e Logger
 import { MainController } from './controllers/MainController';
 import { logger } from './services/Logger';
+import { logsService } from './services/LogsService';
 
 // Inicializar MainController
 const mainController = new MainController();
@@ -384,6 +385,114 @@ app.get('/api/metrics/alerts', (req, res) => {
   } catch (error) {
     console.error('Erro ao obter alertas:', error);
     res.status(500).json({ error: 'Erro ao obter alertas' });
+  }
+});
+
+// Logs Routes
+app.get('/api/logs', (req, res) => {
+  try {
+    const filter = {
+      level: req.query.level as string,
+      context: req.query.context as string,
+      search: req.query.search as string,
+      startDate: req.query.startDate ? new Date(req.query.startDate as string) : undefined,
+      endDate: req.query.endDate ? new Date(req.query.endDate as string) : undefined
+    };
+
+    const logs = logsService.getLogs(filter);
+    res.json({
+      success: true,
+      data: logs,
+      total: logs.length,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('Erro ao obter logs:', error);
+    res.status(500).json({ error: 'Erro ao obter logs' });
+  }
+});
+
+app.get('/api/logs/stats', (req, res) => {
+  try {
+    const stats = logsService.getLogStats();
+    res.json({
+      success: true,
+      data: stats,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('Erro ao obter estatísticas dos logs:', error);
+    res.status(500).json({ error: 'Erro ao obter estatísticas dos logs' });
+  }
+});
+
+app.delete('/api/logs', (req, res) => {
+  try {
+    logsService.clearLogs();
+    res.json({
+      success: true,
+      message: 'Logs limpos com sucesso',
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('Erro ao limpar logs:', error);
+    res.status(500).json({ error: 'Erro ao limpar logs' });
+  }
+});
+
+app.get('/api/logs/export', (req, res) => {
+  try {
+    const format = req.query.format as string || 'json';
+    const filter = {
+      level: req.query.level as string,
+      context: req.query.context as string,
+      search: req.query.search as string,
+      startDate: req.query.startDate ? new Date(req.query.startDate as string) : undefined,
+      endDate: req.query.endDate ? new Date(req.query.endDate as string) : undefined
+    };
+
+    let data: string;
+    let filename: string;
+    let contentType: string;
+
+    if (format === 'csv') {
+      data = logsService.exportLogsCSV(filter);
+      filename = `logs_${new Date().toISOString().split('T')[0]}.csv`;
+      contentType = 'text/csv';
+    } else {
+      data = logsService.exportLogs(filter);
+      filename = `logs_${new Date().toISOString().split('T')[0]}.json`;
+      contentType = 'application/json';
+    }
+
+    res.setHeader('Content-Type', contentType);
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.send(data);
+  } catch (error) {
+    console.error('Erro ao exportar logs:', error);
+    res.status(500).json({ error: 'Erro ao exportar logs' });
+  }
+});
+
+// Rota para adicionar logs de ações do usuário
+app.post('/api/logs', (req, res) => {
+  try {
+    const { level, message, context, metadata } = req.body;
+    
+    if (!level || !message || !context) {
+      return res.status(400).json({ error: 'level, message e context são obrigatórios' });
+    }
+
+    logsService.addLog(level, message, context, metadata);
+    
+    return res.json({
+      success: true,
+      message: 'Log adicionado com sucesso',
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('Erro ao adicionar log:', error);
+    return res.status(500).json({ error: 'Erro ao adicionar log' });
   }
 });
 

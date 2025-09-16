@@ -347,14 +347,39 @@
                             </h6>
                         </div>
                         <div class="card-body">
-                            <!-- Action Cards -->
+                            <!-- Action Card para Mensagem de 30 Minutos -->
+                            <div class="mb-4">
+                                <label class="form-label fw-bold">
+                                    <i class="bi bi-clock me-2"></i>Cartão de Ação - Mensagem de 30 Minutos
+                                </label>
+                                <select id="action-card-30min-select" class="form-select form-select-sm">
+                                    <option value="">Carregando cartões...</option>
+                                </select>
+                                <small class="form-text text-muted">
+                                    Enviado para pacientes aguardando há mais de 30 minutos
+                                </small>
+                            </div>
+
+                            <!-- Action Card para Mensagem de Fim de Expediente -->
+                            <div class="mb-4">
+                                <label class="form-label fw-bold">
+                                    <i class="bi bi-sunset me-2"></i>Cartão de Ação - Fim de Expediente (18h)
+                                </label>
+                                <select id="action-card-endday-select" class="form-select form-select-sm">
+                                    <option value="">Carregando cartões...</option>
+                                </select>
+                                <small class="form-text text-muted">
+                                    Enviado para pacientes ainda aguardando no fim do expediente
+                                </small>
+                            </div>
+
+                            <!-- Legacy Action Card (manter para compatibilidade) -->
                             <div class="mb-3">
-                                <label class="form-label fw-bold">Cartão de Ação (Canais Normais)</label>
+                                <label class="form-label fw-bold">Cartão de Ação Geral (Canais Normais)</label>
                                 <select id="action-card-select" class="form-select form-select-sm">
                                     <option value="">Carregando cartões...</option>
                                 </select>
                             </div>
-
 
                             <button id="save-message-config-btn" class="btn btn-primary btn-sm w-100">
                                 <i class="bi bi-check-lg me-2"></i>Salvar Configurações
@@ -384,9 +409,6 @@
                                 <button id="export-logs-btn" class="btn btn-outline-primary btn-sm">
                                     <i class="bi bi-download"></i> Exportar
                                 </button>
-                                <button id="log-stats-btn" class="btn btn-outline-info btn-sm">
-                                    <i class="bi bi-graph-up"></i> Stats
-                                </button>
                                 <button id="clear-logs-btn" class="btn btn-outline-danger btn-sm">
                                     <i class="bi bi-trash"></i> Limpar
                                 </button>
@@ -405,13 +427,10 @@
                 <!-- Métricas Route -->
                 <div id="metricas-route" class="route-content">
                     <div class="card">
-                        <div class="card-header d-flex justify-content-between align-items-center">
+                        <div class="card-header">
                             <h5 class="mb-0">
                                 <i class="bi bi-speedometer2 me-2"></i>Métricas Detalhadas do Sistema
                             </h5>
-                            <button id="view-detailed-metrics-btn" class="btn btn-outline-info btn-sm">
-                                <i class="bi bi-graph-up me-2"></i>Ver Métricas Completas
-                            </button>
                         </div>
                         <div class="card-body">
                             <div class="row mb-4">

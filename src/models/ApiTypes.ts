@@ -206,3 +206,21 @@ export interface SystemStatus {
   errorStats: ErrorStatistics;
   uptime: number; // milliseconds
 }
+
+export interface LogEntry {
+  id: string;
+  timestamp: Date;
+  level: 'debug' | 'info' | 'warn' | 'error' | 'critical';
+  message: string;
+  context: string;
+  metadata?: Record<string, any>;
+  stack?: string;
+}
+
+export interface LogFilter {
+  level?: string;
+  context?: string;
+  startDate?: Date;
+  endDate?: Date;
+  search?: string;
+}

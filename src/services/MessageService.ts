@@ -5,6 +5,7 @@ import { IErrorHandler } from './ErrorHandler';
 import { TimeUtils } from '../utils/TimeUtils';
 import { retryApiCall, retryCriticalOperation } from '../utils/RetryUtils';
 import { executeWithFallback, executeWithDefaultFallback } from '../utils/FallbackUtils';
+import { logsService } from './LogsService';
 
 export interface IMessageService {
   send30MinuteMessage(patient: WaitingPatient): Promise<boolean>;
@@ -66,7 +67,32 @@ export class MessageService implements IMessageService {
       if (messageSent) {
         // Adicionar à lista de exclusão para evitar mensagens duplicadas (Requisito 1.2)
         await this.configManager.addToExclusionList(patient.id, '30min');
+        
+        // Log de sucesso para o usuário
+        logsService.addLog('info', 
+          `Mensagem de 30min enviada com sucesso para ${patient.name}`, 
+          'Envio de Mensagem',
+          { 
+            patientId: patient.id, 
+            patientName: patient.name,
+            channelType: patient.channelType,
+            messageType: '30min'
+          }
+        );
+        
         return true;
+      } else {
+        // Log de erro para o usuário
+        logsService.addLog('error', 
+          `Falha ao enviar mensagem de 30min para ${patient.name}`, 
+          'Envio de Mensagem',
+          { 
+            patientId: patient.id, 
+            patientName: patient.name,
+            channelType: patient.channelType,
+            messageType: '30min'
+          }
+        );
       }
 
       return false;
@@ -105,12 +131,46 @@ export class MessageService implements IMessageService {
         return true;
       });
 
+      // Log de início do processo
+      logsService.addLog('info', 
+        `Iniciando envio de mensagens de fim de dia para ${eligiblePatients.length} pacientes`, 
+        'Envio de Mensagem',
+        { 
+          totalPatients: eligiblePatients.length,
+          messageType: 'end_of_day'
+        }
+      );
+
       // Enviar mensagens para pacientes elegíveis
       const sendPromises = eligiblePatients.map(async (patient) => {
         try {
           const messageSent = await this.sendMessageByChannelType(patient, 'end_of_day');
           if (messageSent) {
             await this.configManager.addToExclusionList(patient.id, 'end_of_day');
+            
+            // Log de sucesso para o usuário
+            logsService.addLog('info', 
+              `Mensagem de fim de dia enviada com sucesso para ${patient.name}`, 
+              'Envio de Mensagem',
+              { 
+                patientId: patient.id, 
+                patientName: patient.name,
+                channelType: patient.channelType,
+                messageType: 'end_of_day'
+              }
+            );
+          } else {
+            // Log de erro para o usuário
+            logsService.addLog('error', 
+              `Falha ao enviar mensagem de fim de dia para ${patient.name}`, 
+              'Envio de Mensagem',
+              { 
+                patientId: patient.id, 
+                patientName: patient.name,
+                channelType: patient.channelType,
+                messageType: 'end_of_day'
+              }
+            );
           }
           return messageSent;
         } catch (error) {
@@ -118,6 +178,20 @@ export class MessageService implements IMessageService {
             error as Error,
             `MessageService.sendEndOfDayMessages - Patient: ${patient.id}`
           );
+          
+          // Log de erro para o usuário
+          logsService.addLog('error', 
+            `Erro ao enviar mensagem de fim de dia para ${patient.name}`, 
+            'Envio de Mensagem',
+            { 
+              patientId: patient.id, 
+              patientName: patient.name,
+              channelType: patient.channelType,
+              messageType: 'end_of_day',
+              error: (error as Error).message
+            }
+          );
+          
           return false;
         }
       });
@@ -192,11 +266,24 @@ export class MessageService implements IMessageService {
     config: any
   ): Promise<boolean> {
     try {
+      // Determinar qual action card usar baseado no tipo de mensagem
+      let actionCardId: string | undefined;
+      
+      if (messageType === '30min') {
+        actionCardId = config.selectedActionCard30Min || config.selectedActionCard;
+      } else if (messageType === 'end_of_day') {
+        actionCardId = config.selectedActionCardEndDay || config.selectedActionCard;
+      }
+
       // Verificar se há cartão de ação configurado
-      if (!config.selectedActionCard) {
+      if (!actionCardId) {
+        const errorMsg = messageType === '30min' 
+          ? 'Nenhum cartão de ação configurado para mensagens de 30 minutos'
+          : 'Nenhum cartão de ação configurado para mensagens de fim de expediente';
+          
         this.errorHandler.logError(
-          new Error('Nenhum cartão de ação configurado para canais normais'),
-          `MessageService.sendActionCardMessage - Patient: ${patient.id}`
+          new Error(errorMsg),
+          `MessageService.sendActionCardMessage - Patient: ${patient.id}, Type: ${messageType}`
         );
         return false;
       }
@@ -207,7 +294,7 @@ export class MessageService implements IMessageService {
           const retryResult = await retryApiCall(async () => {
             return await this.krolikApiClient.sendActionCard(
               patient.channelId,
-              config.selectedActionCard
+              actionCardId
             );
           });
           

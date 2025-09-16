@@ -1660,3 +1660,100 @@ hanced Mobile Responsiveness */
     background-color: #6b7280;
     box-shadow: 0 0 0 2px rgba(107, 114, 128, 0.3);
 }
+
+/* Logs Styles */
+.log-entry {
+    background-color: #fff;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+}
+
+.log-entry:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.log-entry .log-level {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.log-entry .log-message {
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+    font-size: 0.875rem;
+    line-height: 1.4;
+    margin-top: 0.5rem;
+}
+
+.log-metadata {
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+    font-size: 0.75rem;
+    background-color: #f8f9fa;
+    padding: 0.5rem;
+    border-radius: 4px;
+    border-left: 3px solid #dee2e6;
+}
+
+.log-stack {
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+    font-size: 0.75rem;
+    background-color: #fef2f2;
+    padding: 0.5rem;
+    border-radius: 4px;
+    border-left: 3px solid #ef4444;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.log-stack pre {
+    margin: 0;
+    white-space: pre-wrap;
+    word-break: break-all;
+}
+
+/* Log level specific styles */
+.log-entry.border-info .log-level {
+    background-color: #dbeafe;
+    color: #1e40af;
+}
+
+.log-entry.border-primary .log-level {
+    background-color: #e0e7ff;
+    color: #3730a3;
+}
+
+.log-entry.border-warning .log-level {
+    background-color: #fef3c7;
+    color: #92400e;
+}
+
+.log-entry.border-danger .log-level {
+    background-color: #fee2e2;
+    color: #991b1b;
+}
+
+/* Logs container scrollbar */
+#logs-container {
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e1 #f1f5f9;
+}
+
+#logs-container::-webkit-scrollbar {
+    width: 8px;
+}
+
+#logs-container::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 4px;
+}
+
+#logs-container::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+}
+
+#logs-container::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}

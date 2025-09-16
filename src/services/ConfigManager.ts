@@ -45,6 +45,8 @@ export class ConfigManager implements IConfigManager {
           excludedSectors: configData.excludedSectors ? JSON.parse(configData.excludedSectors) : [],
           excludedChannels: configData.excludedChannels ? JSON.parse(configData.excludedChannels) : [],
           selectedActionCard: configData.selectedActionCard,
+          selectedActionCard30Min: configData.selectedActionCard30Min,
+          selectedActionCardEndDay: configData.selectedActionCardEndDay,
           selectedTemplate: configData.selectedTemplate,
           endOfDayTime: configData.endOfDayTime || '18:00'
         };
@@ -85,6 +87,8 @@ export class ConfigManager implements IConfigManager {
         this.storageService.setConfigValue('excludedSectors', JSON.stringify(this.systemConfig.excludedSectors)),
         this.storageService.setConfigValue('excludedChannels', JSON.stringify(this.systemConfig.excludedChannels)),
         this.storageService.setConfigValue('selectedActionCard', this.systemConfig.selectedActionCard || ''),
+        this.storageService.setConfigValue('selectedActionCard30Min', this.systemConfig.selectedActionCard30Min || ''),
+        this.storageService.setConfigValue('selectedActionCardEndDay', this.systemConfig.selectedActionCardEndDay || ''),
         this.storageService.setConfigValue('selectedTemplate', this.systemConfig.selectedTemplate || ''),
         this.storageService.setConfigValue('endOfDayTime', this.systemConfig.endOfDayTime)
       ]);
