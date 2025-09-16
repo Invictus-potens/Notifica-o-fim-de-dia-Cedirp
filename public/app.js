@@ -1,8 +1,30 @@
 // JavaScript da interface web
+
+/**
+ * Mapeia tipos numéricos de canais para nomes descritivos
+ */
+function getChannelTypeName(type) {
+    const typeMap = {
+        1: 'WhatsApp Pessoal',
+        2: 'WhatsApp Business',
+        3: 'WhatsApp Business API',
+        4: 'WhatsApp Business (Principal)',
+        5: 'Telegram',
+        6: 'Instagram',
+        7: 'Facebook Messenger',
+        8: 'SMS',
+        9: 'Email',
+        10: 'API Externa'
+    };
+    
+    return typeMap[type] || `Tipo ${type}`;
+}
+
 class AutomationInterface {
     constructor() {
         this.apiBaseUrl = '/api';
         this.currentRoute = 'dashboard';
+        this.timerInterval = null;
         
         this.init();
     }
@@ -26,6 +48,7 @@ class AutomationInterface {
             this.initializeExclusionLists();
             this.initializeFlowControl();
             this.initializePatientSelection();
+            this.startRealtimeTimer(); // Iniciar timer em tempo real
             console.log('Automação de Mensagem de Espera - Interface carregada');
         } catch (error) {
             console.error('Erro na inicialização:', error);
@@ -481,11 +504,23 @@ class AutomationInterface {
                 throw new Error(data.error || 'Erro ao carregar status');
             }
 
-            // Update status elements
+            // Update system status badge
             const systemStatusElement = document.getElementById('system-status');
             if (systemStatusElement) {
                 systemStatusElement.textContent = data.isRunning ? 'Sistema Ativo' : 'Sistema Pausado';
                 systemStatusElement.className = `badge ${data.isRunning ? 'bg-success' : 'bg-warning'} me-3`;
+            }
+
+            // Update flow control button
+            const toggleFlowBtn = document.getElementById('toggle-flow-btn');
+            if (toggleFlowBtn) {
+                if (data.isPaused) {
+                    toggleFlowBtn.innerHTML = '<i class="bi bi-play-fill"></i> Retomar Fluxo';
+                    toggleFlowBtn.className = 'btn btn-success btn-sm';
+                } else {
+                    toggleFlowBtn.innerHTML = '<i class="bi bi-pause-fill"></i> Pausar Fluxo';
+                    toggleFlowBtn.className = 'btn btn-outline-primary btn-sm';
+                }
             }
 
             // Update connection status
@@ -495,8 +530,48 @@ class AutomationInterface {
                 connectionStatusElement.className = `badge ${data.apiConnected ? 'bg-success' : 'bg-danger'}`;
             }
 
+            // Update dashboard status metrics
+            this.updateDashboardStatusData(data);
+
         } catch (error) {
             console.error('Erro ao carregar status:', error);
+            this.showError('Erro ao carregar status do sistema');
+        }
+    }
+
+    updateDashboardStatusData(statusData) {
+        try {
+            // Update total waiting patients
+            const totalWaitingElement = document.getElementById('total-waiting');
+            if (totalWaitingElement && statusData.monitoringStats) {
+                totalWaitingElement.textContent = statusData.monitoringStats.totalPatients || 0;
+            }
+
+            // Update 30min messages today
+            const messages30MinElement = document.getElementById('messages-30min');
+            if (messages30MinElement && statusData.monitoringStats) {
+                messages30MinElement.textContent = statusData.monitoringStats.patientsOver30Min || 0;
+            }
+
+            // Update end of day messages
+            const messagesEndDayElement = document.getElementById('messages-endday');
+            if (messagesEndDayElement && statusData.monitoringStats) {
+                messagesEndDayElement.textContent = statusData.monitoringStats.patientsOver30Min || 0; // Using same data for now
+            }
+
+            // Update last check time
+            const lastCheckElement = document.getElementById('last-check');
+            if (lastCheckElement && statusData.lastUpdate) {
+                const lastUpdate = new Date(statusData.lastUpdate);
+                const timeString = lastUpdate.toLocaleTimeString('pt-BR', {
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+                lastCheckElement.textContent = timeString;
+            }
+
+        } catch (error) {
+            console.error('Erro ao atualizar dados do dashboard:', error);
         }
     }
 
@@ -509,29 +584,82 @@ class AutomationInterface {
                 throw new Error(data.error || 'Erro ao carregar métricas');
             }
 
-            // Update metrics elements
-            const messagesSentElement = document.getElementById('metrics-messages-sent');
-            if (messagesSentElement) {
-                messagesSentElement.textContent = data.messagesSent || 0;
-            }
-
-            const apiCallsElement = document.getElementById('metrics-api-calls');
-            if (apiCallsElement) {
-                apiCallsElement.textContent = data.apiCalls || 0;
-            }
-
-            const avgResponseElement = document.getElementById('metrics-avg-response');
-            if (avgResponseElement) {
-                avgResponseElement.textContent = `${data.avgResponseTime || 0}ms`;
-            }
-
-            const errorRateElement = document.getElementById('metrics-error-rate');
-            if (errorRateElement) {
-                errorRateElement.textContent = `${data.errorRate || 0}%`;
-            }
+            // Update metrics elements with real data
+            this.updateDashboardMetricsData(data);
 
         } catch (error) {
             console.error('Erro ao carregar métricas:', error);
+            this.showError('Erro ao carregar métricas do sistema');
+        }
+    }
+
+    updateDashboardMetricsData(metricsData) {
+        try {
+            // Update messages sent
+            const messagesSentElement = document.getElementById('metrics-messages-sent');
+            if (messagesSentElement) {
+                const messagesSent = metricsData.messages?.totalSent || 0;
+                messagesSentElement.textContent = messagesSent;
+            }
+
+            // Update API calls
+            const apiCallsElement = document.getElementById('metrics-api-calls');
+            if (apiCallsElement) {
+                const apiCalls = (metricsData.system?.apiCallsSuccessful || 0) + (metricsData.system?.apiCallsFailed || 0);
+                apiCallsElement.textContent = apiCalls;
+            }
+
+            // Update average response time
+            const avgResponseElement = document.getElementById('metrics-avg-response');
+            if (avgResponseElement) {
+                const avgResponse = metricsData.system?.averageApiResponseTime || metricsData.messages?.averageResponseTime || 0;
+                avgResponseElement.textContent = `${Math.round(avgResponse)}ms`;
+            }
+
+            // Update error rate
+            const errorRateElement = document.getElementById('metrics-error-rate');
+            if (errorRateElement) {
+                const totalApiCalls = (metricsData.system?.apiCallsSuccessful || 0) + (metricsData.system?.apiCallsFailed || 0);
+                const errorRate = totalApiCalls > 0 ? 
+                    Math.round((metricsData.system?.apiCallsFailed || 0) / totalApiCalls * 100) : 0;
+                errorRateElement.textContent = `${errorRate}%`;
+            }
+
+            // Update detailed metrics if available
+            this.updateDetailedMetrics(metricsData);
+
+        } catch (error) {
+            console.error('Erro ao atualizar métricas do dashboard:', error);
+        }
+    }
+
+    updateDetailedMetrics(metricsData) {
+        try {
+            // Update detailed 30min messages
+            const detailed30MinElement = document.getElementById('detailed-messages-30min');
+            if (detailed30MinElement) {
+                detailed30MinElement.textContent = metricsData.messages?.by30Min || 0;
+            }
+
+            // Update detailed end of day messages
+            const detailedEndDayElement = document.getElementById('detailed-messages-endday');
+            if (detailedEndDayElement) {
+                detailedEndDayElement.textContent = metricsData.messages?.byEndOfDay || 0;
+            }
+
+            // Update modal detailed metrics
+            const modal30MinElement = document.getElementById('detailed-messages-30min-modal');
+            if (modal30MinElement) {
+                modal30MinElement.textContent = metricsData.messages?.by30Min || 0;
+            }
+
+            const modalEndDayElement = document.getElementById('detailed-messages-endday-modal');
+            if (modalEndDayElement) {
+                modalEndDayElement.textContent = metricsData.messages?.byEndOfDay || 0;
+            }
+
+        } catch (error) {
+            console.error('Erro ao atualizar métricas detalhadas:', error);
         }
     }
 
@@ -749,7 +877,8 @@ class AutomationInterface {
                     // Adicionar informações adicionais se disponíveis
                     let optionText = displayName;
                     if (channel.type) {
-                        optionText += ` (Tipo: ${channel.type})`;
+                        const typeName = getChannelTypeName(channel.type);
+                        optionText += ` (${typeName})`;
                     }
                     if (channel.active === false) {
                         optionText += ' [Inativo]';
@@ -1086,7 +1215,7 @@ class AutomationInterface {
             channelDiv.className = 'd-flex justify-content-between align-items-center mb-2 p-2 bg-white rounded border';
             
             const displayName = channel.description || channel.identifier || `Canal ${channel.id}`;
-            const typeInfo = channel.type ? ` (Tipo: ${channel.type})` : '';
+            const typeInfo = channel.type ? ` (${getChannelTypeName(channel.type)})` : '';
             
             channelDiv.innerHTML = `
                 <div>
@@ -1622,6 +1751,74 @@ class AutomationInterface {
             modal.classList.remove('show');
             document.body.classList.remove('modal-open');
         }
+    }
+
+    /**
+     * Inicia o timer em tempo real
+     */
+    startRealtimeTimer() {
+        this.updateTimer();
+        this.timerInterval = setInterval(() => {
+            this.updateTimer();
+        }, 1000); // Atualiza a cada segundo
+    }
+
+    /**
+     * Para o timer em tempo real
+     */
+    stopRealtimeTimer() {
+        if (this.timerInterval) {
+            clearInterval(this.timerInterval);
+            this.timerInterval = null;
+        }
+    }
+
+    /**
+     * Atualiza o display do timer com a hora e data atuais
+     */
+    updateTimer() {
+        const now = new Date();
+        
+        // Formatar hora (HH:MM:SS)
+        const timeString = now.toLocaleTimeString('pt-BR', {
+            hour12: false,
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit'
+        });
+        
+        // Formatar data (DD/MM/AAAA)
+        const dateString = now.toLocaleDateString('pt-BR', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric'
+        });
+        
+        // Atualizar elementos DOM
+        const timeElement = document.getElementById('current-time');
+        const dateElement = document.getElementById('current-date');
+        
+        if (timeElement) {
+            timeElement.textContent = timeString;
+        }
+        
+        if (dateElement) {
+            dateElement.textContent = dateString;
+        }
+    }
+
+    /**
+     * Formata data para exibição mais elegante
+     */
+    formatDateForDisplay(date) {
+        const options = {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        };
+        
+        return date.toLocaleDateString('pt-BR', options);
     }
 }
 

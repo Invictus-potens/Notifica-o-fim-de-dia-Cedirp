@@ -70,7 +70,6 @@ export class KrolikApiClient {
           try {
             const response = await requestFn();
             console.log(`📡 Status HTTP: ${response.status} ${response.statusText}`);
-            console.log(`📡 Headers da resposta:`, response.headers);
             return response.data;
           } catch (error: any) {
             console.error(`❌ Erro na requisição HTTP:`, {
@@ -710,7 +709,7 @@ export class KrolikApiClient {
       console.log(`🔑 Token: ${this.config.apiToken ? 'Configurado' : 'NÃO CONFIGURADO'}`);
       
       const response = await this.executeWithRetry(() =>
-        this.axiosInstance.get('/core/v2/api/health')
+        this.axiosInstance.get('/core/v2/api/channel/list')
       );
       
       console.log('✅ API CAM Krolik conectada com sucesso!');
@@ -719,7 +718,7 @@ export class KrolikApiClient {
     } catch (error) {
       console.error('❌ Falha no teste de conectividade com API CAM Krolik:');
       console.error(`   Erro: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
-      console.error(`   URL: ${this.config.baseUrl}/core/v2/api/health`);
+      console.error(`   URL: ${this.config.baseUrl}/core/v2/api/channel/list`);
       return false;
     }
   }

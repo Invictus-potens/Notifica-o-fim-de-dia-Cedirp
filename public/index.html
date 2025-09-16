@@ -105,6 +105,14 @@
 
             <!-- Content Area -->
             <div class="content-area">
+                <!-- Real-time Timer -->
+                <div id="realtime-timer" class="realtime-timer">
+                    <div class="timer-container">
+                        <div class="timer-time" id="current-time">--:--:--</div>
+                        <div class="timer-date" id="current-date">--/--/----</div>
+                    </div>
+                </div>
+
                 <!-- Dashboard Route -->
                 <div id="dashboard-route" class="route-content active">
                     <!-- Status Section -->
@@ -149,7 +157,7 @@
 
                     <!-- Quick Metrics -->
                     <div class="row">
-                        <div class="col-md-6">
+                        <div class="col-md-12">
                             <div class="card">
                                 <div class="card-header d-flex justify-content-between align-items-center">
                                     <h6 class="mb-0">
@@ -161,56 +169,25 @@
                                 </div>
                                 <div class="card-body">
                                     <div class="row text-center mb-3">
-                                        <div class="col-6">
+                                        <div class="col-md-3 col-6">
                                             <div class="h6 text-success" id="metrics-messages-sent">0</div>
                                             <small class="text-muted">Mensagens Enviadas</small>
                                         </div>
-                                        <div class="col-6">
+                                        <div class="col-md-3 col-6">
                                             <div class="h6 text-primary" id="metrics-api-calls">0</div>
                                             <small class="text-muted">Chamadas API</small>
                                         </div>
-                                    </div>
-                                    <div class="row text-center mb-3">
-                                        <div class="col-6">
+                                        <div class="col-md-3 col-6">
                                             <div class="h6 text-info" id="metrics-avg-response">0ms</div>
                                             <small class="text-muted">Tempo Médio API</small>
                                         </div>
-                                        <div class="col-6">
+                                        <div class="col-md-3 col-6">
                                             <div class="h6 text-warning" id="metrics-error-rate">0%</div>
                                             <small class="text-muted">Taxa de Erro</small>
                                         </div>
                                     </div>
                                     <div id="alerts-container" class="mt-3">
                                         <!-- Alerts will be displayed here -->
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="card">
-                                <div class="card-header">
-                                    <h6 class="mb-0">
-                                        <i class="bi bi-info-circle me-2"></i>Informações do Sistema
-                                    </h6>
-                                </div>
-                                <div class="card-body">
-                                    <div class="small">
-                                        <div class="d-flex justify-content-between mb-1">
-                                            <span>Versão:</span>
-                                            <span class="text-muted">1.0.0</span>
-                                        </div>
-                                        <div class="d-flex justify-content-between mb-1">
-                                            <span>Uptime:</span>
-                                            <span class="text-muted" id="system-uptime">--</span>
-                                        </div>
-                                        <div class="d-flex justify-content-between mb-1">
-                                            <span>Última Atualização:</span>
-                                            <span class="text-muted" id="last-update">--</span>
-                                        </div>
-                                        <div class="d-flex justify-content-between">
-                                            <span>Status Conexão:</span>
-                                            <span class="badge bg-success" id="connection-status">Online</span>
-                                        </div>
                                     </div>
                                 </div>
                             </div>

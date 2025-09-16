@@ -191,6 +191,7 @@ export interface SystemStatus {
   isPaused: boolean;
   flowActive: boolean;
   lastUpdate: Date;
+  apiConnected: boolean;
   monitoringStats: {
     totalPatients: number;
     patientsOver30Min: number;

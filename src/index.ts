@@ -52,17 +52,17 @@ const mainController = new MainController();
 
 // Inicializar sistema na inicialização do servidor
 mainController.initialize().then(() => {
-  console.log('\n✅ ===========================================');
-  console.log('   SISTEMA INICIALIZADO COM SUCESSO!');
+  console.log('\n🎉 ===========================================');
+  console.log('   ✅ SISTEMA INICIALIZADO COM SUCESSO!');
   console.log('===========================================');
   console.log('🎯 Todos os componentes estão funcionando');
   console.log('🚀 Sistema pronto para processar mensagens');
   console.log('===========================================\n');
 }).catch((error) => {
-  console.log('\n❌ ===========================================');
-  console.log('   ERRO AO INICIALIZAR SISTEMA');
+  console.log('\n💥 ===========================================');
+  console.log('   ❌ ERRO AO INICIALIZAR SISTEMA');
   console.log('===========================================');
-  console.error(`💥 Erro: ${error.message}`);
+  console.error(`🔥 Erro: ${error.message}`);
   console.log('===========================================\n');
 });
 
@@ -605,30 +605,46 @@ app.get('/', (req, res) => {
 
 // Iniciar servidor
 app.listen(PORT, () => {
+  // Arte ASCII
+  console.log('\n⣇⣿⠘⣿⣿⣿⡿⡿⣟⣟⢟⢟⢝⠵⡝⣿⡿⢂⣼⣿⣷⣌⠩⡫⡻⣝⠹⢿⣿⣷');
+  console.log('⡆⣿⣆⠱⣝⡵⣝⢅⠙⣿⢕⢕⢕⢕⢝⣥⢒⠅⣿⣿⣿⡿⣳⣌⠪⡪⣡⢑⢝⣇');
+  console.log('⡆⣿⣿⣦⠹⣳⣳⣕⢅⠈⢗⢕⢕⢕⢕⢕⢈⢆⠟⠋⠉⠁⠉⠉⠁⠈⠼⢐⢕⢽');
+  console.log('⡗⢰⣶⣶⣦⣝⢝⢕⢕⠅⡆⢕⢕⢕⢕⢕⣴⠏⣠⡶⠛⡉⡉⡛⢶⣦⡀⠐⣕⢕');
+  console.log('⡝⡄⢻⢟⣿⣿⣷⣕⣕⣅⣿⣔⣕⣵⣵⣿⣿⢠⣿⢠⣮⡈⣌⠨⠅⠹⣷⡀⢱⢕');
+  console.log('⡝⡵⠟⠈⢀⣀⣀⡀⠉⢿⣿⣿⣿⣿⣿⣿⣿⣼⣿⢈⡋⠴⢿⡟⣡⡇⣿⡇⡀⢕');
+  console.log('⡝⠁⣠⣾⠟⡉⡉⡉⠻⣦⣻⣿⣿⣿⣿⣿⣿⣿⣿⣧⠸⣿⣦⣥⣿⡇⡿⣰⢗⢄');
+  console.log('⠁⢰⣿⡏⣴⣌⠈⣌⠡⠈⢻⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣬⣉⣉⣁⣄⢖⢕⢕⢕');
+  console.log('⡀⢻⣿⡇⢙⠁⠴⢿⡟⣡⡆⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣷⣵⣵⣿');
+  console.log('⡻⣄⣻⣿⣌⠘⢿⣷⣥⣿⠇⣿⣿⣿⣿⣿⣿⠛⠻⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿');
+  console.log('⣷⢄⠻⣿⣟⠿⠦⠍⠉⣡⣾⣿⣿⣿⣿⣿⣿⢸⣿⣦⠙⣿⣿⣿⣿⣿⣿⣿⣿⠟');
+  console.log('⡕⡑⣑⣈⣻⢗⢟⢞⢝⣻⣿⣿⣿⣿⣿⣿⣿⠸⣿⠿⠃⣿⣿⣿⣿⣿⣿⡿⠁⣠');
+  console.log('⡝⡵⡈⢟⢕⢕⢕⢕⣵⣿⣿⣿⣿⣿⣿⣿⣿⣿⣶⣶⣿⣿⣿⣿⣿⠿⠋⣀⣈⠙');
+  console.log('⡝⡵⡕⡀⠑⠳⠿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⠿⠛⢉⡠⡲⡫⡪⡪⡣');
+  
   console.log('\n🚀 ===========================================');
-  console.log('   SERVIDOR INICIADO COM SUCESSO!');
-  console.log('===========================================\n');
+  console.log('   🎯 SERVIDOR INICIADO COM SUCESSO!');
+  console.log('===========================================');
   
-  console.log(`🌐 Servidor rodando na porta: ${PORT}`);
-  console.log(`📱 Interface web: http://localhost:${PORT}\n`);
+  console.log(`\n🌐 Servidor rodando na porta: ${PORT}`);
+  console.log(`📱 Interface web: http://localhost:${PORT}`);
   
-  console.log('🏥 ===========================================');
+  console.log('\n🏥 ===========================================');
   console.log('   ROTAS DE HEALTH CHECK DISPONÍVEIS');
   console.log('===========================================');
   console.log(`🔍 Health Check Básico: http://localhost:${PORT}/health`);
   console.log(`🔍 Health Check da API: http://localhost:${PORT}/api/health`);
-  console.log(`⚡ Health Check Rápido: http://localhost:${PORT}/api/health?quick=true\n`);
+  console.log(`⚡ Health Check Rápido: http://localhost:${PORT}/api/health?quick=true`);
   
-  console.log('📊 ===========================================');
+  console.log('\n📊 ===========================================');
   console.log('   OUTRAS ROTAS DA API');
   console.log('===========================================');
   console.log(`📈 Status do Sistema: http://localhost:${PORT}/api/status`);
   console.log(`👥 Pacientes: http://localhost:${PORT}/api/patients`);
   console.log(`⚙️  Configuração: http://localhost:${PORT}/api/config`);
   console.log(`📝 Logs: http://localhost:${PORT}/api/logs`);
-  console.log(`📊 Métricas: http://localhost:${PORT}/api/metrics\n`);
+  console.log(`📊 Métricas: http://localhost:${PORT}/api/metrics`);
   
-  console.log('✅ Sistema pronto para uso!\n');
+  console.log('\n✅ Sistema pronto para uso!\n');
 });
 
 export default app;

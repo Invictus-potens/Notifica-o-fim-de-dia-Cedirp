@@ -62,7 +62,7 @@ export class MainController implements IMainController {
     
     // Inicializar KrolikApiClient com configuração padrão
     const defaultApiConfig = {
-      baseUrl: process.env.KROLIK_API_URL || 'https://api.camkrolik.com.br',
+      baseUrl: process.env.KROLIK_API_BASE_URL || 'https://api.camkrolik.com.br',
       apiToken: process.env.KROLIK_API_TOKEN || '',
       timeout: 10000,
       maxRetries: 3,
@@ -284,6 +284,7 @@ export class MainController implements IMainController {
         isPaused: this.configManager.isFlowPaused(),
         flowActive: this.isRunning && !this.configManager.isFlowPaused(),
         lastUpdate: new Date(),
+        apiConnected: this.krolikApiClient ? true : false, // Simplified for now
         monitoringStats,
         schedulerStats: {
           isRunning: schedulerStats.isRunning,
@@ -305,6 +306,7 @@ export class MainController implements IMainController {
         isPaused: true,
         flowActive: false,
         lastUpdate: new Date(),
+        apiConnected: false,
         monitoringStats: {
           totalPatients: 0,
           patientsOver30Min: 0,
