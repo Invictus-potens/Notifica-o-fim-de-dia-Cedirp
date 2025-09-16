@@ -49,9 +49,23 @@ class AutomationInterface {
             this.initializeFlowControl();
             this.initializePatientSelection();
             this.startRealtimeTimer(); // Iniciar timer em tempo real
+            
+            // Fallback: ensure button is enabled after a delay
+            setTimeout(() => {
+                this.ensureButtonEnabled();
+            }, 2000);
+            
             console.log('Automação de Mensagem de Espera - Interface carregada');
         } catch (error) {
             console.error('Erro na inicialização:', error);
+        }
+    }
+    
+    ensureButtonEnabled() {
+        const toggleFlowBtn = document.getElementById('toggle-flow-btn');
+        if (toggleFlowBtn && toggleFlowBtn.disabled) {
+            console.log('🔧 Fallback: Habilitando botão após timeout...');
+            this.enableFlowButton();
         }
     }
 
@@ -482,18 +496,30 @@ class AutomationInterface {
                 break;
             case 'atendimentos':
                 this.loadPatients();
+                // Always sync system status when loading patients
+                this.checkFlowState();
                 break;
             case 'configuracoes':
                 this.loadActionCards();
                 this.loadSectors();
                 this.loadChannels();
                 this.loadMessageConfig();
+                // Always sync system status when loading config
+                this.checkFlowState();
                 break;
             case 'metricas':
                 this.loadMetrics();
+                // Always sync system status when loading metrics
+                this.checkFlowState();
                 break;
             case 'logs':
                 this.loadLogs();
+                // Always sync system status when loading logs
+                this.checkFlowState();
+                break;
+            case 'sistema':
+                // Always sync system status when loading system info
+                this.checkFlowState();
                 break;
         }
     }
@@ -1044,8 +1070,8 @@ class AutomationInterface {
 
     // Métodos para controle de fluxo
     initializeFlowControl() {
-        // Initialize flow state
-        this.isFlowPaused = false;
+        // Initialize flow state as unknown (will be loaded from server)
+        this.isFlowPaused = null;
 
         // Add event listeners for flow control buttons
         const toggleFlowBtn = document.getElementById('toggle-flow-btn');
@@ -1064,14 +1090,25 @@ class AutomationInterface {
             resumeFlowBtn.addEventListener('click', () => this.resumeFlow());
         }
 
-        // Load current flow state
+        // Load current flow state FIRST before showing any UI
         this.loadFlowState();
     }
 
     async toggleFlow() {
+        console.log('🔘 Botão de toggle clicado!');
+        console.log('🔍 Estado atual isFlowPaused:', this.isFlowPaused);
+        
+        if (this.isFlowPaused === null) {
+            console.warn('⚠️ Estado do fluxo ainda não foi carregado, tentando verificar...');
+            await this.checkFlowState();
+            return;
+        }
+        
         if (this.isFlowPaused) {
+            console.log('▶️ Iniciando retomada do fluxo...');
             await this.resumeFlow();
         } else {
+            console.log('⏸️ Iniciando pausa do fluxo...');
             await this.pauseFlow();
         }
     }
@@ -1152,6 +1189,9 @@ class AutomationInterface {
         const resumeFlowBtn = document.getElementById('resume-flow-btn');
 
         if (toggleFlowBtn) {
+            // Always enable the button when updating
+            toggleFlowBtn.disabled = false;
+            
             if (this.isFlowPaused) {
                 toggleFlowBtn.innerHTML = '<i class="bi bi-play-fill"></i> Retomar Fluxo';
                 toggleFlowBtn.className = 'btn btn-success btn-sm';
@@ -1159,6 +1199,8 @@ class AutomationInterface {
                 toggleFlowBtn.innerHTML = '<i class="bi bi-pause-fill"></i> Pausar Fluxo';
                 toggleFlowBtn.className = 'btn btn-outline-primary btn-sm';
             }
+            
+            console.log(`🔘 Botão atualizado: ${this.isFlowPaused ? 'Retomar' : 'Pausar'} (habilitado)`);
         }
 
         if (pauseFlowBtn) {
@@ -1189,15 +1231,38 @@ class AutomationInterface {
             const result = await response.json();
 
             if (response.ok && result.isPaused !== undefined) {
+                const wasPaused = this.isFlowPaused;
                 this.isFlowPaused = result.isPaused;
+                
+                // Always update UI when we get a valid response
                 this.updateFlowButtons();
                 this.updateSystemStatus(
                     this.isFlowPaused ? 'Sistema Pausado' : 'Sistema Ativo',
                     this.isFlowPaused ? 'warning' : 'success'
                 );
+                
+                console.log(`🔄 Estado do sistema sincronizado: ${this.isFlowPaused ? 'Pausado' : 'Ativo'}`);
+            } else {
+                console.warn('Resposta inválida da API de status:', result);
+                // Enable button even if we can't get status
+                this.enableFlowButton();
+                this.updateSystemStatus('Status Desconhecido', 'secondary');
             }
         } catch (error) {
             console.error('Erro ao verificar estado do fluxo:', error);
+            // On error, still enable the button
+            this.enableFlowButton();
+            this.updateSystemStatus('Status Desconhecido', 'secondary');
+        }
+    }
+    
+    enableFlowButton() {
+        const toggleFlowBtn = document.getElementById('toggle-flow-btn');
+        if (toggleFlowBtn) {
+            toggleFlowBtn.disabled = false;
+            toggleFlowBtn.innerHTML = '<i class="bi bi-question-circle"></i> Estado Desconhecido';
+            toggleFlowBtn.className = 'btn btn-outline-secondary btn-sm';
+            console.log('🔘 Botão habilitado (estado desconhecido)');
         }
     }
 
