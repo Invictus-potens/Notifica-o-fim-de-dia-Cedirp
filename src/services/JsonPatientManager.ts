@@ -176,8 +176,11 @@ export class JsonPatientManager {
         ...newPatients.map(patient => ({
           ...patient,
           enteredAt: new Date().toISOString()
-        })),
-        ...updatedPatients
+        } as PatientRecord)),
+        ...updatedPatients.map(patient => ({
+          ...patient,
+          enteredAt: new Date().toISOString()
+        } as PatientRecord))
       ];
 
       // Salvar backup antes de atualizar

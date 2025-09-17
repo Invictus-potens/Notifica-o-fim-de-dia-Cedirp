@@ -266,7 +266,7 @@ export class ProductionScheduler {
   private async handleHealthCheck(): Promise<void> {
     try {
       // Verificar status dos serviços
-      const monitoringStats = this.monitoringService.getMonitoringStats();
+      const monitoringStats = await this.monitoringService.getMonitoringStats();
       const configStats = this.configManager.getSystemConfig();
       
       // Log de status (sem dados sensíveis)

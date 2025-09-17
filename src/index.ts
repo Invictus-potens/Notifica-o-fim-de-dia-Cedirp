@@ -68,9 +68,9 @@ mainController.initialize().then(() => {
 });
 
 // API Routes
-app.get('/api/status', (req, res) => {
+app.get('/api/status', async (req, res) => {
   try {
-    const status = mainController.getStatus();
+    const status = await mainController.getStatus();
     res.json(status);
   } catch (error) {
     console.error('Erro ao obter status do sistema:', error);
@@ -82,7 +82,7 @@ app.get('/api/patients', async (req, res) => {
   try {
     // Obter pacientes em espera usando a nova implementação da API
     const patients = await mainController.getWaitingPatients();
-    const detailedStats = mainController.getDetailedStats();
+    const detailedStats = await mainController.getDetailedStats();
     res.json({ 
       patients: patients, 
       stats: detailedStats.monitoring,

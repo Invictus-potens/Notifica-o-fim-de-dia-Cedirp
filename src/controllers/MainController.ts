@@ -21,7 +21,7 @@ import { logsService } from '../services/LogsService';
 export interface IMainController {
   start(): Promise<void>;
   stop(): Promise<void>;
-  getStatus(): SystemStatus;
+  getStatus(): Promise<SystemStatus>;
   pauseFlow(): void;
   resumeFlow(): void;
   initialize(): Promise<void>;
@@ -278,9 +278,9 @@ export class MainController implements IMainController {
    * Obtém status completo do sistema
    * Requisito: Coordenação e monitoramento de todos os componentes
    */
-  getStatus(): SystemStatus {
+  async getStatus(): Promise<SystemStatus> {
     try {
-      const monitoringStats = this.monitoringService.getMonitoringStats();
+      const monitoringStats = await this.monitoringService.getMonitoringStats();
       const schedulerStats = this.monitoringScheduler.getStats();
       const errorStats = this.errorHandler.getErrorStats();
       const uptime = Date.now() - this.startTime.getTime();
@@ -566,10 +566,10 @@ export class MainController implements IMainController {
   /**
    * Obtém estatísticas detalhadas
    */
-  getDetailedStats() {
+  async getDetailedStats() {
     return {
-      system: this.getStatus(),
-      monitoring: this.monitoringService.getMonitoringStats(),
+      system: await this.getStatus(),
+      monitoring: await this.monitoringService.getMonitoringStats(),
       scheduler: this.monitoringScheduler.getStats(),
       config: this.configManager.getSystemConfig()
     };
