@@ -8,20 +8,8 @@
     "channelId": "63e68f168a48875131856df8",
     "channelType": "normal",
     "waitStartTime": "2025-09-17T15:31:10.825Z",
-    "waitTimeMinutes": 25,
-    "enteredAt": "2025-09-17T15:56:12.654Z"
-  },
-  {
-    "id": "68cacb8e114c3e27fb1d9d72",
-    "name": "Felipe",
-    "phone": "5519995068303",
-    "sectorId": "64d4db384f04cb80ac059912",
-    "sectorName": "Suporte Geral",
-    "channelId": "63e68f168a48875131856df8",
-    "channelType": "normal",
-    "waitStartTime": "2025-09-17T14:54:06.846Z",
-    "waitTimeMinutes": 62,
-    "enteredAt": "2025-09-17T15:56:12.654Z"
+    "waitTimeMinutes": 34,
+    "enteredAt": "2025-09-17T16:06:00.512Z"
   },
   {
     "id": "68cac99f8654a32c665fa03f",
@@ -32,8 +20,8 @@
     "channelId": "63e68f168a48875131856df8",
     "channelType": "normal",
     "waitStartTime": "2025-09-17T14:45:51.005Z",
-    "waitTimeMinutes": 70,
-    "enteredAt": "2025-09-17T15:56:12.654Z"
+    "waitTimeMinutes": 80,
+    "enteredAt": "2025-09-17T16:06:00.512Z"
   },
   {
     "id": "68cac3a98654a32c66cf4244",
@@ -44,8 +32,8 @@
     "channelId": "63e68f168a48875131856df8",
     "channelType": "normal",
     "waitStartTime": "2025-09-17T14:20:25.742Z",
-    "waitTimeMinutes": 95,
-    "enteredAt": "2025-09-17T15:56:12.654Z"
+    "waitTimeMinutes": 105,
+    "enteredAt": "2025-09-17T16:06:00.512Z"
   },
   {
     "id": "68cac3488654a32c66b0b92a",
@@ -56,8 +44,8 @@
     "channelId": "63e68f168a48875131856df8",
     "channelType": "normal",
     "waitStartTime": "2025-09-17T14:18:48.164Z",
-    "waitTimeMinutes": 97,
-    "enteredAt": "2025-09-17T15:56:12.654Z"
+    "waitTimeMinutes": 107,
+    "enteredAt": "2025-09-17T16:06:00.512Z"
   },
   {
     "id": "68cac044e373bd4388c7e643",
@@ -68,8 +56,8 @@
     "channelId": "63e68f168a48875131856df8",
     "channelType": "normal",
     "waitStartTime": "2025-09-17T14:05:56.385Z",
-    "waitTimeMinutes": 110,
-    "enteredAt": "2025-09-17T15:56:12.654Z"
+    "waitTimeMinutes": 120,
+    "enteredAt": "2025-09-17T16:06:00.512Z"
   },
   {
     "id": "68caba7f4a2cd9387d4ad301",
@@ -80,8 +68,8 @@
     "channelId": "63e68f168a48875131856df8",
     "channelType": "normal",
     "waitStartTime": "2025-09-17T13:41:19.979Z",
-    "waitTimeMinutes": 134,
-    "enteredAt": "2025-09-17T15:56:12.654Z"
+    "waitTimeMinutes": 144,
+    "enteredAt": "2025-09-17T16:06:00.512Z"
   },
   {
     "id": "68c9885b8503324084391beb",
@@ -92,8 +80,8 @@
     "channelId": "63e68f168a48875131856df8",
     "channelType": "normal",
     "waitStartTime": "2025-09-16T15:55:07.565Z",
-    "waitTimeMinutes": 1441,
-    "enteredAt": "2025-09-17T15:56:12.654Z"
+    "waitTimeMinutes": 1450,
+    "enteredAt": "2025-09-17T16:06:00.512Z"
   },
   {
     "id": "68c83356e046d08f2f272646",
@@ -104,7 +92,7 @@
     "channelId": "63e68f168a48875131856df8",
     "channelType": "normal",
     "waitStartTime": "2025-09-15T15:40:06.290Z",
-    "waitTimeMinutes": 2896,
-    "enteredAt": "2025-09-17T15:56:12.654Z"
+    "waitTimeMinutes": 2905,
+    "enteredAt": "2025-09-17T16:06:00.512Z"
   }
 ]

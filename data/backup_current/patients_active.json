@@ -1,26 +1,110 @@
 [
   {
-    "id": "test3",
-    "name": "Paciente Teste 3",
-    "phone": "11777777777",
-    "sectorId": "setor3",
-    "waitTimeMinutes": 15,
-    "enteredAt": "2025-09-17T15:36:41.079Z"
+    "id": "68cad43e674e20a28c31de10",
+    "name": "Felipe Prado",
+    "phone": "5516981892476",
+    "sectorId": "64d4db384f04cb80ac059912",
+    "sectorName": "Suporte Geral",
+    "channelId": "63e68f168a48875131856df8",
+    "channelType": "normal",
+    "waitStartTime": "2025-09-17T15:31:10.825Z",
+    "waitTimeMinutes": 31,
+    "enteredAt": "2025-09-17T16:03:00.756Z"
   },
   {
-    "id": "test1",
-    "name": "Paciente Teste 1",
-    "phone": "11999999999",
-    "sectorId": "setor1",
-    "waitTimeMinutes": 25,
-    "enteredAt": "2025-09-17T15:36:41.079Z"
+    "id": "68cacb8e114c3e27fb1d9d72",
+    "name": "Felipe",
+    "phone": "5519995068303",
+    "sectorId": "64d4db384f04cb80ac059912",
+    "sectorName": "Suporte Geral",
+    "channelId": "63e68f168a48875131856df8",
+    "channelType": "normal",
+    "waitStartTime": "2025-09-17T14:54:06.846Z",
+    "waitTimeMinutes": 68,
+    "enteredAt": "2025-09-17T16:03:00.756Z"
   },
   {
-    "id": "test2",
-    "name": "Paciente Teste 2",
-    "phone": "11888888888",
-    "sectorId": "setor2",
-    "waitTimeMinutes": 35,
-    "enteredAt": "2025-09-17T15:36:41.079Z"
+    "id": "68cac99f8654a32c665fa03f",
+    "name": "Manu 💛",
+    "phone": "55819981544991",
+    "sectorId": "631f7d27307d23f46af88983",
+    "sectorName": "Administrativo/Financeiro",
+    "channelId": "63e68f168a48875131856df8",
+    "channelType": "normal",
+    "waitStartTime": "2025-09-17T14:45:51.005Z",
+    "waitTimeMinutes": 77,
+    "enteredAt": "2025-09-17T16:03:00.756Z"
+  },
+  {
+    "id": "68cac3a98654a32c66cf4244",
+    "name": "Luma - Sara",
+    "phone": "5516997944865",
+    "sectorId": "631f7d27307d23f46af88983",
+    "sectorName": "Administrativo/Financeiro",
+    "channelId": "63e68f168a48875131856df8",
+    "channelType": "normal",
+    "waitStartTime": "2025-09-17T14:20:25.742Z",
+    "waitTimeMinutes": 102,
+    "enteredAt": "2025-09-17T16:03:00.756Z"
+  },
+  {
+    "id": "68cac3488654a32c66b0b92a",
+    "name": "Leandro Mioto",
+    "phone": "5516988157266",
+    "sectorId": "6401f4f49b1ff8512b525e9c",
+    "sectorName": "Suporte Telefonia",
+    "channelId": "63e68f168a48875131856df8",
+    "channelType": "normal",
+    "waitStartTime": "2025-09-17T14:18:48.164Z",
+    "waitTimeMinutes": 104,
+    "enteredAt": "2025-09-17T16:03:00.756Z"
+  },
+  {
+    "id": "68cac044e373bd4388c7e643",
+    "name": "Rafa Almeida",
+    "phone": "5511952254788",
+    "sectorId": "6401f4f49b1ff8512b525e9c",
+    "sectorName": "Suporte Telefonia",
+    "channelId": "63e68f168a48875131856df8",
+    "channelType": "normal",
+    "waitStartTime": "2025-09-17T14:05:56.385Z",
+    "waitTimeMinutes": 117,
+    "enteredAt": "2025-09-17T16:03:00.756Z"
+  },
+  {
+    "id": "68caba7f4a2cd9387d4ad301",
+    "name": "Jorge Coqueiro",
+    "phone": "5516993337948",
+    "sectorId": "6401f4f49b1ff8512b525e9c",
+    "sectorName": "Suporte Telefonia",
+    "channelId": "63e68f168a48875131856df8",
+    "channelType": "normal",
+    "waitStartTime": "2025-09-17T13:41:19.979Z",
+    "waitTimeMinutes": 141,
+    "enteredAt": "2025-09-17T16:03:00.756Z"
+  },
+  {
+    "id": "68c9885b8503324084391beb",
+    "name": "Maria Eduarda",
+    "phone": "555381388551",
+    "sectorId": "6401f4f49b1ff8512b525e9c",
+    "sectorName": "Suporte Telefonia",
+    "channelId": "63e68f168a48875131856df8",
+    "channelType": "normal",
+    "waitStartTime": "2025-09-16T15:55:07.565Z",
+    "waitTimeMinutes": 1447,
+    "enteredAt": "2025-09-17T16:03:00.756Z"
+  },
+  {
+    "id": "68c83356e046d08f2f272646",
+    "name": "Paulo Milliet Roque",
+    "phone": "5511994820100",
+    "sectorId": "6401f4f49b1ff8512b525e9c",
+    "sectorName": "Suporte Telefonia",
+    "channelId": "63e68f168a48875131856df8",
+    "channelType": "normal",
+    "waitStartTime": "2025-09-15T15:40:06.290Z",
+    "waitTimeMinutes": 2902,
+    "enteredAt": "2025-09-17T16:03:00.756Z"
   }
 ]

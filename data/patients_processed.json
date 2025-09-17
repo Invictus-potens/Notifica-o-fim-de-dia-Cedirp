@@ -238,5 +238,17 @@
     "sectorId": "setor2",
     "waitTimeMinutes": 35,
     "enteredAt": "2025-09-17T15:55:10.582Z"
+  },
+  {
+    "id": "68cacb8e114c3e27fb1d9d72",
+    "name": "Felipe",
+    "phone": "5519995068303",
+    "sectorId": "64d4db384f04cb80ac059912",
+    "sectorName": "Suporte Geral",
+    "channelId": "63e68f168a48875131856df8",
+    "channelType": "normal",
+    "waitStartTime": "2025-09-17T14:54:06.846Z",
+    "waitTimeMinutes": 68,
+    "enteredAt": "2025-09-17T16:03:46.837Z"
   }
 ]

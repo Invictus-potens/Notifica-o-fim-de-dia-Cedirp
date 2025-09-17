@@ -214,5 +214,29 @@
     "waitStartTime": "2025-09-16T11:40:33.438Z",
     "waitTimeMinutes": 1673,
     "enteredAt": "2025-09-17T15:36:38.961Z"
+  },
+  {
+    "id": "test3",
+    "name": "Paciente Teste 3",
+    "phone": "11777777777",
+    "sectorId": "setor3",
+    "waitTimeMinutes": 15,
+    "enteredAt": "2025-09-17T15:55:10.582Z"
+  },
+  {
+    "id": "test1",
+    "name": "Paciente Teste 1",
+    "phone": "11999999999",
+    "sectorId": "setor1",
+    "waitTimeMinutes": 25,
+    "enteredAt": "2025-09-17T15:55:10.582Z"
+  },
+  {
+    "id": "test2",
+    "name": "Paciente Teste 2",
+    "phone": "11888888888",
+    "sectorId": "setor2",
+    "waitTimeMinutes": 35,
+    "enteredAt": "2025-09-17T15:55:10.582Z"
   }
 ]
