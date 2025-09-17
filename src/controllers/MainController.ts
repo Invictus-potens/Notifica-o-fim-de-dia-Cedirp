@@ -77,7 +77,8 @@ export class MainController implements IMainController {
     // Inicializar MonitoringService
     this.monitoringService = new MonitoringService(
       this.krolikApiClient,
-      this.configManager
+      this.configManager,
+      this.errorHandler
     );
     
     // Inicializar MessageService
@@ -144,6 +145,10 @@ export class MainController implements IMainController {
       // Inicializar ConfigManager (carrega configurações e dados)
       await this.configManager.initialize();
       this.consoleMonitor.showComponentInitialized('ConfigManager');
+      
+      // Inicializar MonitoringService (inicializa JsonPatientManager)
+      await this.monitoringService.initialize();
+      this.consoleMonitor.showComponentInitialized('MonitoringService');
       
       // Testar conectividade com API CAM Krolik
       console.log('\n🔍 TESTANDO CONECTIVIDADE COM API CAM KROLIK...');

@@ -50,11 +50,11 @@ export class CronService {
   }
 
   /**
-   * Agenda job de verificação de 30 minutos (a cada 1 minuto)
+   * Agenda job de verificação de 30 minutos (a cada 3 minutos)
    */
   scheduleThirtyMinuteCheck(callback: () => Promise<void>): string {
     const jobId = 'thirty-minute-check';
-    const schedule = '* * * * *'; // A cada minuto
+    const schedule = '*/3 * * * *'; // A cada 3 minutos
     
     return this.scheduleJob(jobId, 'Verificação de 30 minutos', schedule, callback);
   }

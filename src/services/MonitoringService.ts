@@ -3,72 +3,84 @@ import { KrolikApiClient } from './KrolikApiClient';
 import { IConfigManager } from './ConfigManager';
 import { TimeUtils } from '../utils/TimeUtils';
 import { metricsService } from './MetricsService';
+import { JsonPatientManager } from './JsonPatientManager';
+import { IErrorHandler } from './ErrorHandler';
 
 export interface IMonitoringService {
+  initialize(): Promise<void>;
   checkWaitingPatients(): Promise<WaitingPatient[]>;
-  getPatientWaitTime(patientId: string): number;
+  getPatientWaitTime(patientId: string): Promise<number>;
   isEligibleFor30MinMessage(patient: WaitingPatient): boolean;
   isEligibleForEndOfDayMessage(patient: WaitingPatient): boolean;
   isBusinessHours(): boolean;
   isWorkingDay(date?: Date): boolean;
   getEligiblePatientsFor30MinMessage(): Promise<WaitingPatient[]>;
   getEligiblePatientsForEndOfDayMessage(): Promise<WaitingPatient[]>;
-  getMonitoringStats(): {
+  getMonitoringStats(): Promise<{
     totalPatients: number;
     patientsOver30Min: number;
     averageWaitTime: number;
     lastUpdate: Date;
-  };
+  }>;
+  clearAllData(): Promise<void>;
 }
 
 export class MonitoringService implements IMonitoringService {
   private krolikClient: KrolikApiClient;
   private configManager: IConfigManager;
-  private cachedPatients: Map<string, WaitingPatient> = new Map();
+  private jsonPatientManager: JsonPatientManager;
+  private errorHandler: IErrorHandler;
   private lastUpdate: Date = new Date(0);
-  private cacheValidityMs: number = 30000; // 30 segundos
 
-  constructor(krolikClient: KrolikApiClient, configManager: IConfigManager) {
+  constructor(
+    krolikClient: KrolikApiClient, 
+    configManager: IConfigManager,
+    errorHandler: IErrorHandler
+  ) {
     this.krolikClient = krolikClient;
     this.configManager = configManager;
+    this.errorHandler = errorHandler;
+    this.jsonPatientManager = new JsonPatientManager(errorHandler);
+  }
+
+  async initialize(): Promise<void> {
+    await this.jsonPatientManager.initialize();
   }
 
   /**
    * Verifica atendimentos em espera através da API
-   * Implementa cache para evitar requisições excessivas
+   * Atualiza arquivos JSON com dados da API
    */
   async checkWaitingPatients(): Promise<WaitingPatient[]> {
     const startTime = Date.now();
-    const now = new Date();
     
-    // Usar cache se ainda válido
-    if (now.getTime() - this.lastUpdate.getTime() < this.cacheValidityMs) {
-      return Array.from(this.cachedPatients.values());
-    }
-
     try {
-      const patients = await this.krolikClient.listWaitingAttendances();
+      // Buscar pacientes da API CAM Krolik
+      const apiPatients = await this.krolikClient.listWaitingAttendances();
       
-      // Atualizar cache
-      this.cachedPatients.clear();
-      patients.forEach(patient => {
-        // Recalcular tempo de espera atual
-        const updatedPatient = this.updateWaitTime(patient);
-        this.cachedPatients.set(patient.id, updatedPatient);
-      });
+      // Atualizar arquivos JSON com dados da API
+      const result = await this.jsonPatientManager.updateActivePatients(apiPatients);
       
-      this.lastUpdate = now;
+      this.lastUpdate = new Date();
+      
+      // Log das mudanças detectadas
+      if (result.newPatients.length > 0) {
+        console.log(`📥 ${result.newPatients.length} novos pacientes adicionados`);
+      }
+      if (result.removedPatients.length > 0) {
+        console.log(`📤 ${result.removedPatients.length} pacientes removidos (atendidos)`);
+      }
       
       // Registrar métrica de ciclo de monitoramento
       const duration = Date.now() - startTime;
       metricsService.recordMonitoringCycle(
         duration,
-        patients.length,
+        result.activePatients.length,
         0, // messagesEligible será calculado pelos filtros
         0  // errors
       );
       
-      return Array.from(this.cachedPatients.values());
+      return result.activePatients;
     } catch (error) {
       const duration = Date.now() - startTime;
       
@@ -82,22 +94,33 @@ export class MonitoringService implements IMonitoringService {
       
       console.error('Erro ao verificar atendimentos em espera:', error);
       
-      // Retornar cache existente em caso de erro, mas atualizar tempos
-      const cachedPatients = Array.from(this.cachedPatients.values());
-      return cachedPatients.map(patient => this.updateWaitTime(patient));
+      // Retornar pacientes do arquivo em caso de erro
+      try {
+        return await this.jsonPatientManager.getActivePatients();
+      } catch (fallbackError) {
+        console.error('Erro ao carregar pacientes do arquivo:', fallbackError);
+        return [];
+      }
     }
   }
 
   /**
    * Obtém tempo de espera atual de um paciente específico
    */
-  getPatientWaitTime(patientId: string): number {
-    const patient = this.cachedPatients.get(patientId);
-    if (!patient) {
+  async getPatientWaitTime(patientId: string): Promise<number> {
+    try {
+      const activePatients = await this.jsonPatientManager.getActivePatients();
+      const patient = activePatients.find(p => p.id === patientId);
+      
+      if (!patient) {
+        return 0;
+      }
+
+      return this.calculateWaitTimeMinutes(patient.waitStartTime);
+    } catch (error) {
+      this.errorHandler.logError(error as Error, 'MonitoringService.getPatientWaitTime');
       return 0;
     }
-
-    return this.calculateWaitTimeMinutes(patient.waitStartTime);
   }
 
   /**
@@ -179,34 +202,46 @@ export class MonitoringService implements IMonitoringService {
   }
 
   /**
-   * Limpa cache forçando nova consulta na próxima verificação
+   * Limpa todos os dados (chamado após mensagens de 18h)
    */
-  clearCache(): void {
-    this.cachedPatients.clear();
-    this.lastUpdate = new Date(0);
+  async clearAllData(): Promise<void> {
+    try {
+      await this.jsonPatientManager.clearAllFiles();
+      this.lastUpdate = new Date(0);
+      console.log('🧹 Todos os dados de pacientes foram limpos após mensagens de fim de expediente');
+    } catch (error) {
+      this.errorHandler.logError(error as Error, 'MonitoringService.clearAllData');
+      throw error;
+    }
   }
 
   /**
    * Obtém estatísticas do monitoramento
    */
-  getMonitoringStats(): {
+  async getMonitoringStats(): Promise<{
     totalPatients: number;
     patientsOver30Min: number;
     averageWaitTime: number;
     lastUpdate: Date;
-  } {
-    const patients = Array.from(this.cachedPatients.values());
-    const patientsOver30Min = patients.filter(p => p.waitTimeMinutes >= 30).length;
-    const averageWaitTime = patients.length > 0 
-      ? patients.reduce((sum, p) => sum + p.waitTimeMinutes, 0) / patients.length 
-      : 0;
-
-    return {
-      totalPatients: patients.length,
-      patientsOver30Min,
-      averageWaitTime: Math.round(averageWaitTime),
-      lastUpdate: this.lastUpdate
-    };
+  }> {
+    try {
+      const stats = await this.jsonPatientManager.getStats();
+      
+      return {
+        totalPatients: stats.activeCount,
+        patientsOver30Min: stats.patientsOver30Min,
+        averageWaitTime: stats.averageWaitTime,
+        lastUpdate: this.lastUpdate
+      };
+    } catch (error) {
+      this.errorHandler.logError(error as Error, 'MonitoringService.getMonitoringStats');
+      return {
+        totalPatients: 0,
+        patientsOver30Min: 0,
+        averageWaitTime: 0,
+        lastUpdate: this.lastUpdate
+      };
+    }
   }
 
   /**
@@ -216,6 +251,8 @@ export class MonitoringService implements IMonitoringService {
   async getEligiblePatientsFor30MinMessage(): Promise<WaitingPatient[]> {
     const allPatients = await this.checkWaitingPatients();
     const eligiblePatients: WaitingPatient[] = [];
+    const excludedSectors = this.configManager.getExcludedSectors();
+    const excludedChannels = this.configManager.getExcludedChannels();
 
     for (const patient of allPatients) {
       // Verificar elegibilidade básica
@@ -223,13 +260,27 @@ export class MonitoringService implements IMonitoringService {
         continue;
       }
 
-      // Verificar se já recebeu mensagem (Requisito 1.2)
+      // Verificar se setor está excluído
+      if (excludedSectors.includes(patient.sectorId)) {
+        continue;
+      }
+
+      // Verificar se canal está excluído
+      if (excludedChannels.includes(patient.channelId)) {
+        continue;
+      }
+
+      // Verificar se já recebeu mensagem (usando nova chave nome+telefone+setor)
+      const patientKey = `${patient.name}_${patient.phone}_${patient.sectorId}`;
       const alreadyReceived = await this.configManager.isAttendanceExcluded(
-        patient.id, 
+        patientKey, 
         '30min'
       );
 
-      if (!alreadyReceived) {
+      // Verificar se já foi processado (está na lista de processados)
+      const isProcessed = await this.jsonPatientManager.isPatientProcessed(patient);
+
+      if (!alreadyReceived && !isProcessed) {
         eligiblePatients.push(patient);
       }
     }
@@ -299,7 +350,16 @@ export class MonitoringService implements IMonitoringService {
         continue;
       }
 
-      eligiblePatients.push(patient);
+      // Verificar se já recebeu mensagem de fim de dia (usando nova chave)
+      const patientKey = `${patient.name}_${patient.phone}_${patient.sectorId}`;
+      const alreadyReceived = await this.configManager.isAttendanceExcluded(
+        patientKey, 
+        'end_of_day'
+      );
+
+      if (!alreadyReceived) {
+        eligiblePatients.push(patient);
+      }
     }
 
     return eligiblePatients;
