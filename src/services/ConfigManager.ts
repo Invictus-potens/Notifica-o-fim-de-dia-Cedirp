@@ -102,11 +102,17 @@ export class ConfigManager implements IConfigManager {
 
   // Implementação da interface IConfigManager
   getExcludedSectors(): string[] {
-    return [...this.systemConfig.excludedSectors];
+    // Garantir que sempre retornamos uma cópia dos setores excluídos
+    const sectors = this.systemConfig.excludedSectors || [];
+    console.log(`🔍 ConfigManager: Retornando ${sectors.length} setores excluídos:`, sectors);
+    return [...sectors];
   }
 
   getExcludedChannels(): string[] {
-    return [...this.systemConfig.excludedChannels];
+    // Garantir que sempre retornamos uma cópia dos canais excluídos
+    const channels = this.systemConfig.excludedChannels || [];
+    console.log(`🔍 ConfigManager: Retornando ${channels.length} canais excluídos:`, channels);
+    return [...channels];
   }
 
   async addToExclusionList(attendanceId: string, messageType: '30min' | 'end_of_day'): Promise<void> {

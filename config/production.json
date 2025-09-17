@@ -71,7 +71,13 @@
     "interval": 86400000,
     "retention": 604800000,
     "path": "data/backup",
-    "compression": true
+    "compression": true,
+    "patientData": {
+      "minIntervalMs": 300000,
+      "useSingleFolder": true,
+      "cleanupOnStartup": true,
+      "createOnlyOnChanges": true
+    }
   },
   "health": {
     "enabled": true,

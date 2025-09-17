@@ -45,11 +45,13 @@ export class MessageService implements IMessageService {
 
       // Verificar se o setor está na lista de exceção (Requisito 2.2)
       if (this.isSectorExcluded(patient.sectorId)) {
+        console.log(`❌ MessageService: Setor ${patient.sectorId} está excluído para ${patient.name}`);
         return false;
       }
 
       // Verificar se o canal está na lista de exceção (Requisito 2.3)
       if (this.isChannelExcluded(patient.channelId)) {
+        console.log(`❌ MessageService: Canal ${patient.channelId} está excluído para ${patient.name}`);
         return false;
       }
 
@@ -339,8 +341,10 @@ export class MessageService implements IMessageService {
       
       if (messageType === '30min') {
         actionCardId = config.selectedActionCard30Min || config.selectedActionCard;
+        console.log(`🎯 Usando cartão de 30min: ${actionCardId} para paciente ${patient.name}`);
       } else if (messageType === 'end_of_day') {
         actionCardId = config.selectedActionCardEndDay || config.selectedActionCard;
+        console.log(`🎯 Usando cartão de fim de dia: ${actionCardId} para paciente ${patient.name}`);
       }
 
       // Verificar se há cartão de ação configurado
@@ -349,6 +353,7 @@ export class MessageService implements IMessageService {
           ? 'Nenhum cartão de ação configurado para mensagens de 30 minutos'
           : 'Nenhum cartão de ação configurado para mensagens de fim de expediente';
           
+        console.error(`❌ ${errorMsg}`);
         this.errorHandler.logError(
           new Error(errorMsg),
           `MessageService.sendActionCardMessage - Patient: ${patient.id}, Type: ${messageType}`
@@ -356,13 +361,15 @@ export class MessageService implements IMessageService {
         return false;
       }
 
+      console.log(`📤 Enviando cartão de ação ${actionCardId} para ${patient.name} (${patient.phone}) via canal ${patient.channelId}`);
+
       // Enviar cartão de ação através da API com retry e fallback
       const result = await executeWithFallback(
         async () => {
           const retryResult = await retryApiCall(async () => {
-            return await this.krolikApiClient.sendActionCard(
-              patient.channelId,
-              actionCardId
+            return await this.krolikApiClient.sendActionCardByPhone(
+              patient.phone,
+              actionCardId!
             );
           });
           
@@ -374,14 +381,19 @@ export class MessageService implements IMessageService {
         },
         async () => {
           // Fallback: tentar enviar mensagem de texto simples
-          const fallbackMessage = `Mensagem automática: Sua consulta está aguardando há mais de 30 minutos. Em breve você será atendido.`;
+          const fallbackMessage = messageType === '30min' 
+            ? `Mensagem automática: Sua consulta está aguardando há mais de 30 minutos. Em breve você será atendido.`
+            : `Mensagem automática: O expediente está encerrando. Entre em contato conosco amanhã para reagendar sua consulta.`;
           return await this.krolikApiClient.sendTextMessage(patient.id, fallbackMessage);
         }
       );
 
       const success = result.success && result.data;
 
-      if (!success) {
+      if (success) {
+        console.log(`✅ Cartão de ação enviado com sucesso para ${patient.name}`);
+      } else {
+        console.error(`❌ Falha ao enviar cartão de ação para ${patient.name}`);
         this.errorHandler.logError(
           new Error(`Falha ao enviar cartão de ação para canal ${patient.channelId}`),
           `MessageService.sendActionCardMessage - Patient: ${patient.id}`
@@ -391,6 +403,7 @@ export class MessageService implements IMessageService {
       return success || false;
     } catch (error) {
       // Tratamento de erro específico para cartão de ação (Requisito 6.5)
+      console.error(`❌ Erro ao enviar cartão de ação para ${patient.name}:`, error);
       this.errorHandler.logError(
         error as Error,
         `MessageService.sendActionCardMessage - Patient: ${patient.id}, Channel: ${patient.channelId}`

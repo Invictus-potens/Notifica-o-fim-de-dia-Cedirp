@@ -76,7 +76,6 @@ export class SupabaseClient {
       
       // Note: Direct SQL execution would require database admin privileges
       // In production, these tables should be created via Supabase migrations
-      console.warn('Table creation should be done via Supabase migrations in production');
     }
   }
 
@@ -98,7 +97,6 @@ export class SupabaseClient {
       `;
       
       // Note: Direct SQL execution would require database admin privileges
-      console.warn('Table creation should be done via Supabase migrations in production');
     }
   }
 

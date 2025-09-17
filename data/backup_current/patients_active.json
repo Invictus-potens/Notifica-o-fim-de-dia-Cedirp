@@ -1,0 +1,26 @@
+[
+  {
+    "id": "test3",
+    "name": "Paciente Teste 3",
+    "phone": "11777777777",
+    "sectorId": "setor3",
+    "waitTimeMinutes": 15,
+    "enteredAt": "2025-09-17T15:36:41.079Z"
+  },
+  {
+    "id": "test1",
+    "name": "Paciente Teste 1",
+    "phone": "11999999999",
+    "sectorId": "setor1",
+    "waitTimeMinutes": 25,
+    "enteredAt": "2025-09-17T15:36:41.079Z"
+  },
+  {
+    "id": "test2",
+    "name": "Paciente Teste 2",
+    "phone": "11888888888",
+    "sectorId": "setor2",
+    "waitTimeMinutes": 35,
+    "enteredAt": "2025-09-17T15:36:41.079Z"
+  }
+]

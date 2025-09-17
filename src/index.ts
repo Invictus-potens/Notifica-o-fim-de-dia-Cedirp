@@ -52,12 +52,18 @@ import { logsService } from './services/LogsService';
 const mainController = new MainController();
 
 // Inicializar sistema na inicialização do servidor
-mainController.initialize().then(() => {
+mainController.initialize().then(async () => {
   console.log('\n🎉 ===========================================');
   console.log('   ✅ SISTEMA INICIALIZADO COM SUCESSO!');
   console.log('===========================================');
   console.log('🎯 Todos os componentes estão funcionando');
+  
+  // INICIAR o sistema automaticamente (não apenas inicializar)
+  await mainController.start();
+  
   console.log('🚀 Sistema pronto para processar mensagens');
+  console.log('⏰ Ciclos de monitoramento iniciados (60s)');
+  console.log('📝 Logs de ciclo serão exibidos no console');
   console.log('===========================================\n');
 }).catch((error) => {
   console.log('\n💥 ===========================================');
@@ -118,10 +124,18 @@ app.post('/api/flow/resume', (req, res) => {
 app.get('/api/config', (req, res) => {
   try {
     const config = mainController.getSystemConfig();
-    res.json(config);
+    res.json({
+      success: true,
+      data: config,
+      timestamp: new Date().toISOString()
+    });
   } catch (error) {
     console.error('Erro ao obter configuração:', error);
-    res.status(500).json({ error: 'Erro ao obter configuração' });
+    res.status(500).json({ 
+      success: false,
+      error: 'Erro ao obter configuração',
+      timestamp: new Date().toISOString()
+    });
   }
 });
 

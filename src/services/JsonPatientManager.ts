@@ -18,6 +18,10 @@ export class JsonPatientManager {
   private dataDir: string;
   private files: PatientFiles;
   private errorHandler: IErrorHandler;
+  private lastBackupTime: number = 0;
+  private minBackupIntervalMs: number = 5 * 60 * 1000; // 5 minutos por padrão
+  private useSingleBackupFolder: boolean = true; // Usar apenas uma pasta de backup
+  private singleBackupPath: string;
 
   constructor(errorHandler: IErrorHandler, dataDir: string = './data') {
     this.errorHandler = errorHandler;
@@ -28,6 +32,8 @@ export class JsonPatientManager {
       history: path.join(dataDir, 'patients_history.json'),
       backup: path.join(dataDir, 'patients_backup.json')
     };
+    
+    this.singleBackupPath = path.join(dataDir, 'backup_current');
     
     this.ensureDataDirectory();
   }
@@ -97,10 +103,42 @@ export class JsonPatientManager {
   }
 
   /**
-   * Cria backup dos arquivos antes de operações críticas
+   * Cria backup dos arquivos apenas quando necessário
    */
-  private async createBackup(): Promise<void> {
+  private async createBackup(forceBackup: boolean = false): Promise<void> {
     try {
+      const now = Date.now();
+      
+      // Verificar se deve criar backup baseado no tempo
+      if (!forceBackup && (now - this.lastBackupTime) < this.minBackupIntervalMs) {
+        return;
+      }
+
+      if (this.useSingleBackupFolder) {
+        // Usar apenas uma pasta de backup que é sobrescrita
+        if (!fs.existsSync(this.singleBackupPath)) {
+          fs.mkdirSync(this.singleBackupPath, { recursive: true });
+        }
+
+        // Fazer backup de todos os arquivos na pasta única
+        for (const [type, filePath] of Object.entries(this.files)) {
+          if (fs.existsSync(filePath)) {
+            const backupPath = path.join(this.singleBackupPath, `patients_${type}.json`);
+            fs.copyFileSync(filePath, backupPath);
+          }
+        }
+
+        // Criar arquivo de timestamp para saber quando foi o último backup
+        const timestampFile = path.join(this.singleBackupPath, 'last_backup.json');
+        const backupInfo = {
+          timestamp: new Date().toISOString(),
+          lastBackupTime: now,
+          filesBackedUp: Object.keys(this.files).length
+        };
+        fs.writeFileSync(timestampFile, JSON.stringify(backupInfo, null, 2));
+
+      } else {
+        // Método antigo com múltiplas pastas (mantido para compatibilidade)
       const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
       const backupDir = path.join(this.dataDir, `backup_${timestamp}`);
       
@@ -108,15 +146,60 @@ export class JsonPatientManager {
         fs.mkdirSync(backupDir, { recursive: true });
       }
 
-      // Fazer backup de todos os arquivos
       for (const [type, filePath] of Object.entries(this.files)) {
         if (fs.existsSync(filePath)) {
           const backupPath = path.join(backupDir, `patients_${type}.json`);
           fs.copyFileSync(filePath, backupPath);
         }
       }
+
+        // Limpar backups antigos após criar um novo
+        await this.cleanOldBackups();
+      }
+
+      this.lastBackupTime = now;
+      
     } catch (error) {
       this.errorHandler.logError(error as Error, 'JsonPatientManager.createBackup');
+    }
+  }
+
+  /**
+   * Limpa backups antigos mantendo apenas os mais recentes
+   */
+  private async cleanOldBackups(): Promise<void> {
+    try {
+      const backupDirs = fs.readdirSync(this.dataDir)
+        .filter(name => name.startsWith('backup_'))
+        .map(name => {
+          const fullPath = path.join(this.dataDir, name);
+          const stats = fs.statSync(fullPath);
+          return {
+            name,
+            path: fullPath,
+            mtime: stats.mtime
+          };
+        })
+        .sort((a, b) => b.mtime.getTime() - a.mtime.getTime());
+
+      // Manter apenas os backups mais recentes (padrão: 20)
+      const maxBackupsToKeep = 20;
+      const backupsToDelete = backupDirs.slice(maxBackupsToKeep);
+      
+      for (const backup of backupsToDelete) {
+        try {
+          fs.rmSync(backup.path, { recursive: true, force: true });
+          console.log(`🗑️ Backup antigo removido: ${backup.name}`);
+        } catch (deleteError) {
+          this.errorHandler.logError(deleteError as Error, `JsonPatientManager.cleanOldBackups.delete.${backup.name}`);
+        }
+      }
+
+      if (backupsToDelete.length > 0) {
+        console.log(`🧹 Limpeza de backups concluída. Removidos: ${backupsToDelete.length}, Mantidos: ${Math.min(backupDirs.length, maxBackupsToKeep)}`);
+      }
+    } catch (error) {
+      this.errorHandler.logError(error as Error, 'JsonPatientManager.cleanOldBackups');
     }
   }
 
@@ -183,8 +266,11 @@ export class JsonPatientManager {
         } as PatientRecord))
       ];
 
-      // Salvar backup antes de atualizar
+      // Salvar backup antes de atualizar (apenas se houver mudanças significativas)
+      const hasSignificantChanges = newPatients.length > 0 || removedPatients.length > 0;
+      if (hasSignificantChanges) {
       await this.createBackup();
+      }
 
       // Salvar pacientes ativos
       await this.savePatientsToFile(this.files.active, activePatients);
@@ -297,7 +383,7 @@ export class JsonPatientManager {
    */
   async clearAllFiles(): Promise<void> {
     try {
-      await this.createBackup();
+      await this.createBackup(true); // Força backup na limpeza
       
       // Limpar todos os arquivos
       await Promise.all([
@@ -365,6 +451,116 @@ export class JsonPatientManager {
       this.errorHandler.logError(error as Error, 'JsonPatientManager.isPatientProcessed');
       return false;
     }
+  }
+
+  /**
+   * Configura o intervalo mínimo entre backups
+   */
+  setBackupInterval(intervalMs: number): void {
+    this.minBackupIntervalMs = intervalMs;
+  }
+
+  /**
+   * Configura se deve usar pasta única de backup ou múltiplas pastas
+   */
+  setSingleBackupFolder(useSingle: boolean): void {
+    this.useSingleBackupFolder = useSingle;
+  }
+
+  /**
+   * Força limpeza manual dos backups antigos (apenas para modo múltiplas pastas)
+   */
+  async manualCleanupBackups(): Promise<void> {
+    if (!this.useSingleBackupFolder) {
+      await this.cleanOldBackups();
+    }
+  }
+
+  /**
+   * Obtém estatísticas dos backups
+   */
+  getBackupStats(): { count: number; lastBackup: string | null; totalSizeMB: number; backupMode: string } {
+    try {
+      if (this.useSingleBackupFolder) {
+        // Modo pasta única
+        if (fs.existsSync(this.singleBackupPath)) {
+          const size = this.getDirectorySize(this.singleBackupPath);
+          const timestampFile = path.join(this.singleBackupPath, 'last_backup.json');
+          let lastBackup = null;
+          
+          if (fs.existsSync(timestampFile)) {
+            try {
+              const backupInfo = JSON.parse(fs.readFileSync(timestampFile, 'utf8'));
+              lastBackup = backupInfo.timestamp;
+            } catch (error) {
+              // Ignorar erro ao ler timestamp
+            }
+          }
+          
+          return {
+            count: 1,
+            lastBackup,
+            totalSizeMB: Math.round(size / (1024 * 1024) * 100) / 100,
+            backupMode: 'single_folder'
+          };
+        } else {
+          return { count: 0, lastBackup: null, totalSizeMB: 0, backupMode: 'single_folder' };
+        }
+      } else {
+        // Modo múltiplas pastas
+        const backupDirs = fs.readdirSync(this.dataDir)
+          .filter(name => name.startsWith('backup_'))
+          .map(name => {
+            const fullPath = path.join(this.dataDir, name);
+            const stats = fs.statSync(fullPath);
+            return {
+              name,
+              path: fullPath,
+              mtime: stats.mtime,
+              size: this.getDirectorySize(fullPath)
+            };
+          })
+          .sort((a, b) => b.mtime.getTime() - a.mtime.getTime());
+
+        const totalSize = backupDirs.reduce((sum, backup) => sum + backup.size, 0);
+        
+        return {
+          count: backupDirs.length,
+          lastBackup: backupDirs.length > 0 ? backupDirs[0].name : null,
+          totalSizeMB: Math.round(totalSize / (1024 * 1024) * 100) / 100,
+          backupMode: 'multiple_folders'
+        };
+      }
+    } catch (error) {
+      this.errorHandler.logError(error as Error, 'JsonPatientManager.getBackupStats');
+      return { count: 0, lastBackup: null, totalSizeMB: 0, backupMode: 'unknown' };
+    }
+  }
+
+  /**
+   * Calcula o tamanho de um diretório recursivamente
+   */
+  private getDirectorySize(dirPath: string): number {
+    let totalSize = 0;
+    
+    try {
+      const items = fs.readdirSync(dirPath);
+      
+      for (const item of items) {
+        const itemPath = path.join(dirPath, item);
+        const stats = fs.statSync(itemPath);
+        
+        if (stats.isFile()) {
+          totalSize += stats.size;
+        } else if (stats.isDirectory()) {
+          totalSize += this.getDirectorySize(itemPath);
+        }
+      }
+    } catch (error) {
+      // Ignorar erros de acesso a arquivos
+    }
+    
+    return totalSize;
   }
 
   /**

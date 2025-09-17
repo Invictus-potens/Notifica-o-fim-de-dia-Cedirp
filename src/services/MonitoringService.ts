@@ -44,6 +44,34 @@ export class MonitoringService implements IMonitoringService {
   }
 
   async initialize(): Promise<void> {
+    // Configurar o JsonPatientManager com as configurações de backup
+    try {
+      // Configurações padrão para backup
+      const backupConfig = {
+        minIntervalMs: 300000, // 5 minutos
+        useSingleFolder: true, // Usar pasta única
+        cleanupOnStartup: true,
+        createOnlyOnChanges: true
+      };
+      
+      // Configurar intervalo mínimo entre backups
+      this.jsonPatientManager.setBackupInterval(backupConfig.minIntervalMs);
+      
+      // Configurar modo de backup (pasta única)
+      this.jsonPatientManager.setSingleBackupFolder(backupConfig.useSingleFolder);
+      
+      // Limpeza automática na inicialização (apenas para modo múltiplas pastas)
+      if (backupConfig.cleanupOnStartup) {
+        console.log('🧹 Executando limpeza automática de backups na inicialização...');
+        await this.jsonPatientManager.manualCleanupBackups();
+        
+        const stats = this.jsonPatientManager.getBackupStats();
+        console.log(`📊 Backups após configuração: ${stats.count} backup(s), ${stats.totalSizeMB}MB, modo: ${stats.backupMode}`);
+      }
+    } catch (error) {
+      this.errorHandler.logError(error as Error, 'MonitoringService.initialize.backupConfig');
+    }
+    
     await this.jsonPatientManager.initialize();
   }
 
@@ -254,19 +282,28 @@ export class MonitoringService implements IMonitoringService {
     const excludedSectors = this.configManager.getExcludedSectors();
     const excludedChannels = this.configManager.getExcludedChannels();
 
+    console.log(`🔍 MonitoringService: Verificando ${allPatients.length} pacientes para mensagem de 30min`);
+    console.log(`🔍 MonitoringService: Setores excluídos:`, excludedSectors);
+    console.log(`🔍 MonitoringService: Canais excluídos:`, excludedChannels);
+
     for (const patient of allPatients) {
+      console.log(`🔍 Verificando paciente ${patient.name} (Setor: ${patient.sectorId}, Canal: ${patient.channelId})`);
+
       // Verificar elegibilidade básica
       if (!this.isEligibleFor30MinMessage(patient)) {
+        console.log(`❌ ${patient.name}: Não elegível para mensagem de 30min`);
         continue;
       }
 
       // Verificar se setor está excluído
       if (excludedSectors.includes(patient.sectorId)) {
+        console.log(`❌ ${patient.name}: Setor ${patient.sectorId} está excluído`);
         continue;
       }
 
       // Verificar se canal está excluído
       if (excludedChannels.includes(patient.channelId)) {
+        console.log(`❌ ${patient.name}: Canal ${patient.channelId} está excluído`);
         continue;
       }
 
@@ -281,10 +318,14 @@ export class MonitoringService implements IMonitoringService {
       const isProcessed = await this.jsonPatientManager.isPatientProcessed(patient);
 
       if (!alreadyReceived && !isProcessed) {
+        console.log(`✅ ${patient.name}: Elegível para mensagem de 30min`);
         eligiblePatients.push(patient);
+      } else {
+        console.log(`❌ ${patient.name}: Já recebeu mensagem ou foi processado`);
       }
     }
 
+    console.log(`🎯 MonitoringService: ${eligiblePatients.length} pacientes elegíveis encontrados`);
     return eligiblePatients;
   }
 

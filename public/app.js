@@ -504,6 +504,8 @@ class AutomationInterface {
                 this.loadSectors();
                 this.loadChannels();
                 this.loadMessageConfig();
+                // Load exclusion lists after sectors/channels are loaded
+                this.loadExclusionLists();
                 // Always sync system status when loading config
                 this.checkFlowState();
                 break;
@@ -854,10 +856,65 @@ class AutomationInterface {
 
             console.log(`📋 Carregados ${result.total || 0} cartões de ação`);
             this.displayActionCards(result.data || result);
+            
+            // Carregar configurações salvas dos cartões
+            await this.loadSavedActionCardConfig();
 
         } catch (error) {
             console.error('❌ Erro ao carregar cartões de ação:', error);
             this.showError('Erro ao carregar cartões de ação: ' + error.message);
+        }
+    }
+
+    async loadSavedActionCardConfig() {
+        try {
+            console.log('🔍 Carregando configurações salvas dos cartões...');
+            const response = await fetch('/api/config');
+            const result = await response.json();
+
+            console.log('📥 Resposta da API /api/config:', result);
+
+            if (response.ok && result.success) {
+                const config = result.data;
+                console.log('📋 Configurações recebidas:', config);
+                
+                // Aplicar configurações salvas nos selects
+                if (config.selectedActionCard) {
+                    const select = document.getElementById('action-card-select');
+                    if (select) {
+                        select.value = config.selectedActionCard;
+                        console.log('✅ Cartão geral carregado:', config.selectedActionCard);
+                    } else {
+                        console.warn('⚠️ Elemento action-card-select não encontrado');
+                    }
+                }
+                
+                if (config.selectedActionCard30Min) {
+                    const select = document.getElementById('action-card-30min-select');
+                    if (select) {
+                        select.value = config.selectedActionCard30Min;
+                        console.log('✅ Cartão 30min carregado:', config.selectedActionCard30Min);
+                    } else {
+                        console.warn('⚠️ Elemento action-card-30min-select não encontrado');
+                    }
+                }
+                
+                if (config.selectedActionCardEndDay) {
+                    const select = document.getElementById('action-card-endday-select');
+                    if (select) {
+                        select.value = config.selectedActionCardEndDay;
+                        console.log('✅ Cartão fim de dia carregado:', config.selectedActionCardEndDay);
+                    } else {
+                        console.warn('⚠️ Elemento action-card-endday-select não encontrado');
+                    }
+                }
+                
+                console.log('✅ Configurações de cartões de ação carregadas do backend');
+            } else {
+                console.error('❌ Resposta inválida da API:', result);
+            }
+        } catch (error) {
+            console.error('❌ Erro ao carregar configurações de cartões:', error);
         }
     }
 
@@ -1057,9 +1114,8 @@ class AutomationInterface {
             channelSelect.addEventListener('change', () => this.onChannelSelectChange());
         }
 
-        // Load existing exclusions
-        this.loadExcludedSectors();
-        this.loadExcludedChannels();
+        // Load existing exclusions (will be called after sectors/channels are loaded)
+        // this.loadExclusionLists(); // Called separately in loadRouteData
 
         // Add event listener for save message config button
         const saveMessageConfigBtn = document.getElementById('save-message-config-btn');
@@ -1441,36 +1497,132 @@ class AutomationInterface {
         }
     }
 
-    saveExcludedSectors() {
+    async saveExcludedSectors() {
+        // Salvar localmente (rápido)
         localStorage.setItem('excludedSectors', JSON.stringify(this.excludedSectors));
-    }
-
-    saveExcludedChannels() {
-        localStorage.setItem('excludedChannels', JSON.stringify(this.excludedChannels));
-    }
-
-    loadExcludedSectors() {
+        
+        // Sincronizar com backend (persistente)
         try {
+            await fetch('/api/config', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    excludedSectors: this.excludedSectors.map(s => s.id)
+                })
+            });
+            console.log('✅ Setores excluídos sincronizados com backend');
+        } catch (error) {
+            console.error('❌ Erro ao sincronizar setores excluídos:', error);
+        }
+    }
+
+    async saveExcludedChannels() {
+        // Salvar localmente (rápido)
+        localStorage.setItem('excludedChannels', JSON.stringify(this.excludedChannels));
+        
+        // Sincronizar com backend (persistente)
+        try {
+            await fetch('/api/config', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    excludedChannels: this.excludedChannels.map(c => c.id)
+                })
+            });
+            console.log('✅ Canais excluídos sincronizados com backend');
+        } catch (error) {
+            console.error('❌ Erro ao sincronizar canais excluídos:', error);
+        }
+    }
+
+    async loadExcludedSectors() {
+        try {
+            // Primeiro, tentar carregar do backend
+            const response = await fetch('/api/config');
+            if (response.ok) {
+                const config = await response.json();
+                if (config.excludedSectors && Array.isArray(config.excludedSectors)) {
+                    // Carregar setores completos da lista disponível
+                    this.excludedSectors = this.availableSectors.filter(sector => 
+                        config.excludedSectors.includes(sector.id)
+                    );
+                    this.updateExcludedSectorsDisplay();
+                    console.log('✅ Setores excluídos carregados do backend');
+                    return;
+                }
+            }
+            
+            // Fallback: carregar do localStorage
             const saved = localStorage.getItem('excludedSectors');
             if (saved) {
                 this.excludedSectors = JSON.parse(saved);
                 this.updateExcludedSectorsDisplay();
+                console.log('⚠️ Setores excluídos carregados do localStorage (fallback)');
             }
         } catch (error) {
             console.error('Erro ao carregar setores excluídos:', error);
+            // Fallback para localStorage
+            try {
+                const saved = localStorage.getItem('excludedSectors');
+                if (saved) {
+                    this.excludedSectors = JSON.parse(saved);
+                    this.updateExcludedSectorsDisplay();
+                }
+            } catch (localError) {
+                console.error('Erro no fallback localStorage:', localError);
+            }
         }
     }
 
-    loadExcludedChannels() {
+    async loadExcludedChannels() {
         try {
+            // Primeiro, tentar carregar do backend
+            const response = await fetch('/api/config');
+            if (response.ok) {
+                const config = await response.json();
+                if (config.excludedChannels && Array.isArray(config.excludedChannels)) {
+                    // Carregar canais completos da lista disponível
+                    this.excludedChannels = this.availableChannels.filter(channel => 
+                        config.excludedChannels.includes(channel.id)
+                    );
+                    this.updateExcludedChannelsDisplay();
+                    console.log('✅ Canais excluídos carregados do backend');
+                    return;
+                }
+            }
+            
+            // Fallback: carregar do localStorage
             const saved = localStorage.getItem('excludedChannels');
             if (saved) {
                 this.excludedChannels = JSON.parse(saved);
                 this.updateExcludedChannelsDisplay();
+                console.log('⚠️ Canais excluídos carregados do localStorage (fallback)');
             }
         } catch (error) {
             console.error('Erro ao carregar canais excluídos:', error);
+            // Fallback para localStorage
+            try {
+                const saved = localStorage.getItem('excludedChannels');
+                if (saved) {
+                    this.excludedChannels = JSON.parse(saved);
+                    this.updateExcludedChannelsDisplay();
+                }
+            } catch (localError) {
+                console.error('Erro no fallback localStorage:', localError);
+            }
         }
+    }
+
+    async loadExclusionLists() {
+        // Carregar setores e canais disponíveis primeiro
+        await this.loadSectors();
+        await this.loadChannels();
+        
+        // Depois carregar as exclusões (que dependem das listas disponíveis)
+        await this.loadExcludedSectors();
+        await this.loadExcludedChannels();
+        
+        console.log('✅ Listas de exclusão carregadas com sucesso');
     }
 
     async loadMessageConfig() {
@@ -1480,8 +1632,11 @@ class AutomationInterface {
             const response = await fetch('/api/config');
             const result = await response.json();
             
-            if (response.ok && result) {
-                console.log('📋 Configurações recebidas da API:', result);
+            console.log('📥 Resposta da API /api/config (loadMessageConfig):', result);
+            
+            if (response.ok && result.success) {
+                const config = result.data;
+                console.log('📋 Configurações recebidas da API:', config);
                 
                 // Update action card selects
                 const actionCardSelect = document.getElementById('action-card-select');
@@ -1489,9 +1644,9 @@ class AutomationInterface {
                 const actionCardEndDaySelect = document.getElementById('action-card-endday-select');
                 
                 if (actionCardSelect) {
-                    if (result.selectedActionCard) {
-                        actionCardSelect.value = result.selectedActionCard;
-                        console.log('✅ Action card geral selecionado:', result.selectedActionCard);
+                    if (config.selectedActionCard) {
+                        actionCardSelect.value = config.selectedActionCard;
+                        console.log('✅ Action card geral selecionado:', config.selectedActionCard);
                     } else {
                         console.log('⚠️ Nenhum action card geral selecionado');
                     }
@@ -1500,9 +1655,9 @@ class AutomationInterface {
                 }
 
                 if (actionCard30MinSelect) {
-                    if (result.selectedActionCard30Min) {
-                        actionCard30MinSelect.value = result.selectedActionCard30Min;
-                        console.log('✅ Action card 30min selecionado:', result.selectedActionCard30Min);
+                    if (config.selectedActionCard30Min) {
+                        actionCard30MinSelect.value = config.selectedActionCard30Min;
+                        console.log('✅ Action card 30min selecionado:', config.selectedActionCard30Min);
                     } else {
                         console.log('⚠️ Nenhum action card 30min selecionado');
                     }
@@ -1511,9 +1666,9 @@ class AutomationInterface {
                 }
 
                 if (actionCardEndDaySelect) {
-                    if (result.selectedActionCardEndDay) {
-                        actionCardEndDaySelect.value = result.selectedActionCardEndDay;
-                        console.log('✅ Action card fim de dia selecionado:', result.selectedActionCardEndDay);
+                    if (config.selectedActionCardEndDay) {
+                        actionCardEndDaySelect.value = config.selectedActionCardEndDay;
+                        console.log('✅ Action card fim de dia selecionado:', config.selectedActionCardEndDay);
                     } else {
                         console.log('⚠️ Nenhum action card fim de dia selecionado');
                     }
@@ -1521,8 +1676,7 @@ class AutomationInterface {
                     console.log('❌ Elemento action-card-endday-select não encontrado');
                 }
                 
-                
-                console.log('✅ Configurações de mensagem carregadas:', result);
+                console.log('✅ Configurações de mensagem carregadas:', config);
             } else {
                 console.log('❌ Erro na resposta da API:', result);
             }
@@ -1556,7 +1710,10 @@ class AutomationInterface {
             const configData = {
                 selectedActionCard: selectedActionCard || undefined,
                 selectedActionCard30Min: selectedActionCard30Min || undefined,
-                selectedActionCardEndDay: selectedActionCardEndDay || undefined
+                selectedActionCardEndDay: selectedActionCardEndDay || undefined,
+                // Incluir exclusões na configuração
+                excludedSectors: this.excludedSectors.map(s => s.id),
+                excludedChannels: this.excludedChannels.map(c => c.id)
             };
             
             console.log('💾 Dados de configuração:', configData);
