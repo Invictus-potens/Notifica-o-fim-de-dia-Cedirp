@@ -7,3 +7,4 @@ export * from './ErrorHandler';
 export * from './StorageService';
 export * from './SupabaseClient';
 export * from './LocalStorageClient';
+export * from './JsonPatientManager';

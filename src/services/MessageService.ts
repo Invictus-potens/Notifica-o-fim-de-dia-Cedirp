@@ -54,7 +54,9 @@ export class MessageService implements IMessageService {
       }
 
       // Verificar se o atendimento já recebeu mensagem de 30 minutos (Requisito 1.2)
-      const isExcluded = await this.configManager.isAttendanceExcluded(patient.id, '30min');
+      // Usar nova chave baseada em nome+telefone+setor
+      const patientKey = `${patient.name}_${patient.phone}_${patient.sectorId}`;
+      const isExcluded = await this.configManager.isAttendanceExcluded(patientKey, '30min');
       if (isExcluded) {
         return false;
       }
@@ -70,7 +72,7 @@ export class MessageService implements IMessageService {
 
       if (messageSent) {
         // Adicionar à lista de exclusão para evitar mensagens duplicadas (Requisito 1.2)
-        await this.configManager.addToExclusionList(patient.id, '30min');
+        await this.configManager.addToExclusionList(patientKey, '30min');
         
         // Registrar métrica de sucesso
         metricsService.recordMessageSent(

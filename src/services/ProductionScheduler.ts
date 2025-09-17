@@ -233,6 +233,10 @@ export class ProductionScheduler {
       // Enviar mensagens de fim de expediente
       await this.messageService.sendEndOfDayMessages(eligiblePatients);
 
+      // Limpar todos os dados após envio das mensagens de fim de expediente
+      logger.info('Limpando todos os dados após mensagens de fim de expediente', 'ProductionScheduler');
+      await this.monitoringService.clearAllData();
+
     } catch (error) {
       logger.error(`Erro nas mensagens de fim de expediente: ${error}`, 'ProductionScheduler');
     }
