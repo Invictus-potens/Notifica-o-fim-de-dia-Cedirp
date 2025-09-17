@@ -571,6 +571,13 @@ export class MainController implements IMainController {
   }
 
   /**
+   * Obtém o MonitoringService para testes
+   */
+  getMonitoringService(): IMonitoringService {
+    return this.monitoringService;
+  }
+
+  /**
    * Obtém logs do sistema
    */
   getLogs(level?: LogLevel, limit?: number): LogEntry[] {

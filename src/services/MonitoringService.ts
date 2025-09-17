@@ -8,6 +8,7 @@ export interface IMonitoringService {
   checkWaitingPatients(): Promise<WaitingPatient[]>;
   getPatientWaitTime(patientId: string): number;
   isEligibleFor30MinMessage(patient: WaitingPatient): boolean;
+  isEligibleForEndOfDayMessage(patient: WaitingPatient): boolean;
   isBusinessHours(): boolean;
   isWorkingDay(date?: Date): boolean;
   getEligiblePatientsFor30MinMessage(): Promise<WaitingPatient[]>;
@@ -107,6 +108,7 @@ export class MonitoringService implements IMonitoringService {
     // Verificar se já passou 30 minutos
     const waitTime = this.calculateWaitTimeMinutes(patient.waitStartTime);
     if (waitTime < 30) {
+      console.log(`⚙️ ${patient.name} não elegível (${waitTime}min < 30min)`);
       return false;
     }
 
@@ -122,6 +124,18 @@ export class MonitoringService implements IMonitoringService {
 
     // Verificar se é dia útil
     if (!this.isWorkingDay()) {
+      return false;
+    }
+
+    // Verificar se setor está excluído (Requisito 1.1)
+    const excludedSectors = this.configManager.getExcludedSectors();
+    if (excludedSectors.includes(patient.sectorId)) {
+      return false;
+    }
+
+    // Verificar se canal está excluído (Requisito 1.1)
+    const excludedChannels = this.configManager.getExcludedChannels();
+    if (excludedChannels.includes(patient.channelId)) {
       return false;
     }
 
@@ -221,6 +235,37 @@ export class MonitoringService implements IMonitoringService {
     }
 
     return eligiblePatients;
+  }
+
+  /**
+   * Verifica se um paciente específico é elegível para mensagem de fim de dia
+   * Requisito 2.1, 2.2, 2.3 - Mensagem às 18h com exceções
+   */
+  isEligibleForEndOfDayMessage(patient: WaitingPatient): boolean {
+    // Verificar se é horário de fim de expediente (18h)
+    if (!TimeUtils.isEndOfDayTimeWithTolerance(1)) {
+      return false;
+    }
+
+    // Verificar se é dia útil
+    if (!this.isWorkingDay()) {
+      return false;
+    }
+
+    const excludedSectors = this.configManager.getExcludedSectors();
+    const excludedChannels = this.configManager.getExcludedChannels();
+
+    // Verificar se setor está excluído (Requisito 2.2)
+    if (excludedSectors.includes(patient.sectorId)) {
+      return false;
+    }
+
+    // Verificar se canal está excluído (Requisito 2.3)
+    if (excludedChannels.includes(patient.channelId)) {
+      return false;
+    }
+
+    return true;
   }
 
   /**

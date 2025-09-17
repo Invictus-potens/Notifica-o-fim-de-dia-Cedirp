@@ -125,6 +125,27 @@ app.get('/api/config', (req, res) => {
   }
 });
 
+app.get('/api/storage-info', (req, res) => {
+  try {
+    // Obter informações do StorageService através do ConfigManager
+    const config = mainController.getSystemConfig();
+    const storageInfo = {
+      usingSupabase: false, // Será implementado
+      supabaseHealthy: false, // Será implementado
+      localStorageHealthy: true, // Assumindo que está funcionando
+      configFields: {
+        selectedActionCard: !!config.selectedActionCard,
+        selectedActionCard30Min: !!config.selectedActionCard30Min,
+        selectedActionCardEndDay: !!config.selectedActionCardEndDay
+      }
+    };
+    res.json(storageInfo);
+  } catch (error) {
+    console.error('Erro ao obter informações de armazenamento:', error);
+    res.status(500).json({ error: 'Erro ao obter informações de armazenamento' });
+  }
+});
+
 app.post('/api/config', async (req, res) => {
   try {
     await mainController.updateSystemConfig(req.body);
@@ -706,6 +727,48 @@ app.get('/api/health', async (req, res) => {
 
 // Servir arquivos estáticos da interface web (DEPOIS das rotas da API)
 app.use(express.static(path.join(__dirname, '../public')));
+
+// Endpoint de teste para verificar elegibilidade
+app.post('/api/test/check-eligibility', async (req, res) => {
+  try {
+    const { patient, messageType } = req.body;
+    
+    if (!patient) {
+      return res.status(400).json({ error: 'Paciente não fornecido' });
+    }
+
+    // Simular verificação de elegibilidade
+    const monitoringService = mainController.getMonitoringService();
+    let eligible = false;
+    let reason = '';
+
+    if (messageType === '30min') {
+      eligible = monitoringService.isEligibleFor30MinMessage(patient);
+      reason = eligible ? 'Elegível para mensagem de 30min' : 'Não elegível para mensagem de 30min';
+    } else if (messageType === 'endday') {
+      eligible = monitoringService.isEligibleForEndOfDayMessage(patient);
+      reason = eligible ? 'Elegível para mensagem de fim de dia' : 'Não elegível para mensagem de fim de dia';
+    } else {
+      return res.status(400).json({ error: 'Tipo de mensagem inválido' });
+    }
+
+    return res.json({
+      success: true,
+      patient: {
+        name: patient.name,
+        phone: patient.phone,
+        waitTimeMinutes: patient.waitTimeMinutes
+      },
+      eligible,
+      reason,
+      messageType
+    });
+
+  } catch (error) {
+    console.error('Erro ao verificar elegibilidade:', error);
+    return res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
 
 // Rota principal
 app.get('/', (req, res) => {
