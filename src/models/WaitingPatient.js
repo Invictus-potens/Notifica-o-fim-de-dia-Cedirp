@@ -1,16 +1,22 @@
-export interface WaitingPatient {
-  id: string;
-  name: string;
-  phone: string;
-  sectorId: string;
-  sectorName: string;
-  channelId: string;
-  channelType: 'normal' | 'api_oficial';
-  waitStartTime: Date;
-  waitTimeMinutes: number;
-}
+/**
+ * @typedef {Object} WaitingPatient
+ * @property {string} id - ID único do paciente
+ * @property {string} name - Nome do paciente
+ * @property {string} phone - Telefone do paciente
+ * @property {string} sectorId - ID do setor
+ * @property {string} sectorName - Nome do setor
+ * @property {string} channelId - ID do canal
+ * @property {'normal'|'api_oficial'} channelType - Tipo do canal
+ * @property {Date} waitStartTime - Horário de início da espera
+ * @property {number} waitTimeMinutes - Tempo de espera em minutos
+ */
 
-export function validateWaitingPatient(patient: any): patient is WaitingPatient {
+/**
+ * Valida se um objeto é um WaitingPatient válido
+ * @param {any} patient - Objeto a ser validado
+ * @returns {boolean} - True se válido
+ */
+function validateWaitingPatient(patient) {
   if (!patient || typeof patient !== 'object') {
     return false;
   }
@@ -58,7 +64,12 @@ export function validateWaitingPatient(patient: any): patient is WaitingPatient 
   return true;
 }
 
-export function createWaitingPatient(data: Partial<WaitingPatient>): WaitingPatient | null {
+/**
+ * Cria um WaitingPatient a partir de dados parciais
+ * @param {Partial<WaitingPatient>} data - Dados parciais do paciente
+ * @returns {WaitingPatient|null} - Paciente válido ou null se inválido
+ */
+function createWaitingPatient(data) {
   const patient = {
     id: data.id || '',
     name: data.name || '',
@@ -66,10 +77,15 @@ export function createWaitingPatient(data: Partial<WaitingPatient>): WaitingPati
     sectorId: data.sectorId || '',
     sectorName: data.sectorName || '',
     channelId: data.channelId || '',
-    channelType: data.channelType || 'normal' as const,
+    channelType: data.channelType || 'normal',
     waitStartTime: data.waitStartTime || new Date(),
     waitTimeMinutes: data.waitTimeMinutes || 0
   };
 
   return validateWaitingPatient(patient) ? patient : null;
 }
+
+module.exports = {
+  validateWaitingPatient,
+  createWaitingPatient
+};
