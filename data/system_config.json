@@ -2,7 +2,7 @@
   "excludedSectors": "[]",
   "endOfDayTime": "18:00",
   "excludedChannels": "[]",
-  "flowPaused": "true",
+  "flowPaused": "false",
   "selectedActionCard": "631f2b4f307d23f46ac80a2b",
   "selectedActionCard30Min": "631f2b4f307d23f46ac80a2b",
   "selectedActionCardEndDay": "631f2b4f307d23f46ac80a2b",

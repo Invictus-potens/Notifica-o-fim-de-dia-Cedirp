@@ -8,80 +8,20 @@
     "channelId": "63e68f168a48875131856df8",
     "channelType": "normal",
     "waitStartTime": "2025-09-17T15:31:10.825Z",
-    "waitTimeMinutes": 31,
-    "enteredAt": "2025-09-17T16:03:00.756Z"
+    "waitTimeMinutes": 149,
+    "enteredAt": "2025-09-17T18:00:46.279Z"
   },
   {
-    "id": "68cacb8e114c3e27fb1d9d72",
-    "name": "Felipe",
-    "phone": "5519995068303",
-    "sectorId": "64d4db384f04cb80ac059912",
-    "sectorName": "Suporte Geral",
+    "id": "68cac5168654a32c66336854",
+    "name": "Thiago Silva",
+    "phone": "5517991283130",
+    "sectorId": "6400efb5343817d4ddbb2a4c",
+    "sectorName": "Suporte CAM",
     "channelId": "63e68f168a48875131856df8",
     "channelType": "normal",
-    "waitStartTime": "2025-09-17T14:54:06.846Z",
-    "waitTimeMinutes": 68,
-    "enteredAt": "2025-09-17T16:03:00.756Z"
-  },
-  {
-    "id": "68cac99f8654a32c665fa03f",
-    "name": "Manu 💛",
-    "phone": "55819981544991",
-    "sectorId": "631f7d27307d23f46af88983",
-    "sectorName": "Administrativo/Financeiro",
-    "channelId": "63e68f168a48875131856df8",
-    "channelType": "normal",
-    "waitStartTime": "2025-09-17T14:45:51.005Z",
-    "waitTimeMinutes": 77,
-    "enteredAt": "2025-09-17T16:03:00.756Z"
-  },
-  {
-    "id": "68cac3a98654a32c66cf4244",
-    "name": "Luma - Sara",
-    "phone": "5516997944865",
-    "sectorId": "631f7d27307d23f46af88983",
-    "sectorName": "Administrativo/Financeiro",
-    "channelId": "63e68f168a48875131856df8",
-    "channelType": "normal",
-    "waitStartTime": "2025-09-17T14:20:25.742Z",
-    "waitTimeMinutes": 102,
-    "enteredAt": "2025-09-17T16:03:00.756Z"
-  },
-  {
-    "id": "68cac3488654a32c66b0b92a",
-    "name": "Leandro Mioto",
-    "phone": "5516988157266",
-    "sectorId": "6401f4f49b1ff8512b525e9c",
-    "sectorName": "Suporte Telefonia",
-    "channelId": "63e68f168a48875131856df8",
-    "channelType": "normal",
-    "waitStartTime": "2025-09-17T14:18:48.164Z",
-    "waitTimeMinutes": 104,
-    "enteredAt": "2025-09-17T16:03:00.756Z"
-  },
-  {
-    "id": "68cac044e373bd4388c7e643",
-    "name": "Rafa Almeida",
-    "phone": "5511952254788",
-    "sectorId": "6401f4f49b1ff8512b525e9c",
-    "sectorName": "Suporte Telefonia",
-    "channelId": "63e68f168a48875131856df8",
-    "channelType": "normal",
-    "waitStartTime": "2025-09-17T14:05:56.385Z",
-    "waitTimeMinutes": 117,
-    "enteredAt": "2025-09-17T16:03:00.756Z"
-  },
-  {
-    "id": "68caba7f4a2cd9387d4ad301",
-    "name": "Jorge Coqueiro",
-    "phone": "5516993337948",
-    "sectorId": "6401f4f49b1ff8512b525e9c",
-    "sectorName": "Suporte Telefonia",
-    "channelId": "63e68f168a48875131856df8",
-    "channelType": "normal",
-    "waitStartTime": "2025-09-17T13:41:19.979Z",
-    "waitTimeMinutes": 141,
-    "enteredAt": "2025-09-17T16:03:00.756Z"
+    "waitStartTime": "2025-09-17T14:26:30.166Z",
+    "waitTimeMinutes": 214,
+    "enteredAt": "2025-09-17T18:00:46.279Z"
   },
   {
     "id": "68c9885b8503324084391beb",
@@ -92,19 +32,7 @@
     "channelId": "63e68f168a48875131856df8",
     "channelType": "normal",
     "waitStartTime": "2025-09-16T15:55:07.565Z",
-    "waitTimeMinutes": 1447,
-    "enteredAt": "2025-09-17T16:03:00.756Z"
-  },
-  {
-    "id": "68c83356e046d08f2f272646",
-    "name": "Paulo Milliet Roque",
-    "phone": "5511994820100",
-    "sectorId": "6401f4f49b1ff8512b525e9c",
-    "sectorName": "Suporte Telefonia",
-    "channelId": "63e68f168a48875131856df8",
-    "channelType": "normal",
-    "waitStartTime": "2025-09-15T15:40:06.290Z",
-    "waitTimeMinutes": 2902,
-    "enteredAt": "2025-09-17T16:03:00.756Z"
+    "waitTimeMinutes": 1565,
+    "enteredAt": "2025-09-17T18:00:46.279Z"
   }
 ]
