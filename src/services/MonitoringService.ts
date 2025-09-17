@@ -156,10 +156,15 @@ export class MonitoringService implements IMonitoringService {
    * Requisitos: 1.1, 1.3 - Mensagem após 30 minutos, sem duplicação
    */
   isEligibleFor30MinMessage(patient: WaitingPatient): boolean {
-    // Verificar se já passou 30 minutos
+    // Verificar janela de tempo (30-40 minutos) - evita spam para pacientes com muito tempo de espera
     const waitTime = this.calculateWaitTimeMinutes(patient.waitStartTime);
     if (waitTime < 30) {
       console.log(`⚙️ ${patient.name} não elegível (${waitTime}min < 30min)`);
+      return false;
+    }
+    
+    if (waitTime > 40) {
+      console.log(`⚙️ ${patient.name} não elegível (${waitTime}min > 40min - janela perdida)`);
       return false;
     }
 

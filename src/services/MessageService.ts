@@ -63,8 +63,14 @@ export class MessageService implements IMessageService {
         return false;
       }
 
-      // Verificar se o paciente realmente está aguardando há 30 minutos
+      // Verificar janela de elegibilidade (30-40 minutos)
       if (patient.waitTimeMinutes < 30) {
+        console.log(`⚙️ ${patient.name}: Muito cedo (${patient.waitTimeMinutes}min < 30min)`);
+        return false;
+      }
+      
+      if (patient.waitTimeMinutes > 40) {
+        console.log(`⚙️ ${patient.name}: Fora da janela (${patient.waitTimeMinutes}min > 40min)`);
         return false;
       }
 

@@ -1,15 +1,39 @@
 [
   {
-    "id": "68cadf7b8654a32c661363ca",
-    "name": "Gabriel",
-    "phone": "5511990075158",
-    "sectorId": "6401f4f49b1ff8512b525e9c",
-    "sectorName": "Suporte Telefonia",
+    "id": "68cb01033e5123047c9dcd62",
+    "name": "Felipe",
+    "phone": "5519995068303",
+    "sectorId": "64d4db384f04cb80ac059912",
+    "sectorName": "Suporte Geral",
     "channelId": "63e68f168a48875131856df8",
     "channelType": "normal",
-    "waitStartTime": "2025-09-17T16:19:07.041Z",
-    "waitTimeMinutes": 104,
-    "enteredAt": "2025-09-17T18:03:35.769Z"
+    "waitStartTime": "2025-09-17T18:42:11.562Z",
+    "waitTimeMinutes": 37,
+    "enteredAt": "2025-09-17T19:19:54.516Z"
+  },
+  {
+    "id": "68cb00b73e5123047c887999",
+    "name": "Felipe Prado",
+    "phone": "551640421507",
+    "sectorId": "64d4db384f04cb80ac059912",
+    "sectorName": "Suporte Geral",
+    "channelId": "63e68f168a48875131856df8",
+    "channelType": "normal",
+    "waitStartTime": "2025-09-17T18:40:55.343Z",
+    "waitTimeMinutes": 38,
+    "enteredAt": "2025-09-17T19:19:54.516Z"
+  },
+  {
+    "id": "68cb00b43e5123047c880b48",
+    "name": "Felipe Ortiz",
+    "phone": "551633231679",
+    "sectorId": "64d4db384f04cb80ac059912",
+    "sectorName": "Suporte Geral",
+    "channelId": "63e68f168a48875131856df8",
+    "channelType": "normal",
+    "waitStartTime": "2025-09-17T18:40:52.991Z",
+    "waitTimeMinutes": 39,
+    "enteredAt": "2025-09-17T19:19:54.516Z"
   },
   {
     "id": "68cad43e674e20a28c31de10",
@@ -20,8 +44,8 @@
     "channelId": "63e68f168a48875131856df8",
     "channelType": "normal",
     "waitStartTime": "2025-09-17T15:31:10.825Z",
-    "waitTimeMinutes": 152,
-    "enteredAt": "2025-09-17T18:03:35.769Z"
+    "waitTimeMinutes": 228,
+    "enteredAt": "2025-09-17T19:19:54.516Z"
   },
   {
     "id": "68cac5168654a32c66336854",
@@ -32,8 +56,8 @@
     "channelId": "63e68f168a48875131856df8",
     "channelType": "normal",
     "waitStartTime": "2025-09-17T14:26:30.166Z",
-    "waitTimeMinutes": 217,
-    "enteredAt": "2025-09-17T18:03:35.769Z"
+    "waitTimeMinutes": 293,
+    "enteredAt": "2025-09-17T19:19:54.516Z"
   },
   {
     "id": "68c9885b8503324084391beb",
@@ -44,19 +68,7 @@
     "channelId": "63e68f168a48875131856df8",
     "channelType": "normal",
     "waitStartTime": "2025-09-16T15:55:07.565Z",
-    "waitTimeMinutes": 1568,
-    "enteredAt": "2025-09-17T18:03:35.769Z"
-  },
-  {
-    "id": "68c83356e046d08f2f272646",
-    "name": "Paulo Milliet Roque",
-    "phone": "5511994820100",
-    "sectorId": "6401f4f49b1ff8512b525e9c",
-    "sectorName": "Suporte Telefonia",
-    "channelId": "63e68f168a48875131856df8",
-    "channelType": "normal",
-    "waitStartTime": "2025-09-15T15:40:06.290Z",
-    "waitTimeMinutes": 3023,
-    "enteredAt": "2025-09-17T18:03:35.769Z"
+    "waitTimeMinutes": 1644,
+    "enteredAt": "2025-09-17T19:19:54.516Z"
   }
 ]

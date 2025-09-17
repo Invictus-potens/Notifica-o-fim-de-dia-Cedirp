@@ -1,52 +1,50 @@
 [
   {
-    "id": "68cac99f8654a32c665fa03f",
-    "name": "Manu 💛",
-    "phone": "55819981544991",
-    "sectorId": "631f7d27307d23f46af88983",
-    "sectorName": "Administrativo/Financeiro",
-    "channelId": "63e68f168a48875131856df8",
-    "channelType": "normal",
-    "waitStartTime": "2025-09-17T14:45:51.005Z",
-    "waitTimeMinutes": 161,
-    "enteredAt": "2025-09-17T17:48:00.413Z"
-  },
-  {
-    "id": "68cac3a98654a32c66cf4244",
-    "name": "Luma - Sara",
-    "phone": "5516997944865",
-    "sectorId": "631f7d27307d23f46af88983",
-    "sectorName": "Administrativo/Financeiro",
-    "channelId": "63e68f168a48875131856df8",
-    "channelType": "normal",
-    "waitStartTime": "2025-09-17T14:20:25.742Z",
-    "waitTimeMinutes": 187,
-    "enteredAt": "2025-09-17T17:48:00.413Z"
-  },
-
-  {
-    "id": "68cac5168654a32c66336854",
-    "name": "Thiago Silva",
-    "phone": "5517991283130",
-    "sectorId": "6400efb5343817d4ddbb2a4c",
-    "sectorName": "Suporte CAM",
-    "channelId": "63e68f168a48875131856df8",
-    "channelType": "normal",
-    "waitStartTime": "2025-09-17T14:26:30.166Z",
-    "waitTimeMinutes": 212,
-    "enteredAt": "2025-09-17T17:58:45.131Z"
-  },
-
-  {
-    "id": "68c9885b8503324084391beb",
-    "name": "Maria Eduarda",
-    "phone": "555381388551",
+    "id": "68cadf7b8654a32c661363ca",
+    "name": "Gabriel",
+    "phone": "5511990075158",
     "sectorId": "6401f4f49b1ff8512b525e9c",
     "sectorName": "Suporte Telefonia",
     "channelId": "63e68f168a48875131856df8",
     "channelType": "normal",
-    "waitStartTime": "2025-09-16T15:55:07.565Z",
-    "waitTimeMinutes": 1564,
-    "enteredAt": "2025-09-17T17:59:45.741Z"
+    "waitStartTime": "2025-09-17T16:19:07.041Z",
+    "waitTimeMinutes": 104,
+    "enteredAt": "2025-09-17T18:40:57.813Z"
+  },
+  {
+    "id": "68cae641f22d799dcf67d677",
+    "name": "Marcus",
+    "phone": "5516991942267",
+    "sectorId": "6401f4f49b1ff8512b525e9c",
+    "sectorName": "Suporte Telefonia",
+    "channelId": "63e68f168a48875131856df8",
+    "channelType": "normal",
+    "waitStartTime": "2025-09-17T16:48:01.623Z",
+    "waitTimeMinutes": 115,
+    "enteredAt": "2025-09-17T18:44:13.434Z"
+  },
+  {
+    "id": "68cb000026180b5fa0ecef49",
+    "name": "Alan Lopes",
+    "phone": "5516981443200",
+    "sectorId": "6400efb5343817d4ddbb2a4c",
+    "sectorName": "Suporte CAM",
+    "channelId": "63e68f168a48875131856df8",
+    "channelType": "normal",
+    "waitStartTime": "2025-09-17T18:37:52.526Z",
+    "waitTimeMinutes": 14,
+    "enteredAt": "2025-09-17T18:53:24.530Z"
+  },
+  {
+    "id": "68cb01c4e74cafc575221731",
+    "name": "Leticia Lira",
+    "phone": "5521996443939",
+    "sectorId": "6400efb5343817d4ddbb2a4c",
+    "sectorName": "Suporte CAM",
+    "channelId": "63e68f168a48875131856df8",
+    "channelType": "normal",
+    "waitStartTime": "2025-09-17T18:45:24.187Z",
+    "waitTimeMinutes": 11,
+    "enteredAt": "2025-09-17T18:57:31.417Z"
   }
 ]

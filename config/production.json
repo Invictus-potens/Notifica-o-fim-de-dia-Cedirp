@@ -26,7 +26,12 @@
     "waitTimeThreshold": 1800000,
     "maxConcurrentAttendances": 1000,
     "batchSize": 50,
-    "processingDelay": 100
+    "processingDelay": 100,
+    "messageWindow": {
+      "minWaitMinutes": 30,
+      "maxWaitMinutes": 40,
+      "description": "Janela de elegibilidade para mensagens de 30min"
+    }
   },
   "logging": {
     "level": "info",
