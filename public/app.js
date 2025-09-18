@@ -48,6 +48,7 @@ class AutomationInterface {
             this.initializeExclusionLists();
             this.initializeFlowControl();
             this.initializePatientSelection();
+            this.initializePatientData();
             this.startRealtimeTimer(); // Iniciar timer em tempo real
             
             // Fallback: ensure button is enabled after a delay
@@ -528,7 +529,7 @@ class AutomationInterface {
 
     async loadPatients() {
         try {
-            console.log('Carregando pacientes...');
+            console.log('📋 Carregando pacientes da API CAM Krolik...');
             
             // Show loading state
             const loadingElement = document.getElementById('loading-patients');
@@ -540,27 +541,32 @@ class AutomationInterface {
             const response = await fetch('/api/patients');
             const data = await response.json();
 
+            console.log('📥 Resposta da API /api/patients:', data);
+
             if (!response.ok) {
                 throw new Error(data.error || 'Erro ao carregar pacientes');
             }
 
-            this.displayPatients(data.patients || []);
+            const patients = data.data || [];
+            console.log(`📊 Exibindo ${patients.length} pacientes na interface`);
+            
+            this.displayPatients(patients);
             
             // Update total waiting count in dashboard
             const totalWaitingElement = document.getElementById('total-waiting');
             if (totalWaitingElement) {
-                totalWaitingElement.textContent = data.total || 0;
+                totalWaitingElement.textContent = data.total || patients.length;
             }
 
             // Update last check time
             const lastCheckElement = document.getElementById('last-check');
-            if (lastCheckElement && data.lastUpdate) {
-                const updateTime = new Date(data.lastUpdate);
+            if (lastCheckElement && data.timestamp) {
+                const updateTime = new Date(data.timestamp);
                 lastCheckElement.textContent = updateTime.toLocaleTimeString();
             }
 
         } catch (error) {
-            console.error('Erro ao carregar pacientes:', error);
+            console.error('❌ Erro ao carregar pacientes:', error);
             this.showError('Erro ao carregar pacientes: ' + error.message);
         } finally {
             // Hide loading state
@@ -592,13 +598,14 @@ class AutomationInterface {
                 <td>
                     <input type="checkbox" class="form-check-input patient-checkbox" 
                            data-patient-id="${patient.id}" 
-                           data-patient-name="${this.escapeHtml(patient.name)}"
-                           data-patient-phone="${this.escapeHtml(patient.phone || patient.number || '')}">
+                           data-patient-name="${this.escapeHtml(patient.name || 'Nome não informado')}"
+                           data-patient-phone="${this.escapeHtml(patient.phone || patient.number || '')}"
+                           data-contact-id="${patient.contactId || patient.id}">
                 </td>
-                <td>${this.escapeHtml(patient.name)}</td>
+                <td>${this.escapeHtml(patient.name || 'Nome não informado')}</td>
                 <td>${this.escapeHtml(patient.phone || patient.number || '')}</td>
-                <td>${this.escapeHtml(patient.sectorName)}</td>
-                <td>${this.formatWaitTime(patient.waitTimeMinutes)}</td>
+                <td>${this.escapeHtml(patient.sectorName || patient.sector_name || 'Setor não informado')}</td>
+                <td>${this.formatWaitTime(patient.waitTimeMinutes || 0)}</td>
                 <td>
                     <span class="badge bg-warning">Aguardando</span>
                 </td>
@@ -1173,7 +1180,7 @@ class AutomationInterface {
         try {
             console.log('🔄 Pausando fluxo...');
             
-            const response = await fetch('/api/flow/pause', {
+            const response = await fetch('/api/system/pause', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -1208,7 +1215,7 @@ class AutomationInterface {
         try {
             console.log('▶️ Retomando fluxo...');
             
-            const response = await fetch('/api/flow/resume', {
+            const response = await fetch('/api/system/resume', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -1894,6 +1901,7 @@ class AutomationInterface {
         const checkboxes = document.querySelectorAll('.patient-checkbox:checked');
         this.selectedPatients = Array.from(checkboxes).map(checkbox => ({
             id: checkbox.dataset.patientId,
+            contactId: checkbox.dataset.contactId || checkbox.dataset.patientId,
             name: checkbox.dataset.patientName,
             phone: checkbox.dataset.patientPhone || '', // Garantir que sempre tenha um valor
             number: checkbox.dataset.patientPhone || '' // Para compatibilidade
@@ -2052,7 +2060,7 @@ class AutomationInterface {
                     <br>
                     <small class="text-muted">Telefone: ${this.escapeHtml(patient.phone || 'Não informado')}</small>
                     <br>
-                    <small class="text-muted">ID: ${patient.id}</small>
+                    <small class="text-muted">ID: ${patient.contactId || patient.id}</small>
                 </div>
             </div>
         `).join('');
@@ -2066,7 +2074,7 @@ class AutomationInterface {
 
         const patients = this.selectedPatients.map(p => ({
             number: p.phone, // Número de telefone do paciente
-            contactId: p.id   // ID do chat/atendimento
+            contactId: p.contactId || p.id   // ID do chat/atendimento
         }));
 
         // Validar se todos os pacientes têm número de telefone
@@ -2390,6 +2398,290 @@ class AutomationInterface {
             console.error('Erro ao exportar logs:', error);
             this.showAlert('Erro ao exportar logs', 'danger');
         }
+    }
+
+    /**
+     * Inicializa dados dos pacientes
+     */
+    initializePatientData() {
+        console.log('Inicializando dados dos pacientes...');
+        this.patients = [];
+        this.processedPatients = new Set(); // Para rastrear pacientes que receberam mensagens
+        this.loadPatients();
+        this.startPatientDataRefresh(); // Iniciar atualização automática
+    }
+
+    /**
+     * Carrega dados dos pacientes da API
+     */
+    async loadPatients() {
+        try {
+            console.log('Carregando dados dos pacientes...');
+            
+            const response = await fetch(`${this.apiBaseUrl}/patients`);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            const data = await response.json();
+            console.log('Dados dos pacientes recebidos:', data);
+            
+            if (data.success && data.data) {
+                this.patients = data.data;
+                this.displayPatients(this.patients);
+                this.updateLastCheckTime();
+            } else {
+                console.warn('Formato de dados inesperado:', data);
+                this.displayPatients([]);
+            }
+            
+        } catch (error) {
+            console.error('Erro ao carregar pacientes:', error);
+            this.displayPatients([]);
+        }
+    }
+
+    /**
+     * Exibe pacientes na tabela
+     */
+    displayPatients(patients) {
+        const tbody = document.getElementById('patients-tbody');
+        if (!tbody) {
+            console.warn('Elemento patients-tbody não encontrado');
+            return;
+        }
+
+        if (patients.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="7" class="text-center text-muted py-4">
+                        Nenhum atendimento em espera
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+
+        tbody.innerHTML = patients.map(patient => {
+            const hasReceivedMessage = this.hasPatientReceivedMessage(patient);
+            const messageStatus = this.getMessageStatus(patient, hasReceivedMessage);
+            
+            return `
+                <tr>
+                    <td>
+                        <input type="checkbox" class="form-check-input patient-checkbox" 
+                               data-patient-id="${patient.id}" 
+                               data-patient-name="${this.escapeHtml(patient.name || 'Nome não informado')}"
+                               data-patient-phone="${this.escapeHtml(patient.phone || '')}"
+                               data-contact-id="${patient.contactId || patient.id}">
+                    </td>
+                    <td>${this.escapeHtml(patient.name || 'Nome não informado')}</td>
+                    <td>${this.escapeHtml(patient.phone || '')}</td>
+                    <td>${this.escapeHtml(patient.sectorName || 'Setor não informado')}</td>
+                    <td>${this.formatWaitTime(patient.waitTimeMinutes || 0)}</td>
+                    <td>
+                        <span class="badge bg-warning">Aguardando</span>
+                    </td>
+                    <td>${messageStatus}</td>
+                </tr>
+            `;
+        }).join('');
+
+        this.setupPatientSelection();
+    }
+
+    /**
+     * Verifica se o paciente recebeu uma mensagem
+     */
+    hasPatientReceivedMessage(patient) {
+        // Verificar se está na lista de pacientes processados
+        const patientKey = `${patient.name}_${patient.phone}_${patient.sectorId}`;
+        return this.processedPatients.has(patientKey);
+    }
+
+    /**
+     * Retorna o status da mensagem para exibição
+     */
+    getMessageStatus(patient, hasReceivedMessage) {
+        if (hasReceivedMessage) {
+            return '<span class="badge bg-success"><i class="bi bi-check-circle"></i> Enviada</span>';
+        } else if (this.isEligibleFor30MinMessage(patient)) {
+            return '<span class="badge bg-warning"><i class="bi bi-clock"></i> Elegível</span>';
+        } else if (this.isEligibleForEndOfDayMessage(patient)) {
+            return '<span class="badge bg-info"><i class="bi bi-sunset"></i> Fim de Dia</span>';
+        } else {
+            return '<span class="badge bg-secondary"><i class="bi bi-dash-circle"></i> Não Enviada</span>';
+        }
+    }
+
+    /**
+     * Verifica se paciente é elegível para mensagem de 30min
+     */
+    isEligibleFor30MinMessage(patient) {
+        const waitTime = patient.waitTimeMinutes || 0;
+        return waitTime >= 30 && waitTime <= 40;
+    }
+
+    /**
+     * Verifica se paciente é elegível para mensagem de fim de dia
+     * TODOS os pacientes aguardando são elegíveis para fim de dia
+     */
+    isEligibleForEndOfDayMessage(patient) {
+        // Verificar se é fim de dia (18h)
+        const now = new Date();
+        const hour = now.getHours();
+        return hour >= 18;
+    }
+
+    /**
+     * Formata tempo de espera
+     */
+    formatWaitTime(minutes) {
+        if (!minutes || minutes === 0) {
+            return '0 min';
+        }
+        
+        if (minutes < 60) {
+            return `${minutes} min`;
+        }
+        
+        const hours = Math.floor(minutes / 60);
+        const remainingMinutes = minutes % 60;
+        
+        if (remainingMinutes === 0) {
+            return `${hours}h`;
+        }
+        
+        return `${hours}h ${remainingMinutes}min`;
+    }
+
+    /**
+     * Escapa HTML para evitar XSS
+     */
+    escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    /**
+     * Configura seleção de pacientes
+     */
+    setupPatientSelection() {
+        const checkboxes = document.querySelectorAll('.patient-checkbox');
+        const selectAllCheckbox = document.getElementById('select-all-patients');
+        
+        // Event listener para seleção individual
+        checkboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', () => {
+                this.updateSelectedPatientsList();
+                this.updateSelectAllCheckbox();
+            });
+        });
+        
+        // Event listener para selecionar todos
+        if (selectAllCheckbox) {
+            selectAllCheckbox.addEventListener('change', (e) => {
+                checkboxes.forEach(checkbox => {
+                    checkbox.checked = e.target.checked;
+                });
+                this.updateSelectedPatientsList();
+            });
+        }
+    }
+
+    /**
+     * Atualiza lista de pacientes selecionados
+     */
+    updateSelectedPatientsList() {
+        const selectedCheckboxes = document.querySelectorAll('.patient-checkbox:checked');
+        const selectedCount = selectedCheckboxes.length;
+        
+        // Atualizar contador se existir
+        const counterElement = document.getElementById('selected-patients-count');
+        if (counterElement) {
+            counterElement.textContent = selectedCount;
+        }
+        
+        // Habilitar/desabilitar botão de envio
+        const sendButton = document.getElementById('send-messages-btn');
+        if (sendButton) {
+            sendButton.disabled = selectedCount === 0;
+        }
+    }
+
+    /**
+     * Atualiza checkbox "Selecionar Todos"
+     */
+    updateSelectAllCheckbox() {
+        const checkboxes = document.querySelectorAll('.patient-checkbox');
+        const selectAllCheckbox = document.getElementById('select-all-patients');
+        
+        if (selectAllCheckbox && checkboxes.length > 0) {
+            const checkedCount = document.querySelectorAll('.patient-checkbox:checked').length;
+            
+            if (checkedCount === 0) {
+                selectAllCheckbox.indeterminate = false;
+                selectAllCheckbox.checked = false;
+            } else if (checkedCount === checkboxes.length) {
+                selectAllCheckbox.indeterminate = false;
+                selectAllCheckbox.checked = true;
+            } else {
+                selectAllCheckbox.indeterminate = true;
+            }
+        }
+    }
+
+    /**
+     * Atualiza horário da última verificação
+     */
+    updateLastCheckTime() {
+        const lastCheckElement = document.getElementById('last-check');
+        if (lastCheckElement) {
+            const now = new Date();
+            lastCheckElement.textContent = now.toLocaleTimeString('pt-BR');
+        }
+    }
+
+    /**
+     * Marca paciente como tendo recebido mensagem
+     */
+    markPatientAsProcessed(patient) {
+        const patientKey = `${patient.name}_${patient.phone}_${patient.sectorId}`;
+        this.processedPatients.add(patientKey);
+        
+        // Atualizar exibição
+        this.displayPatients(this.patients);
+        
+        console.log(`Paciente ${patient.name} marcado como processado`);
+    }
+
+    /**
+     * Atualiza dados dos pacientes periodicamente
+     */
+    startPatientDataRefresh() {
+        // Atualizar dados a cada 30 segundos
+        setInterval(() => {
+            this.loadPatients();
+        }, 30000);
+    }
+
+    /**
+     * Obtém estatísticas dos pacientes
+     */
+    getPatientStats() {
+        const total = this.patients.length;
+        const processed = this.processedPatients.size;
+        const eligible30min = this.patients.filter(p => this.isEligibleFor30MinMessage(p)).length;
+        const eligibleEndOfDay = this.patients.filter(p => this.isEligibleForEndOfDayMessage(p)).length;
+        
+        return {
+            total,
+            processed,
+            eligible30min,
+            eligibleEndOfDay,
+            waiting: total - processed
+        };
     }
 
     /**

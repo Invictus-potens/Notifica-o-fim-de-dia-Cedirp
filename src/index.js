@@ -45,9 +45,17 @@ app.use((req, res, next) => {
 
 // Importar MainController (versão JavaScript)
 const { MainController } = require('./controllers/MainController');
+const { KrolikApiClient } = require('./services/KrolikApiClient');
 
 // Inicializar MainController
 const mainController = new MainController();
+
+// Inicializar KrolikApiClient
+const krolikApiClient = new KrolikApiClient({
+  baseURL: process.env.KROLIK_API_BASE_URL || 'https://api.camkrolik.com.br',
+  token: process.env.KROLIK_API_TOKEN,
+  timeout: 10000
+});
 
 // Servir arquivos estáticos da interface web
 app.use(express.static(path.join(__dirname, '../public')));
@@ -119,6 +127,27 @@ app.get('/api/logs', (req, res) => {
   }
 });
 
+// Adicionar log de ação do usuário
+app.post('/api/logs', (req, res) => {
+  try {
+    const { action, details, timestamp } = req.body;
+    
+    console.log(`📝 Log de ação do usuário: ${action}`, details);
+    
+    res.json({
+      success: true,
+      message: 'Log de ação registrado com sucesso',
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('Erro ao registrar log de ação:', error);
+    res.status(500).json({ 
+      success: false,
+      error: 'Erro ao registrar log de ação' 
+    });
+  }
+});
+
 // Controle do sistema
 app.post('/api/system/start', async (req, res) => {
   try {
@@ -173,19 +202,10 @@ app.post('/api/logs/clear', (req, res) => {
 // Pacientes em espera
 app.get('/api/patients', async (req, res) => {
   try {
-    console.log('📋 API: Buscando pacientes...');
+    console.log('📋 API: Buscando pacientes na API CAM Krolik...');
     
-    // Simular busca de pacientes (versão simplificada)
-    const patients = [
-      {
-        id: 'demo1',
-        name: 'Paciente Demo',
-        phone: '11999999999',
-        sectorName: 'Suporte Geral',
-        waitTimeMinutes: 35,
-        channelType: 'normal'
-      }
-    ];
+    // Buscar pacientes reais da API CAM Krolik
+    const patients = await krolikApiClient.listWaitingAttendances();
     
     console.log(`📋 API: Retornando ${patients.length} pacientes`);
     res.json({
@@ -198,7 +218,8 @@ app.get('/api/patients', async (req, res) => {
     console.error('Erro ao buscar pacientes:', error);
     res.status(500).json({ 
       success: false,
-      error: 'Erro ao buscar pacientes',
+      error: 'Erro ao buscar pacientes da API CAM Krolik',
+      message: error.message,
       data: [],
       total: 0,
       timestamp: new Date().toISOString()
@@ -209,15 +230,10 @@ app.get('/api/patients', async (req, res) => {
 // Setores disponíveis
 app.get('/api/sectors', async (req, res) => {
   try {
-    console.log('📋 API: Buscando setores...');
+    console.log('📋 API: Buscando setores na API CAM Krolik...');
     
-    // Dados estáticos de setores (versão simplificada)
-    const sectors = [
-      { id: '64d4db384f04cb80ac059912', name: 'Suporte Geral', active: true },
-      { id: '631f7d27307d23f46af88983', name: 'Administrativo/Financeiro', active: true },
-      { id: '6400efb5343817d4ddbb2a4c', name: 'Suporte CAM', active: true },
-      { id: '6401f4f49b1ff8512b525e9c', name: 'Suporte Telefonia', active: true }
-    ];
+    // Buscar setores reais da API CAM Krolik
+    const sectors = await krolikApiClient.listSectors();
     
     console.log(`📋 API: Retornando ${sectors.length} setores`);
     res.json({
@@ -228,24 +244,22 @@ app.get('/api/sectors', async (req, res) => {
     });
   } catch (error) {
     console.error('Erro ao buscar setores:', error);
-    res.status(500).json({ error: 'Erro ao buscar setores' });
+    res.status(500).json({ 
+      success: false,
+      error: 'Erro ao buscar setores da API CAM Krolik',
+      message: error.message,
+      timestamp: new Date().toISOString()
+    });
   }
 });
 
 // Action cards disponíveis
 app.get('/api/action-cards', async (req, res) => {
   try {
-    console.log('📋 API: Buscando action cards...');
+    console.log('📋 API: Buscando action cards na API CAM Krolik...');
     
-    // Dados estáticos de action cards (versão simplificada)
-    const actionCards = [
-      { 
-        id: '631f2b4f307d23f46ac80a2b', 
-        name: 'Mensagem de Espera 30min',
-        content: 'Sua consulta está sendo processada...',
-        active: true 
-      }
-    ];
+    // Buscar action cards reais da API CAM Krolik
+    const actionCards = await krolikApiClient.listActionCards();
     
     console.log(`📋 API: Retornando ${actionCards.length} action cards`);
     res.json({
@@ -256,24 +270,22 @@ app.get('/api/action-cards', async (req, res) => {
     });
   } catch (error) {
     console.error('Erro ao buscar action cards:', error);
-    res.status(500).json({ error: 'Erro ao buscar action cards' });
+    res.status(500).json({ 
+      success: false,
+      error: 'Erro ao buscar action cards da API CAM Krolik',
+      message: error.message,
+      timestamp: new Date().toISOString()
+    });
   }
 });
 
 // Canais disponíveis
 app.get('/api/channels', async (req, res) => {
   try {
-    console.log('📋 API: Buscando canais...');
+    console.log('📋 API: Buscando canais na API CAM Krolik...');
     
-    // Dados estáticos de canais (versão simplificada)
-    const channels = [
-      { 
-        id: '63e68f168a48875131856df8', 
-        name: 'Canal Principal',
-        type: 'normal',
-        active: true 
-      }
-    ];
+    // Buscar canais reais da API CAM Krolik
+    const channels = await krolikApiClient.listChannels();
     
     console.log(`📋 API: Retornando ${channels.length} canais`);
     res.json({
@@ -284,7 +296,12 @@ app.get('/api/channels', async (req, res) => {
     });
   } catch (error) {
     console.error('Erro ao buscar canais:', error);
-    res.status(500).json({ error: 'Erro ao buscar canais' });
+    res.status(500).json({ 
+      success: false,
+      error: 'Erro ao buscar canais da API CAM Krolik',
+      message: error.message,
+      timestamp: new Date().toISOString()
+    });
   }
 });
 
@@ -343,32 +360,64 @@ app.post('/api/messages/send-action-card', async (req, res) => {
       return;
     }
 
-    console.log(`📤 API: Tentativa de envio de cartão ${action_card_id} para ${patients.length} pacientes...`);
+    console.log(`📤 API: Enviando cartão ${action_card_id} para ${patients.length} pacientes via API CAM Krolik...`);
     
-    // Simular envio (versão simplificada - sem KrolikApiClient completo)
-    const result = {
-      success: patients.length,
-      failed: 0,
-      results: patients.map(p => ({ 
-        contactId: p.contactId, 
-        number: p.number, 
-        success: true, 
-        message: 'Simulado - migração JavaScript' 
-      }))
-    };
+    // Enviar cartões via API CAM Krolik
+    const results = [];
+    let successCount = 0;
+    let failedCount = 0;
+
+    for (const patient of patients) {
+      try {
+        const payload = {
+          number: patient.number,
+          contactId: patient.contactId,
+          action_card_id: action_card_id,
+          forceSend: true
+        };
+
+        const response = await krolikApiClient.sendActionCard(payload);
+        
+        results.push({
+          contactId: patient.contactId,
+          number: patient.number,
+          success: true,
+          message: 'Enviado com sucesso',
+          response: response
+        });
+        successCount++;
+      } catch (error) {
+        results.push({
+          contactId: patient.contactId,
+          number: patient.number,
+          success: false,
+          error: error.message
+        });
+        failedCount++;
+      }
+    }
     
-    console.log(`📊 API: Resultado simulado - ${result.success} sucessos, ${result.failed} falhas`);
+    console.log(`📊 API: Resultado real - ${successCount} sucessos, ${failedCount} falhas`);
     
     res.json({
       success: true,
-      data: result,
-      message: `Cartão enviado: ${result.success} sucessos, ${result.failed} falhas`,
+      data: {
+        success: successCount,
+        failed: failedCount,
+        results: results
+      },
+      message: `Cartão enviado: ${successCount} sucessos, ${failedCount} falhas`,
       timestamp: new Date().toISOString()
     });
 
   } catch (error) {
     console.error('Erro ao enviar action card:', error);
-    res.status(500).json({ error: 'Erro ao enviar action card' });
+    res.status(500).json({ 
+      success: false,
+      error: 'Erro ao enviar action card via API CAM Krolik',
+      message: error.message,
+      timestamp: new Date().toISOString()
+    });
   }
 });
 
@@ -438,6 +487,15 @@ app.get('/health', async (req, res) => {
 // Inicializar sistema e iniciar servidor
 async function startServer() {
   try {
+    // Testar conexão com API CAM Krolik
+    console.log('\\n🔍 TESTANDO CONECTIVIDADE COM API CAM KROLIK...');
+    const apiConnected = await krolikApiClient.testConnection();
+    if (apiConnected) {
+      console.log('✅ API CAM Krolik conectada com sucesso!');
+    } else {
+      console.log('⚠️  API CAM Krolik não conectada - verifique as configurações');
+    }
+    
     // Inicializar sistema
     await mainController.initialize();
     
@@ -445,6 +503,7 @@ async function startServer() {
     console.log('   ✅ SISTEMA INICIALIZADO COM SUCESSO!');
     console.log('===========================================');
     console.log('🎯 Todos os componentes estão funcionando');
+    console.log(`🌐 API CAM Krolik: ${apiConnected ? '✅ Conectada' : '❌ Desconectada'}`);
     
     // INICIAR o sistema automaticamente
     await mainController.start();

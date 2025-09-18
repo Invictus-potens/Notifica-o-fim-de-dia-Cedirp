@@ -1,6 +1,7 @@
 const { ErrorHandler } = require('../services/ErrorHandler');
 const { ConfigManager } = require('../services/ConfigManager');
 const { JsonPatientManager } = require('../services/JsonPatientManager');
+const { ProductionScheduler } = require('../services/ProductionScheduler');
 const { TimeUtils } = require('../utils/TimeUtils');
 
 /**
@@ -16,6 +17,9 @@ class MainController {
     
     // Inicializar JsonPatientManager
     this.jsonPatientManager = new JsonPatientManager(this.errorHandler);
+    
+    // Inicializar ProductionScheduler
+    this.productionScheduler = new ProductionScheduler(this.errorHandler, this.configManager);
     
     this.isRunning = false;
     this.initialized = false;
@@ -51,6 +55,15 @@ class MainController {
       await this.jsonPatientManager.initialize();
       console.log('✅ JsonPatientManager inicializado');
 
+      // Inicializar ProductionScheduler com credenciais da API CAM Krolik
+      const krolikCredentials = {
+        baseURL: process.env.KROLIK_BASE_URL || 'https://api.camkrolik.com.br',
+        token: process.env.KROLIK_TOKEN || '63e68f168a48875131856df8'
+      };
+      
+      await this.productionScheduler.initialize(krolikCredentials);
+      console.log('✅ ProductionScheduler inicializado');
+
       this.initialized = true;
       console.log('✅ MainController inicializado com sucesso');
       
@@ -76,8 +89,8 @@ class MainController {
 
       console.log('🚀 Iniciando sistema de automação...');
 
-      // Iniciar ciclo de monitoramento simplificado
-      this.startMonitoringCycle();
+      // Iniciar ProductionScheduler (substitui o ciclo simplificado)
+      await this.productionScheduler.start();
       
       this.isRunning = true;
       console.log('✅ Sistema de automação iniciado com sucesso');
@@ -142,6 +155,11 @@ class MainController {
    */
   async stop() {
     try {
+      // Parar ProductionScheduler
+      if (this.productionScheduler) {
+        await this.productionScheduler.stop();
+      }
+      
       this.isRunning = false;
       console.log('🛑 Sistema parado');
     } catch (error) {
@@ -157,6 +175,8 @@ class MainController {
     try {
       const timeInfo = TimeUtils.getTimeInfo();
       
+      const flowPaused = this.configManager.isFlowPaused();
+      
       return {
         isRunning: this.isRunning,
         isInitialized: this.initialized,
@@ -165,9 +185,11 @@ class MainController {
         uptime: Date.now() - this.startTime.getTime(),
         isBusinessHours: timeInfo.isBusinessHours,
         isWorkingDay: timeInfo.isWorkingDay,
-        flowPaused: this.configManager.isFlowPaused(),
+        flowPaused: flowPaused, // Para compatibilidade
+        isPaused: flowPaused, // Nome que o frontend espera
         version: '1.0.0-js',
-        environment: process.env.NODE_ENV || 'development'
+        environment: process.env.NODE_ENV || 'development',
+        productionScheduler: this.productionScheduler ? this.productionScheduler.getStatus() : null
       };
     } catch (error) {
       this.errorHandler.logError(error, 'MainController.getStatus');
@@ -279,6 +301,95 @@ class MainController {
       uptime: Date.now() - this.startTime.getTime(),
       version: '1.0.0-js'
     };
+  }
+
+  /**
+   * Executa verificação manual de pacientes
+   */
+  async runManualPatientCheck() {
+    try {
+      if (!this.productionScheduler) {
+        throw new Error('ProductionScheduler não inicializado');
+      }
+      
+      console.log('🔍 Executando verificação manual de pacientes...');
+      await this.productionScheduler.runManualPatientCheck();
+      console.log('✅ Verificação manual concluída');
+      
+    } catch (error) {
+      this.errorHandler.logError(error, 'MainController.runManualPatientCheck');
+      throw error;
+    }
+  }
+
+  /**
+   * Executa mensagens de fim de dia manualmente
+   */
+  async runManualEndOfDayMessages() {
+    try {
+      if (!this.productionScheduler) {
+        throw new Error('ProductionScheduler não inicializado');
+      }
+      
+      console.log('🌅 Executando mensagens de fim de dia manual...');
+      await this.productionScheduler.runManualEndOfDayMessages();
+      console.log('✅ Mensagens de fim de dia manuais concluídas');
+      
+    } catch (error) {
+      this.errorHandler.logError(error, 'MainController.runManualEndOfDayMessages');
+      throw error;
+    }
+  }
+
+  /**
+   * Obtém estatísticas detalhadas do sistema
+   */
+  async getDetailedStats() {
+    try {
+      if (!this.productionScheduler) {
+        throw new Error('ProductionScheduler não inicializado');
+      }
+      
+      return this.productionScheduler.getDetailedStats();
+      
+    } catch (error) {
+      this.errorHandler.logError(error, 'MainController.getDetailedStats');
+      throw error;
+    }
+  }
+
+  /**
+   * Lista jobs ativos do agendador
+   */
+  listActiveJobs() {
+    try {
+      if (!this.productionScheduler) {
+        console.log('⚠️ ProductionScheduler não inicializado');
+        return;
+      }
+      
+      this.productionScheduler.listActiveJobs();
+      
+    } catch (error) {
+      this.errorHandler.logError(error, 'MainController.listActiveJobs');
+    }
+  }
+
+  /**
+   * Atualiza configurações do agendador
+   */
+  updateSchedulerConfig(newConfig) {
+    try {
+      if (!this.productionScheduler) {
+        throw new Error('ProductionScheduler não inicializado');
+      }
+      
+      this.productionScheduler.updateConfig(newConfig);
+      
+    } catch (error) {
+      this.errorHandler.logError(error, 'MainController.updateSchedulerConfig');
+      throw error;
+    }
   }
 }
 

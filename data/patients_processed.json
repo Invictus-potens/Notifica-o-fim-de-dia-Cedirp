@@ -6,10 +6,11 @@
     "sectorId": "6401f4f49b1ff8512b525e9c",
     "sectorName": "Suporte Telefonia",
     "channelId": "63e68f168a48875131856df8",
-    "channelType": "normal",
+    "channelType": "WhatsApp Business (Principal)",
     "waitStartTime": "2025-09-17T16:19:07.041Z",
     "waitTimeMinutes": 104,
-    "enteredAt": "2025-09-17T18:40:57.813Z"
+    "enteredAt": "2025-09-17T18:40:57.813Z",
+    "contactId": "68bcadf7b8654a32c661363ca"
   },
   {
     "id": "68cae641f22d799dcf67d677",
@@ -18,10 +19,11 @@
     "sectorId": "6401f4f49b1ff8512b525e9c",
     "sectorName": "Suporte Telefonia",
     "channelId": "63e68f168a48875131856df8",
-    "channelType": "normal",
+    "channelType": "WhatsApp Business (Principal)",
     "waitStartTime": "2025-09-17T16:48:01.623Z",
     "waitTimeMinutes": 115,
-    "enteredAt": "2025-09-17T18:44:13.434Z"
+    "enteredAt": "2025-09-17T18:44:13.434Z",
+    "contactId": "68bcae641f22d799dcf67d677"
   },
   {
     "id": "68cb000026180b5fa0ecef49",
@@ -30,10 +32,11 @@
     "sectorId": "6400efb5343817d4ddbb2a4c",
     "sectorName": "Suporte CAM",
     "channelId": "63e68f168a48875131856df8",
-    "channelType": "normal",
+    "channelType": "WhatsApp Business (Principal)",
     "waitStartTime": "2025-09-17T18:37:52.526Z",
     "waitTimeMinutes": 14,
-    "enteredAt": "2025-09-17T18:53:24.530Z"
+    "enteredAt": "2025-09-17T18:53:24.530Z",
+    "contactId": "68bcb000026180b5fa0ecef49"
   },
   {
     "id": "68cb01c4e74cafc575221731",
@@ -42,10 +45,11 @@
     "sectorId": "6400efb5343817d4ddbb2a4c",
     "sectorName": "Suporte CAM",
     "channelId": "63e68f168a48875131856df8",
-    "channelType": "normal",
+    "channelType": "WhatsApp Business (Principal)",
     "waitStartTime": "2025-09-17T18:45:24.187Z",
     "waitTimeMinutes": 11,
-    "enteredAt": "2025-09-17T18:57:31.417Z"
+    "enteredAt": "2025-09-17T18:57:31.417Z",
+    "contactId": "68bcb01c4e74cafc575221731"
   },
   {
     "id": "68c83356e046d08f2f272646",
@@ -54,9 +58,10 @@
     "sectorId": "6401f4f49b1ff8512b525e9c",
     "sectorName": "Suporte Telefonia",
     "channelId": "63e68f168a48875131856df8",
-    "channelType": "normal",
+    "channelType": "WhatsApp Business (Principal)",
     "waitStartTime": "2025-09-15T15:40:06.290Z",
     "waitTimeMinutes": 3096,
-    "enteredAt": "2025-09-17T19:17:37.274Z"
+    "enteredAt": "2025-09-17T19:17:37.274Z",
+    "contactId": "68bc83356e046d08f2f272646"
   }
 ]
