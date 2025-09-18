@@ -179,7 +179,7 @@ class MessageService {
     try {
       console.log(`⏰ Enviando mensagens de 30min para ${eligiblePatients.length} pacientes...`);
       
-      const actionCardId = this.configManager.get30MinuteActionCardId();
+      const actionCardId = this.configManager.get30MinActionCardId();
       
       const results = await this.sendActionCardsToMultiple(
         eligiblePatients, 

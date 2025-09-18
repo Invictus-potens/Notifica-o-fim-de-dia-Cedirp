@@ -8,6 +8,7 @@ class CronService {
   constructor(errorHandler) {
     this.errorHandler = errorHandler;
     this.jobs = new Map();
+    this.jobStatus = new Map(); // Rastreamento manual de status
     this.isRunning = false;
   }
 
@@ -36,10 +37,12 @@ class CronService {
     // Parar todos os jobs ativos
     for (const [jobName, job] of this.jobs.entries()) {
       job.stop();
+      this.jobStatus.set(jobName, false); // Marcar como parado
       console.log(`⏹️ Job '${jobName}' parado`);
     }
 
     this.jobs.clear();
+    this.jobStatus.clear();
     this.isRunning = false;
     console.log('⏰ CronService parado');
   }
@@ -54,6 +57,7 @@ class CronService {
       // Parar job existente se houver
       if (this.jobs.has(jobName)) {
         this.jobs.get(jobName).stop();
+        this.jobStatus.set(jobName, false);
       }
 
       // Criar novo job: a cada 3 minutos
@@ -65,12 +69,12 @@ class CronService {
           this.errorHandler.logError(error, 'CronService.patientCheck');
         }
       }, {
-        scheduled: false,
+        scheduled: true,
         timezone: "America/Sao_Paulo"
       });
 
       this.jobs.set(jobName, job);
-      job.start();
+      this.jobStatus.set(jobName, true); // Marcar como ativo
       
       console.log('✅ Verificação de pacientes agendada (a cada 3 minutos)');
       return job;
@@ -91,6 +95,7 @@ class CronService {
       // Parar job existente se houver
       if (this.jobs.has(jobName)) {
         this.jobs.get(jobName).stop();
+        this.jobStatus.set(jobName, false);
       }
 
       // Criar novo job: a cada minuto
@@ -102,12 +107,12 @@ class CronService {
           this.errorHandler.logError(error, 'CronService.intensivePatientCheck');
         }
       }, {
-        scheduled: false,
+        scheduled: true,
         timezone: "America/Sao_Paulo"
       });
 
       this.jobs.set(jobName, job);
-      job.start();
+      this.jobStatus.set(jobName, true); // Marcar como ativo
       
       console.log('✅ Verificação intensiva de pacientes agendada (a cada minuto)');
       return job;
@@ -128,6 +133,7 @@ class CronService {
       // Parar job existente se houver
       if (this.jobs.has(jobName)) {
         this.jobs.get(jobName).stop();
+        this.jobStatus.set(jobName, false);
       }
 
       // Criar novo job: todos os dias às 18:00
@@ -139,12 +145,12 @@ class CronService {
           this.errorHandler.logError(error, 'CronService.endOfDayMessages');
         }
       }, {
-        scheduled: false,
+        scheduled: true,
         timezone: "America/Sao_Paulo"
       });
 
       this.jobs.set(jobName, job);
-      job.start();
+      this.jobStatus.set(jobName, true); // Marcar como ativo
       
       console.log('✅ Mensagens de fim de dia agendadas (18:00 diariamente)');
       return job;
@@ -165,6 +171,7 @@ class CronService {
       // Parar job existente se houver
       if (this.jobs.has(jobName)) {
         this.jobs.get(jobName).stop();
+        this.jobStatus.set(jobName, false);
       }
 
       // Criar novo job: todos os dias às 18:05
@@ -176,12 +183,12 @@ class CronService {
           this.errorHandler.logError(error, 'CronService.dailyCleanup');
         }
       }, {
-        scheduled: false,
+        scheduled: true,
         timezone: "America/Sao_Paulo"
       });
 
       this.jobs.set(jobName, job);
-      job.start();
+      this.jobStatus.set(jobName, true); // Marcar como ativo
       
       console.log('✅ Limpeza diária agendada (18:05 diariamente)');
       return job;
@@ -202,6 +209,7 @@ class CronService {
       // Parar job existente se houver
       if (this.jobs.has(jobName)) {
         this.jobs.get(jobName).stop();
+        this.jobStatus.set(jobName, false);
       }
 
       // Criar novo job: todos os dias às 23:00
@@ -213,12 +221,12 @@ class CronService {
           this.errorHandler.logError(error, 'CronService.dailyBackup');
         }
       }, {
-        scheduled: false,
+        scheduled: true,
         timezone: "America/Sao_Paulo"
       });
 
       this.jobs.set(jobName, job);
-      job.start();
+      this.jobStatus.set(jobName, true); // Marcar como ativo
       
       console.log('✅ Backup diário agendado (23:00 diariamente)');
       return job;
@@ -237,6 +245,7 @@ class CronService {
       // Parar job existente se houver
       if (this.jobs.has(jobName)) {
         this.jobs.get(jobName).stop();
+        this.jobStatus.set(jobName, false);
       }
 
       // Criar novo job
@@ -248,12 +257,12 @@ class CronService {
           this.errorHandler.logError(error, `CronService.${jobName}`);
         }
       }, {
-        scheduled: false,
+        scheduled: true,
         timezone: "America/Sao_Paulo"
       });
 
       this.jobs.set(jobName, job);
-      job.start();
+      this.jobStatus.set(jobName, true); // Marcar como ativo
       
       console.log(`✅ Job '${jobName}' agendado: ${cronExpression} ${description}`);
       return job;
@@ -271,6 +280,7 @@ class CronService {
     if (this.jobs.has(jobName)) {
       this.jobs.get(jobName).stop();
       this.jobs.delete(jobName);
+      this.jobStatus.set(jobName, false); // Marcar como parado
       console.log(`⏹️ Job '${jobName}' parado`);
       return true;
     }
@@ -311,8 +321,9 @@ class CronService {
       return;
     }
 
-    for (const [jobName, job] of this.jobs.entries()) {
-      const status = job.running ? '🟢 Ativo' : '🔴 Parado';
+    for (const [jobName] of this.jobs.entries()) {
+      const isActive = this.jobStatus.get(jobName) || false;
+      const status = isActive ? '🟢 Ativo' : '🔴 Parado';
       
       console.log(`📌 ${jobName}: ${status}`);
     }

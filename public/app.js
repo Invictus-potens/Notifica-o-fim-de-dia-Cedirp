@@ -848,7 +848,7 @@ class AutomationInterface {
         try {
             console.log('📋 Carregando cartões de ação...');
             
-            const response = await fetch('/api/action-cards');
+            const response = await fetch('/api/action-cards/available');
             const result = await response.json();
 
             if (!response.ok) {
@@ -1698,7 +1698,13 @@ class AutomationInterface {
         try {
             console.log('💾 Salvando configurações de mensagem...');
             
-            // Get selected values
+            // 1. Primeiro, buscar configurações atuais para manter valores não alterados
+            console.log('🔍 Buscando configurações atuais...');
+            const currentConfigResponse = await fetch('/api/config');
+            const currentConfigResult = await currentConfigResponse.json();
+            const currentConfig = currentConfigResult.data || {};
+            
+            // Get selected values from form
             const actionCardSelect = document.getElementById('action-card-select');
             const actionCard30MinSelect = document.getElementById('action-card-30min-select');
             const actionCardEndDaySelect = document.getElementById('action-card-endday-select');
@@ -1707,38 +1713,96 @@ class AutomationInterface {
             const selectedActionCard30Min = actionCard30MinSelect ? actionCard30MinSelect.value : '';
             const selectedActionCardEndDay = actionCardEndDaySelect ? actionCardEndDaySelect.value : '';
             
-            // Validate that at least one is selected
-            if (!selectedActionCard && !selectedActionCard30Min && !selectedActionCardEndDay) {
-                this.showError('Selecione pelo menos um cartão de ação');
+            console.log('📋 Valores selecionados no formulário:');
+            console.log('   Default:', selectedActionCard || '(vazio)');
+            console.log('   30Min:', selectedActionCard30Min || '(vazio)');
+            console.log('   EndDay:', selectedActionCardEndDay || '(vazio)');
+            
+            console.log('📋 Valores atuais no sistema:');
+            console.log('   Default:', currentConfig.selectedActionCard || '(vazio)');
+            console.log('   30Min:', currentConfig.selectedActionCard30Min || '(vazio)');
+            console.log('   EndDay:', currentConfig.selectedActionCardEndDay || '(vazio)');
+            
+            // 2. Aplicar lógica: se não selecionou novo, manter o antigo
+            const finalActionCard = selectedActionCard || currentConfig.selectedActionCard;
+            const finalActionCard30Min = selectedActionCard30Min || currentConfig.selectedActionCard30Min;
+            const finalActionCardEndDay = selectedActionCardEndDay || currentConfig.selectedActionCardEndDay;
+            
+            console.log('💾 Valores finais que serão salvos:');
+            console.log('   Default:', finalActionCard || '(vazio)');
+            console.log('   30Min:', finalActionCard30Min || '(vazio)');
+            console.log('   EndDay:', finalActionCardEndDay || '(vazio)');
+            
+            // 3. Validar que pelo menos um está definido
+            if (!finalActionCard && !finalActionCard30Min && !finalActionCardEndDay) {
+                this.showError('Erro: Nenhum cartão de ação está configurado. Selecione pelo menos um.');
                 return;
             }
             
-            // Prepare configuration data
-            const configData = {
-                selectedActionCard: selectedActionCard || undefined,
-                selectedActionCard30Min: selectedActionCard30Min || undefined,
-                selectedActionCardEndDay: selectedActionCardEndDay || undefined,
-                // Incluir exclusões na configuração
-                excludedSectors: this.excludedSectors.map(s => s.id),
-                excludedChannels: this.excludedChannels.map(c => c.id)
-            };
+            // 4. Preparar dados apenas com os campos que devem ser atualizados
+            const configData = {};
             
-            console.log('💾 Dados de configuração:', configData);
+            // Só incluir no payload se há mudança ou se é um novo valor
+            if (selectedActionCard || !currentConfig.selectedActionCard) {
+                configData.selectedActionCard = finalActionCard;
+            }
+            if (selectedActionCard30Min || !currentConfig.selectedActionCard30Min) {
+                configData.selectedActionCard30Min = finalActionCard30Min;
+            }
+            if (selectedActionCardEndDay || !currentConfig.selectedActionCardEndDay) {
+                configData.selectedActionCardEndDay = finalActionCardEndDay;
+            }
             
-            // Send to API
-            const response = await fetch('/api/config', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(configData)
-            });
+            // Incluir exclusões na configuração
+            configData.excludedSectors = this.excludedSectors.map(s => s.id);
+            configData.excludedChannels = this.excludedChannels.map(c => c.id);
+            
+            console.log('📤 Dados que serão enviados para API:', configData);
+            
+            // 5. Usar rota específica para Action Cards se há mudanças nos cards
+            const hasActionCardChanges = configData.selectedActionCard || configData.selectedActionCard30Min || configData.selectedActionCardEndDay;
+            
+            let response;
+            if (hasActionCardChanges) {
+                // Usar rota específica para Action Cards
+                const actionCardData = {
+                    default: finalActionCard,
+                    thirtyMin: finalActionCard30Min,
+                    endOfDay: finalActionCardEndDay
+                };
+                
+                console.log('📤 Enviando para /api/action-cards:', actionCardData);
+                response = await fetch('/api/action-cards', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(actionCardData)
+                });
+            } else {
+                // Usar rota geral para outras configurações
+                console.log('📤 Enviando para /api/config:', configData);
+                response = await fetch('/api/config', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(configData)
+                });
+            }
             
             const result = await response.json();
             
             if (response.ok && result.success) {
                 this.showSuccess('Configurações de mensagem salvas com sucesso!');
                 console.log('✅ Configurações salvas:', result);
+                
+                // 6. Atualizar visualmente os campos com os valores finais
+                if (actionCardSelect) actionCardSelect.value = finalActionCard || '';
+                if (actionCard30MinSelect) actionCard30MinSelect.value = finalActionCard30Min || '';
+                if (actionCardEndDaySelect) actionCardEndDaySelect.value = finalActionCardEndDay || '';
+                
+                console.log('🔄 Interface atualizada com valores salvos');
             } else {
                 throw new Error(result.error || 'Erro ao salvar configurações');
             }

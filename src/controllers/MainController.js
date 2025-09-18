@@ -238,6 +238,26 @@ class MainController {
   }
 
   /**
+   * Atualiza Action Cards específicos
+   * @param {Object} actionCards - Action cards para atualizar
+   */
+  async updateActionCards(actionCards) {
+    await this.configManager.setAllActionCards(actionCards);
+  }
+
+  /**
+   * Obtém Action Cards atuais
+   * @returns {Object} Action cards configurados
+   */
+  getActionCards() {
+    return {
+      default: this.configManager.getActionCardId(),
+      thirtyMin: this.configManager.get30MinActionCardId(),
+      endOfDay: this.configManager.getEndOfDayActionCardId()
+    };
+  }
+
+  /**
    * Obtém logs do sistema
    * @param {number} [level] - Nível mínimo
    * @param {number} [limit] - Limite de logs

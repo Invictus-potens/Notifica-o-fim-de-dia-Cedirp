@@ -1,10 +1,10 @@
 {
   "excludedSectors": "[]",
-  "endOfDayTime": "18:00",
   "excludedChannels": "[]",
   "flowPaused": "false",
   "selectedActionCard": "631f2b4f307d23f46ac80a2b",
-  "selectedActionCard30Min": "631f2b4f307d23f46ac80a2b",
   "selectedActionCardEndDay": "631f2b4f307d23f46ac80a2b",
-  "selectedTemplate": ""
+  "selectedActionCard30Min": "68cbfa96b8640e9721e4feab",
+  "selectedTemplate": "",
+  "endOfDayTime": "18:00"
 }

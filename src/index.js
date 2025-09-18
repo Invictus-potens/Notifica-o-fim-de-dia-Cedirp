@@ -103,6 +103,55 @@ app.post('/api/config', async (req, res) => {
   }
 });
 
+// Rota específica para Action Cards
+app.get('/api/action-cards', async (req, res) => {
+  try {
+    const actionCards = mainController.getActionCards();
+    res.json({
+      success: true,
+      data: actionCards,
+      message: 'Action Cards obtidos com sucesso',
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('Erro ao obter Action Cards:', error);
+    res.status(500).json({ error: 'Erro ao obter Action Cards' });
+  }
+});
+
+app.post('/api/action-cards', async (req, res) => {
+  try {
+    const { default: defaultCard, thirtyMin, endOfDay } = req.body;
+    
+    if (!defaultCard && !thirtyMin && !endOfDay) {
+      return res.status(400).json({ 
+        error: 'Pelo menos um Action Card deve ser fornecido',
+        message: 'Forneça default, thirtyMin ou endOfDay'
+      });
+    }
+
+    const actionCards = {};
+    if (defaultCard) actionCards.default = defaultCard;
+    if (thirtyMin) actionCards.thirtyMin = thirtyMin;
+    if (endOfDay) actionCards.endOfDay = endOfDay;
+
+    await mainController.updateActionCards(actionCards);
+    
+    // Retornar configuração atualizada
+    const updatedCards = mainController.getActionCards();
+    
+    res.json({ 
+      success: true, 
+      message: 'Action Cards atualizados com sucesso',
+      data: updatedCards,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('Erro ao atualizar Action Cards:', error);
+    res.status(500).json({ error: 'Erro ao atualizar Action Cards' });
+  }
+});
+
 // Logs do sistema
 app.get('/api/logs', (req, res) => {
   try {
@@ -253,23 +302,24 @@ app.get('/api/sectors', async (req, res) => {
   }
 });
 
-// Action cards disponíveis
-app.get('/api/action-cards', async (req, res) => {
+// Lista todos os Action Cards disponíveis na API CAM Krolik
+app.get('/api/action-cards/available', async (req, res) => {
   try {
-    console.log('📋 API: Buscando action cards na API CAM Krolik...');
+    console.log('📋 API: Buscando action cards disponíveis na API CAM Krolik...');
     
     // Buscar action cards reais da API CAM Krolik
     const actionCards = await krolikApiClient.listActionCards();
     
-    console.log(`📋 API: Retornando ${actionCards.length} action cards`);
+    console.log(`📋 API: Retornando ${actionCards.length} action cards disponíveis`);
     res.json({
       success: true,
       data: actionCards,
       total: actionCards.length,
+      message: 'Action Cards disponíveis obtidos com sucesso',
       timestamp: new Date().toISOString()
     });
   } catch (error) {
-    console.error('Erro ao buscar action cards:', error);
+    console.error('Erro ao buscar action cards disponíveis:', error);
     res.status(500).json({ 
       success: false,
       error: 'Erro ao buscar action cards da API CAM Krolik',

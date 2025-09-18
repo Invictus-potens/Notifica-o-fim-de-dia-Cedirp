@@ -203,7 +203,7 @@ class MonitoringService {
   async isPatientEligibleForEndOfDayMessage(patient) {
     try {
       // 1. Verificar se é fim de dia (18h)
-      if (!TimeUtils.isEndOfDay()) {
+      if (!TimeUtils.isEndOfDayTime()) {
         return false;
       }
       
@@ -251,7 +251,7 @@ class MonitoringService {
           const payload = {
             number: patient.phone,
             contactId: patient.contactId,
-            action_card_id: this.configManager.getActionCardId(), // ID do action card configurado
+            action_card_id: this.configManager.get30MinActionCardId(), // ID do action card para 30min
             forceSend: true
           };
           

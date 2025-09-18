@@ -169,7 +169,7 @@ class ProductionScheduler {
       }
       
       // Processar pacientes elegíveis para mensagem de fim de dia
-      if (this.config.enableEndOfDayMessages && TimeUtils.isEndOfDay() && checkResult.eligibleEndOfDay.length > 0) {
+      if (this.config.enableEndOfDayMessages && TimeUtils.isEndOfDayTime() && checkResult.eligibleEndOfDay.length > 0) {
         await this.handleEndOfDayMessages(checkResult.eligibleEndOfDay);
       }
       
