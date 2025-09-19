@@ -53,6 +53,7 @@ class AutomationInterface {
             this.initializePatientData();
             this.initializeSystemTab(); // Inicializar aba Sistema
             this.initializeMetricsTab(); // Inicializar aba Métricas
+            this.initializeLogsTab(); // Inicializar aba Logs
             this.startRealtimeTimer(); // Iniciar timer em tempo real
             // Carregar configurações do sistema
             this.loadSystemConfig();
@@ -1343,9 +1344,9 @@ class AutomationInterface {
             this.showSuccess('Fluxo pausado com sucesso');
             
             // Log de ação do usuário
-            this.addUserActionLog('info', 
-                'Fluxo de mensagens pausado pelo usuário', 
-                'Controle de Fluxo',
+            await this.addUserActionLog('warning', 
+                'Controle de Fluxo', 
+                'Usuário pausou o fluxo de mensagens automáticas',
                 { action: 'pause' }
             );
 
@@ -1378,9 +1379,9 @@ class AutomationInterface {
             this.showSuccess('Fluxo retomado com sucesso');
             
             // Log de ação do usuário
-            this.addUserActionLog('info', 
-                'Fluxo de mensagens retomado pelo usuário', 
-                'Controle de Fluxo',
+            await this.addUserActionLog('info', 
+                'Controle de Fluxo', 
+                'Usuário retomou o fluxo de mensagens automáticas',
                 { action: 'resume' }
             );
 
@@ -1494,6 +1495,13 @@ class AutomationInterface {
             this.excludedSectors.push(sector);
             this.updateExcludedSectorsDisplay();
             this.saveExcludedSectors();
+            
+            // Log da ação do usuário
+            this.addUserActionLog('info', 
+                'Lista de Exclusão', 
+                `Usuário adicionou setor "${sector.name}" à lista de exclusão`,
+                { sectorId: sector.id, sectorName: sector.name, action: 'add' }
+            );
             
             // Reset select
             sectorSelect.value = '';
@@ -1915,6 +1923,17 @@ class AutomationInterface {
             if (response.ok && result.success) {
                 this.showSuccess('Configurações de mensagem salvas com sucesso!');
                 console.log('✅ Configurações salvas:', result);
+                
+                // Log da ação do usuário
+                await this.addUserActionLog('info', 
+                    'Action Cards Configurados', 
+                    'Usuário atualizou configurações de Action Cards',
+                    { 
+                        actionCardDefault: finalActionCard,
+                        actionCard30Min: finalActionCard30Min,
+                        actionCardEndDay: finalActionCardEndDay
+                    }
+                );
                 
                 // 6. Atualizar visualmente os campos com os valores finais
                 if (actionCardSelect) actionCardSelect.value = finalActionCard || '';
@@ -2350,15 +2369,15 @@ class AutomationInterface {
                 this.showSuccess(`${messageType} enviado: ${result.data.success} sucessos, ${result.data.failed} falhas`);
                 
                 // Log de sucesso para o usuário
-                this.addUserActionLog('info', 
-                    `Mensagem manual enviada com sucesso para ${patients.length} pacientes`, 
-                    'Envio Manual',
+                await this.addUserActionLog('info', 
+                    'Envio Manual de Mensagem', 
+                    `Usuário enviou mensagem para ${patients.length} pacientes (${result.data.success} sucessos, ${result.data.failed} falhas)`,
                     { 
                         messageType: this.currentMessageType,
-                        messageId: this.currentMessageId,
+                        actionCard: this.currentMessageId,
                         totalPatients: patients.length,
                         successCount: result.data.success,
-                        failedCount: result.data.failed
+                        failedCount: result.data.failed 
                     }
                 );
                 
@@ -3194,6 +3213,14 @@ class AutomationInterface {
                 this.updateWarningState();
                 this.showNotification('Configurações do sistema salvas com sucesso!', 'success');
                 
+                // Logar a ação do usuário
+                await this.addUserActionLog('info', 'Configurações Salvas', 'Usuário salvou configurações do sistema', {
+                    startOfDayTime: configData.startOfDayTime,
+                    endOfDayTime: configData.endOfDayTime,
+                    minWaitTime: configData.minWaitTime,
+                    maxWaitTime: configData.maxWaitTime
+                });
+                
                 // Recarregar configurações para garantir sincronização
                 setTimeout(() => this.loadSystemConfig(), 1000);
             } else {
@@ -3454,6 +3481,218 @@ class AutomationInterface {
         if (this.metricsInterval) {
             clearInterval(this.metricsInterval);
             this.metricsInterval = null;
+        }
+    }
+
+    /**
+     * Logs Tab - Sistema de logs de ações do usuário
+     */
+    initializeLogsTab() {
+        // Elementos da interface de logs
+        this.logsElements = {
+            container: document.getElementById('logs-container'),
+            levelFilter: document.getElementById('log-level-filter'),
+            exportBtn: document.getElementById('export-logs-btn'),
+            clearBtn: document.getElementById('clear-logs-btn')
+        };
+
+        // Setup event listeners
+        this.setupLogsEventListeners();
+        
+        // Carregar logs iniciais
+        this.loadUserLogs();
+    }
+
+    setupLogsEventListeners() {
+        // Filtro por nível
+        this.logsElements.levelFilter?.addEventListener('change', () => {
+            this.loadUserLogs();
+        });
+
+        // Exportar logs
+        this.logsElements.exportBtn?.addEventListener('click', () => {
+            this.exportUserLogs();
+        });
+
+        // Limpar logs
+        this.logsElements.clearBtn?.addEventListener('click', () => {
+            this.clearUserLogs();
+        });
+    }
+
+    async loadUserLogs() {
+        try {
+            const level = this.logsElements.levelFilter?.value || '';
+            
+            const response = await fetch(`/api/logs/user?level=${level}&limit=100`);
+            const result = await response.json();
+            
+            if (response.ok && result.success) {
+                this.displayUserLogs(result.data);
+            } else {
+                this.displayUserLogs([]);
+            }
+        } catch (error) {
+            console.error('Erro ao carregar logs do usuário:', error);
+            this.displayUserLogs([]);
+        }
+    }
+
+    displayUserLogs(logs) {
+        const container = this.logsElements.container;
+        if (!container) return;
+
+        if (logs.length === 0) {
+            container.innerHTML = `
+                <div class="text-muted text-center py-4">
+                    <i class="bi bi-journal-x me-2"></i>
+                    Nenhum log de usuário disponível
+                </div>
+            `;
+            return;
+        }
+
+        const logsHtml = logs.map(log => {
+            const levelClass = this.getLogLevelClass(log.level);
+            const levelIcon = this.getLogLevelIcon(log.level);
+            const formattedDate = new Date(log.timestamp).toLocaleString('pt-BR');
+            
+            return `
+                <div class="log-entry border-start border-3 ${levelClass} mb-2 p-3">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <div class="d-flex align-items-center">
+                            <span class="log-level badge me-2">
+                                <i class="bi ${levelIcon} me-1"></i>${log.level.toUpperCase()}
+                            </span>
+                            <strong class="log-action">${this.escapeHtml(log.action)}</strong>
+                        </div>
+                        <small class="text-muted log-time">${formattedDate}</small>
+                    </div>
+                    <div class="log-details text-muted mb-2">
+                        ${this.escapeHtml(log.details)}
+                    </div>
+                    ${log.metadata && Object.keys(log.metadata).length > 0 ? `
+                        <div class="log-metadata">
+                            <small class="text-muted">
+                                <i class="bi bi-info-circle me-1"></i>
+                                ${this.formatMetadata(log.metadata)}
+                            </small>
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+        }).join('');
+
+        container.innerHTML = logsHtml;
+        
+        // Auto-scroll para o topo para mostrar logs mais recentes
+        container.scrollTop = 0;
+    }
+
+    getLogLevelClass(level) {
+        switch (level) {
+            case 'info': return 'border-info';
+            case 'warning': return 'border-warning';
+            case 'error': return 'border-danger';
+            default: return 'border-secondary';
+        }
+    }
+
+    getLogLevelIcon(level) {
+        switch (level) {
+            case 'info': return 'bi-info-circle-fill';
+            case 'warning': return 'bi-exclamation-triangle-fill';
+            case 'error': return 'bi-x-circle-fill';
+            default: return 'bi-circle-fill';
+        }
+    }
+
+    formatMetadata(metadata) {
+        const relevantFields = [];
+        
+        if (metadata.oldValue && metadata.newValue) {
+            relevantFields.push(`${metadata.oldValue} → ${metadata.newValue}`);
+        }
+        
+        if (metadata.actionCard) {
+            relevantFields.push(`Action Card: ${metadata.actionCard}`);
+        }
+        
+        if (metadata.patientCount) {
+            relevantFields.push(`${metadata.patientCount} pacientes`);
+        }
+        
+        return relevantFields.length > 0 ? relevantFields.join(' | ') : 'Sem detalhes adicionais';
+    }
+
+    async exportUserLogs() {
+        try {
+            const response = await fetch('/api/logs/user?limit=1000');
+            const result = await response.json();
+            
+            if (response.ok && result.success) {
+                const dataStr = JSON.stringify(result.data, null, 2);
+                const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+                
+                const exportFileName = `user_logs_${new Date().toISOString().split('T')[0]}.json`;
+                
+                const linkElement = document.createElement('a');
+                linkElement.setAttribute('href', dataUri);
+                linkElement.setAttribute('download', exportFileName);
+                linkElement.click();
+                
+                this.showNotification('Logs exportados com sucesso!', 'success');
+                
+                // Logar a própria ação de exportar
+                await this.addUserActionLog('info', 'Exportar Logs', 'Usuário exportou logs do sistema');
+            } else {
+                throw new Error('Erro ao obter logs para exportação');
+            }
+        } catch (error) {
+            console.error('Erro ao exportar logs:', error);
+            this.showNotification('Erro ao exportar logs', 'error');
+        }
+    }
+
+    async clearUserLogs() {
+        try {
+            const response = await fetch('/api/logs/user', {
+                method: 'DELETE'
+            });
+            
+            const result = await response.json();
+            
+            if (response.ok && result.success) {
+                this.showNotification('Logs limpos com sucesso!', 'success');
+                this.loadUserLogs(); // Recarregar (deve mostrar vazio)
+            } else {
+                throw new Error(result.message || 'Erro ao limpar logs');
+            }
+        } catch (error) {
+            console.error('Erro ao limpar logs:', error);
+            this.showNotification('Erro ao limpar logs', 'error');
+        }
+    }
+
+    /**
+     * Adiciona log de ação do usuário
+     */
+    async addUserActionLog(level, action, details, metadata = {}) {
+        try {
+            await fetch('/api/logs/user', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    level,
+                    action,
+                    details,
+                    metadata
+                })
+            });
+        } catch (error) {
+            console.error('Erro ao adicionar log de ação do usuário:', error);
         }
     }
 

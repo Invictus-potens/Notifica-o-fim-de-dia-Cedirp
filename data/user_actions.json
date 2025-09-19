@@ -1,0 +1,64 @@
+[
+  {
+    "id": "log_1758288587972_d5gjto6j3",
+    "timestamp": "2025-09-19T13:29:47.972Z",
+    "level": "error",
+    "action": "Falha no Envio",
+    "details": "Falha ao enviar mensagem automática para Maria Santos",
+    "metadata": {
+      "error": "Número de telefone inválido"
+    },
+    "userAgent": "Sistema",
+    "ip": "local"
+  },
+  {
+    "id": "log_1758288587953_02bqlw1hf",
+    "timestamp": "2025-09-19T13:29:47.953Z",
+    "level": "info",
+    "action": "Mensagem Automática Enviada",
+    "details": "30min para João Silva usando Action Card 631f2b4f307d23f46ac80a2b",
+    "metadata": {
+      "patientPhone": "11999999999"
+    },
+    "userAgent": "Sistema",
+    "ip": "local"
+  },
+  {
+    "id": "log_1758288587950_ldofnz64k",
+    "timestamp": "2025-09-19T13:29:47.951Z",
+    "level": "info",
+    "action": "Envio Manual de Mensagem",
+    "details": "Usuário enviou mensagem para 3 pacientes (3 sucessos, 0 falhas)",
+    "metadata": {
+      "totalPatients": 3,
+      "actionCard": "631f2b4f307d23f46ac80a2b"
+    },
+    "userAgent": "Sistema",
+    "ip": "local"
+  },
+  {
+    "id": "log_1758288587945_kkqn7swc6",
+    "timestamp": "2025-09-19T13:29:47.945Z",
+    "level": "warning",
+    "action": "Controle de Fluxo",
+    "details": "Usuário pausou o fluxo de mensagens automáticas",
+    "metadata": {
+      "action": "pause"
+    },
+    "userAgent": "Sistema",
+    "ip": "local"
+  },
+  {
+    "id": "log_1758288587938_1qh24pmwa",
+    "timestamp": "2025-09-19T13:29:47.938Z",
+    "level": "info",
+    "action": "Configurações Salvas",
+    "details": "Usuário salvou configurações do sistema",
+    "metadata": {
+      "startOfDayTime": "08:30",
+      "endOfDayTime": "17:30"
+    },
+    "userAgent": "Sistema",
+    "ip": "local"
+  }
+]

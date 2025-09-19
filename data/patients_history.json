@@ -268,5 +268,77 @@
     "status": "waiting",
     "enteredAt": "2025-09-19T00:34:01.217Z",
     "processedAt": "2025-09-19T12:54:00.384Z"
+  },
+  {
+    "id": "68cd4b165a6f2df91a6f7df1",
+    "contactId": "66c49f5de32cb0f8d4d53967",
+    "name": "Wilson Lopes - Comercial Izahub",
+    "phone": "5591993273001",
+    "sectorId": "631f2b4f307d23f46ac80a1c",
+    "sectorName": "Setor 631f2b4f307d23f46ac80a1c",
+    "channelId": "63e68f168a48875131856df8",
+    "channelType": "WhatsApp Business (Principal)",
+    "waitStartTime": "2025-09-19T12:22:46.970Z",
+    "waitTimeMinutes": 30,
+    "status": "waiting",
+    "enteredAt": "2025-09-19T12:26:00.410Z",
+    "messageSent": {
+      "actionCardId": "68cbfa96b8640e9721e4feab",
+      "messageType": "30min",
+      "sentAt": "2025-09-19T12:56:00.481Z",
+      "sentAtFormatted": "19/09/2025, 09:56:00"
+    },
+    "processedAt": "2025-09-19T12:56:00.950Z"
+  },
+  {
+    "id": "68cd4b165a6f2df91a6f7df1",
+    "contactId": "66c49f5de32cb0f8d4d53967",
+    "name": "Wilson Lopes - Comercial Izahub",
+    "phone": "5591993273001",
+    "sectorId": "631f2b4f307d23f46ac80a1c",
+    "sectorName": "Setor 631f2b4f307d23f46ac80a1c",
+    "channelId": "63e68f168a48875131856df8",
+    "channelType": "WhatsApp Business (Principal)",
+    "waitStartTime": "2025-09-19T12:22:46.970Z",
+    "waitTimeMinutes": 55,
+    "status": "waiting",
+    "enteredAt": "2025-09-19T12:57:00.922Z",
+    "processedAt": "2025-09-19T13:22:01.015Z"
+  },
+  {
+    "id": "68cd57eaf42aa528cd696e58",
+    "contactId": "688b7b360a1a3d6a46756d0b",
+    "name": "Habiteto Imóveis",
+    "phone": "5516992237869",
+    "sectorId": "631f7d27307d23f46af88983",
+    "sectorName": "Administrativo/Financeiro",
+    "channelId": "63e68f168a48875131856df8",
+    "channelType": "WhatsApp Business (Principal)",
+    "waitStartTime": "2025-09-19T13:17:30.158Z",
+    "waitTimeMinutes": 5,
+    "status": "waiting",
+    "enteredAt": "2025-09-19T13:20:00.828Z",
+    "processedAt": "2025-09-19T13:26:00.500Z"
+  },
+  {
+    "id": "68cd5899cd7eca0c24f44eef",
+    "contactId": "66b5033d55244d2965df3495",
+    "name": "Leandro Mioto",
+    "phone": "5516988157266",
+    "sectorId": "6400efb5343817d4ddbb2a4c",
+    "sectorName": "Suporte CAM",
+    "channelId": "63e68f168a48875131856df8",
+    "channelType": "WhatsApp Business (Principal)",
+    "waitStartTime": "2025-09-19T13:20:25.923Z",
+    "waitTimeMinutes": 30,
+    "status": "waiting",
+    "enteredAt": "2025-09-19T13:24:01.232Z",
+    "messageSent": {
+      "actionCardId": "68cbfa96b8640e9721e4feab",
+      "messageType": "30min",
+      "sentAt": "2025-09-19T13:54:00.728Z",
+      "sentAtFormatted": "19/09/2025, 10:54:00"
+    },
+    "processedAt": "2025-09-19T13:54:01.177Z"
   }
 ]

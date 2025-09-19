@@ -1,6 +1,7 @@
 const { KrolikApiClient } = require('./KrolikApiClient');
 const { ConfigManager } = require('./ConfigManager');
 const { MessageHistoryManager } = require('./MessageHistoryManager');
+const { UserActionLogger } = require('./UserActionLogger');
 
 /**
  * Serviço de envio de mensagens
@@ -12,6 +13,7 @@ class MessageService {
     this.configManager = configManager;
     this.krolikApiClient = null;
     this.messageHistoryManager = new MessageHistoryManager(errorHandler);
+    this.userActionLogger = new UserActionLogger(errorHandler);
     
     this.stats = {
       totalSent: 0,
@@ -99,6 +101,18 @@ class MessageService {
       
       console.log(`✅ Action card enviado com sucesso para ${patient.name}`);
       
+      // Log automático para ações do usuário (envio automático)
+      await this.userActionLogger.logAutomaticMessage(
+        patient.name,
+        cardId,
+        messageData.messageType || 'automática',
+        true,
+        {
+          patientPhone: patient.phone,
+          contactId: patient.contactId
+        }
+      );
+      
       return {
         success: true,
         patient: patient.name,
@@ -118,6 +132,19 @@ class MessageService {
       });
       
       console.error(`❌ Erro ao enviar action card para ${patient.name}:`, error.message);
+      
+      // Log automático de falha
+      await this.userActionLogger.logAutomaticMessage(
+        patient.name,
+        actionCardId || 'N/A',
+        'automática',
+        false,
+        {
+          patientPhone: patient.phone,
+          contactId: patient.contactId,
+          error: error.message
+        }
+      );
       
       return {
         success: false,

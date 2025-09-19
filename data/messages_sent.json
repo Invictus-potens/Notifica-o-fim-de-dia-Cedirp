@@ -35,9 +35,33 @@
       "sentAtFormatted": "19/09/2025, 09:16:01",
       "success": true,
       "createdAt": "2025-09-19T12:16:01.608Z"
+    },
+    {
+      "id": "msg_1758286560943_fq0oi3wr4",
+      "patientId": "68cd4b165a6f2df91a6f7df1",
+      "patientName": "Wilson Lopes - Comercial Izahub",
+      "patientPhone": "5591993273001",
+      "actionCardId": "68cbfa96b8640e9721e4feab",
+      "messageType": "30min",
+      "sentAt": "2025-09-19T12:56:00.481Z",
+      "sentAtFormatted": "19/09/2025, 09:56:00",
+      "success": true,
+      "createdAt": "2025-09-19T12:56:00.943Z"
+    },
+    {
+      "id": "msg_1758290041171_n64bmsnbz",
+      "patientId": "68cd5899cd7eca0c24f44eef",
+      "patientName": "Leandro Mioto",
+      "patientPhone": "5516988157266",
+      "actionCardId": "68cbfa96b8640e9721e4feab",
+      "messageType": "30min",
+      "sentAt": "2025-09-19T13:54:00.728Z",
+      "sentAtFormatted": "19/09/2025, 10:54:00",
+      "success": true,
+      "createdAt": "2025-09-19T13:54:01.173Z"
     }
   ],
   "lastCleanup": null,
-  "totalSent": 3,
+  "totalSent": 5,
   "createdAt": "2025-09-19T00:45:57.736Z"
 }

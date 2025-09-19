@@ -1,17 +1,17 @@
 [
   {
-    "id": "68cd4b165a6f2df91a6f7df1",
-    "contactId": "66c49f5de32cb0f8d4d53967",
-    "name": "Wilson Lopes - Comercial Izahub",
-    "phone": "5591993273001",
-    "sectorId": "631f2b4f307d23f46ac80a1c",
-    "sectorName": "Setor 631f2b4f307d23f46ac80a1c",
+    "id": "68cd5899cd7eca0c24f44eef",
+    "contactId": "66b5033d55244d2965df3495",
+    "name": "Leandro Mioto",
+    "phone": "5516988157266",
+    "sectorId": "6400efb5343817d4ddbb2a4c",
+    "sectorName": "Suporte CAM",
     "channelId": "63e68f168a48875131856df8",
     "channelType": "WhatsApp Business (Principal)",
-    "waitStartTime": "2025-09-19T12:22:46.970Z",
-    "waitTimeMinutes": 28,
+    "waitStartTime": "2025-09-19T13:20:25.923Z",
+    "waitTimeMinutes": 32,
     "status": "waiting",
-    "enteredAt": "2025-09-19T12:26:00.410Z"
+    "enteredAt": "2025-09-19T13:55:01.173Z"
   },
   {
     "id": "68cbecf9a56a3d64bbba352a",
@@ -23,7 +23,7 @@
     "channelId": "63e68f168a48875131856df8",
     "channelType": "WhatsApp Business (Principal)",
     "waitStartTime": "2025-09-18T11:28:57.776Z",
-    "waitTimeMinutes": 1158,
+    "waitTimeMinutes": 1220,
     "status": "waiting",
     "enteredAt": "2025-09-19T00:34:01.217Z"
   }

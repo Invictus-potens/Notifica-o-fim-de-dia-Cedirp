@@ -3,6 +3,7 @@ const { ConfigManager } = require('../services/ConfigManager');
 const { JsonPatientManager } = require('../services/JsonPatientManager');
 const { ProductionScheduler } = require('../services/ProductionScheduler');
 const { MessageHistoryManager } = require('../services/MessageHistoryManager');
+const { UserActionLogger } = require('../services/UserActionLogger');
 const { TimeUtils } = require('../utils/TimeUtils');
 
 /**
@@ -24,6 +25,9 @@ class MainController {
     
     // Inicializar MessageHistoryManager
     this.messageHistoryManager = new MessageHistoryManager(this.errorHandler);
+    
+    // Inicializar UserActionLogger
+    this.userActionLogger = new UserActionLogger(this.errorHandler);
     
     // Inicializar ProductionScheduler
     this.productionScheduler = new ProductionScheduler(this.errorHandler, this.configManager);
@@ -655,6 +659,54 @@ class MainController {
       
     } catch (error) {
       this.errorHandler.logError(error, 'MainController.updateSchedulerConfig');
+      throw error;
+    }
+  }
+
+  /**
+   * Obtém logs de ações do usuário
+   */
+  async getUserLogs(filters = {}) {
+    try {
+      return await this.userActionLogger.getFilteredLogs(filters);
+    } catch (error) {
+      this.errorHandler.logError(error, 'MainController.getUserLogs');
+      throw error;
+    }
+  }
+
+  /**
+   * Adiciona log de ação do usuário
+   */
+  async addUserLog(level, action, details, metadata = {}) {
+    try {
+      return await this.userActionLogger.logUserAction(level, action, details, metadata);
+    } catch (error) {
+      this.errorHandler.logError(error, 'MainController.addUserLog');
+      throw error;
+    }
+  }
+
+  /**
+   * Limpa logs de usuário
+   */
+  async clearUserLogs() {
+    try {
+      return await this.userActionLogger.clearAllLogs();
+    } catch (error) {
+      this.errorHandler.logError(error, 'MainController.clearUserLogs');
+      throw error;
+    }
+  }
+
+  /**
+   * Obtém estatísticas dos logs
+   */
+  async getUserLogStats() {
+    try {
+      return await this.userActionLogger.getLogStats();
+    } catch (error) {
+      this.errorHandler.logError(error, 'MainController.getUserLogStats');
       throw error;
     }
   }

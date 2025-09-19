@@ -313,6 +313,112 @@ app.get('/api/sectors', async (req, res) => {
   }
 });
 
+// Rotas para logs de ações do usuário
+app.get('/api/logs/user', async (req, res) => {
+  try {
+    const filters = {
+      level: req.query.level,
+      action: req.query.action,
+      startDate: req.query.startDate,
+      endDate: req.query.endDate,
+      limit: req.query.limit ? parseInt(req.query.limit) : undefined
+    };
+
+    const logs = await mainController.getUserLogs(filters);
+    
+    res.json({
+      success: true,
+      data: logs,
+      total: logs.length,
+      filters: filters,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('Erro ao obter logs do usuário:', error);
+    res.status(500).json({ 
+      success: false,
+      error: 'Erro ao obter logs do usuário',
+      message: error.message 
+    });
+  }
+});
+
+app.post('/api/logs/user', async (req, res) => {
+  try {
+    const { level, action, details, metadata } = req.body;
+    
+    if (!level || !action || !details) {
+      return res.status(400).json({
+        success: false,
+        error: 'Campos obrigatórios: level, action, details'
+      });
+    }
+
+    // Adicionar informações da requisição aos metadados
+    const enrichedMetadata = {
+      ...metadata,
+      userAgent: req.get('User-Agent'),
+      ip: req.ip || req.connection.remoteAddress
+    };
+
+    const logEntry = await mainController.addUserLog(level, action, details, enrichedMetadata);
+    
+    res.json({
+      success: true,
+      data: logEntry,
+      message: 'Log adicionado com sucesso',
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('Erro ao adicionar log do usuário:', error);
+    res.status(500).json({ 
+      success: false,
+      error: 'Erro ao adicionar log do usuário',
+      message: error.message 
+    });
+  }
+});
+
+app.delete('/api/logs/user', async (req, res) => {
+  try {
+    const result = await mainController.clearUserLogs();
+    
+    res.json({
+      success: true,
+      data: result,
+      message: 'Logs limpos com sucesso',
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('Erro ao limpar logs do usuário:', error);
+    res.status(500).json({ 
+      success: false,
+      error: 'Erro ao limpar logs do usuário',
+      message: error.message 
+    });
+  }
+});
+
+app.get('/api/logs/user/stats', async (req, res) => {
+  try {
+    const stats = await mainController.getUserLogStats();
+    
+    res.json({
+      success: true,
+      data: stats,
+      message: 'Estatísticas obtidas com sucesso',
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('Erro ao obter estatísticas dos logs:', error);
+    res.status(500).json({ 
+      success: false,
+      error: 'Erro ao obter estatísticas dos logs',
+      message: error.message 
+    });
+  }
+});
+
 // Lista todos os Action Cards disponíveis na API CAM Krolik
 app.get('/api/action-cards/available', async (req, res) => {
   try {
