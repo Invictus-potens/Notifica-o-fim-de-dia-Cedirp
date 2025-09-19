@@ -36,13 +36,18 @@ class ConfigManager {
   createDefaultSystemConfig() {
     return {
       flowPaused: false,
+      endOfDayPaused: false,
+      ignoreBusinessHours: false,
+      minWaitTime: 30,
+      maxWaitTime: 40,
       excludedSectors: [],
       excludedChannels: [],
       selectedActionCard: undefined,
       selectedActionCard30Min: undefined,
       selectedActionCardEndDay: undefined,
       selectedTemplate: undefined,
-      endOfDayTime: '18:00'
+      endOfDayTime: '18:00',
+      logCleanupTime: '02:00'
     };
   }
 
@@ -74,13 +79,18 @@ class ConfigManager {
         
         this.systemConfig = {
           flowPaused: parsedConfig.flowPaused === 'true' || parsedConfig.flowPaused === true,
+          endOfDayPaused: parsedConfig.endOfDayPaused === 'true' || parsedConfig.endOfDayPaused === true,
+          ignoreBusinessHours: parsedConfig.ignoreBusinessHours === 'true' || parsedConfig.ignoreBusinessHours === true,
+          minWaitTime: parseInt(parsedConfig.minWaitTime) || 30,
+          maxWaitTime: parseInt(parsedConfig.maxWaitTime) || 40,
           excludedSectors: this.parseJsonArray(parsedConfig.excludedSectors),
           excludedChannels: this.parseJsonArray(parsedConfig.excludedChannels),
           selectedActionCard: parsedConfig.selectedActionCard || '631f2b4f307d23f46ac80a2b',
           selectedActionCard30Min: parsedConfig.selectedActionCard30Min || '631f2b4f307d23f46ac80a2b',
           selectedActionCardEndDay: parsedConfig.selectedActionCardEndDay || '631f2b4f307d23f46ac80a2b',
           selectedTemplate: parsedConfig.selectedTemplate || '',
-          endOfDayTime: parsedConfig.endOfDayTime || '18:00'
+          endOfDayTime: parsedConfig.endOfDayTime || '18:00',
+          logCleanupTime: parsedConfig.logCleanupTime || '02:00'
         };
         
         console.log('✅ Configuração carregada do arquivo system_config.json');
@@ -95,6 +105,10 @@ class ConfigManager {
         // Usar valores padrão
         this.systemConfig = {
           flowPaused: false,
+          endOfDayPaused: false,
+          ignoreBusinessHours: false,
+          minWaitTime: 30,
+          maxWaitTime: 40,
           excludedSectors: [
             '631f2b4f307d23f46ac80a1c',
             '631f7d27307d23f46af88983', 
@@ -109,7 +123,8 @@ class ConfigManager {
           selectedActionCard30Min: '631f2b4f307d23f46ac80a2b',
           selectedActionCardEndDay: '631f2b4f307d23f46ac80a2b',
           selectedTemplate: '',
-          endOfDayTime: '18:00'
+          endOfDayTime: '18:00',
+          logCleanupTime: '02:00'
         };
       }
     } catch (error) {
@@ -183,6 +198,46 @@ class ConfigManager {
    */
   isFlowPaused() {
     return this.systemConfig.flowPaused || false;
+  }
+
+  /**
+   * Verifica se mensagem de fim de dia (18h) está pausada
+   * @returns {boolean} True se pausado
+   */
+  isEndOfDayPaused() {
+    return this.systemConfig.endOfDayPaused || false;
+  }
+
+  /**
+   * Verifica se deve ignorar verificação de horário comercial
+   * @returns {boolean} True se deve ignorar
+   */
+  shouldIgnoreBusinessHours() {
+    return this.systemConfig.ignoreBusinessHours || false;
+  }
+
+  /**
+   * Obtém o tempo mínimo de espera configurado
+   * @returns {number} Tempo mínimo em minutos
+   */
+  getMinWaitTime() {
+    return this.systemConfig.minWaitTime || 30;
+  }
+
+  /**
+   * Obtém o tempo máximo de espera configurado
+   * @returns {number} Tempo máximo em minutos
+   */
+  getMaxWaitTime() {
+    return this.systemConfig.maxWaitTime || 40;
+  }
+
+  /**
+   * Obtém o horário de limpeza de logs configurado
+   * @returns {string} Horário no formato HH:MM
+   */
+  getLogCleanupTime() {
+    return this.systemConfig.logCleanupTime || '02:00';
   }
 
   /**
@@ -261,11 +316,16 @@ class ConfigManager {
         excludedSectors: JSON.stringify(this.systemConfig.excludedSectors),
         excludedChannels: JSON.stringify(this.systemConfig.excludedChannels),
         flowPaused: this.systemConfig.flowPaused.toString(),
+        endOfDayPaused: this.systemConfig.endOfDayPaused.toString(),
+        ignoreBusinessHours: this.systemConfig.ignoreBusinessHours.toString(),
+        minWaitTime: this.systemConfig.minWaitTime.toString(),
+        maxWaitTime: this.systemConfig.maxWaitTime.toString(),
         selectedActionCard: this.systemConfig.selectedActionCard,
         selectedActionCard30Min: this.systemConfig.selectedActionCard30Min,
         selectedActionCardEndDay: this.systemConfig.selectedActionCardEndDay,
         selectedTemplate: this.systemConfig.selectedTemplate,
-        endOfDayTime: this.systemConfig.endOfDayTime
+        endOfDayTime: this.systemConfig.endOfDayTime,
+        logCleanupTime: this.systemConfig.logCleanupTime
       };
       
       // Salvar arquivo

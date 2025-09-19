@@ -25,6 +25,8 @@ class AutomationInterface {
         this.apiBaseUrl = '/api';
         this.currentRoute = 'dashboard';
         this.timerInterval = null;
+        this.systemConfig = {}; // Armazenar configurações do sistema
+        this.actionCards = []; // Armazenar action cards da API
         
         this.init();
     }
@@ -50,6 +52,12 @@ class AutomationInterface {
             this.initializePatientSelection();
             this.initializePatientData();
             this.startRealtimeTimer(); // Iniciar timer em tempo real
+            // Carregar configurações do sistema
+            this.loadSystemConfig();
+            // Carregar action cards para nomes corretos
+            this.loadActionCards();
+            // Iniciar timer para atualizar countdowns
+            this.startCountdownTimer();
             
             // Fallback: ensure button is enabled after a delay
             setTimeout(() => {
@@ -607,13 +615,235 @@ class AutomationInterface {
                 <td>${this.escapeHtml(patient.sectorName || patient.sector_name || 'Setor não informado')}</td>
                 <td>${this.formatWaitTime(patient.waitTimeMinutes || 0)}</td>
                 <td>
+                    ${this.generateNextMessageInfo(patient)}
+                </td>
+                <td>
                     <span class="badge bg-warning">Aguardando</span>
+                </td>
+                <td>
+                    ${this.generateMessageSentInfo(patient)}
                 </td>
             </tr>
         `).join('');
 
         // Adicionar event listeners para os checkboxes
         this.setupPatientSelection();
+    }
+
+    /**
+     * Obtém o nome do action card pelo ID
+     */
+    getActionCardName(cardId) {
+        if (!cardId) {
+            return 'Card N/A';
+        }
+        
+        if (!this.actionCards || this.actionCards.length === 0) {
+            console.warn(`⚠️ Action cards não carregados. Tentando carregar...`);
+            // Tentar carregar action cards se não estiverem carregados
+            this.loadActionCards();
+            return `Card ${cardId} (carregando...)`;
+        }
+        
+        const card = this.actionCards.find(c => c.id === cardId);
+        if (!card) {
+            console.warn(`⚠️ Action card não encontrado: ${cardId}`);
+            return `Card ${cardId} (não encontrado)`;
+        }
+        
+        // Usar description primeiro (que é o que a API retorna), depois name, title, com fallback para id
+        const cardName = card.description || card.name || card.title || `Card ${cardId}`;
+        console.log(`✅ Action card encontrado: ${cardId} -> ${cardName}`);
+        return cardName;
+    }
+
+    /**
+     * Gera informação da mensagem enviada para um paciente
+     */
+    generateMessageSentInfo(patient) {
+        console.log(`🔍 Gerando info de mensagem para ${patient.name}:`, {
+            hasMessageSent: !!patient.messageSent,
+            hasLastMessageSent: !!patient.lastMessageSent,
+            lastMessageSent: patient.lastMessageSent
+        });
+        
+        // Verificar se o paciente tem informações de mensagem enviada
+        if (patient.messageSent) {
+            const messageInfo = patient.messageSent;
+            const cardName = this.getActionCardName(messageInfo.actionCardId);
+            
+            console.log(`✅ ${patient.name}: usando messageSent`);
+            return `
+                <div class="text-success">
+                    <div class="fw-bold">✅ Enviada</div>
+                    <small class="text-muted">${messageInfo.sentAtFormatted}</small>
+                    <br>
+                    <small class="text-info">${cardName}</small>
+                </div>
+            `;
+        }
+        
+        // Se não tem mensagem enviada, verificar se há mensagem no histórico
+        if (patient.lastMessageSent) {
+            const messageInfo = patient.lastMessageSent;
+            const cardName = this.getActionCardName(messageInfo.actionCardId);
+            
+            console.log(`✅ ${patient.name}: usando lastMessageSent - ${messageInfo.messageType}`);
+            return `
+                <div class="text-success">
+                    <div class="fw-bold">✅ Enviada</div>
+                    <small class="text-muted">${messageInfo.sentAtFormatted}</small>
+                    <br>
+                    <small class="text-info">${cardName}</small>
+                </div>
+            `;
+        }
+        
+        // Se não tem mensagem enviada
+        console.log(`❌ ${patient.name}: nenhuma mensagem encontrada`);
+        return `
+            <div class="text-muted">
+                <span class="badge bg-secondary">Não enviada</span>
+            </div>
+        `;
+    }
+
+    /**
+     * Gera informação da próxima mensagem para um paciente
+     */
+    generateNextMessageInfo(patient) {
+        const waitTime = patient.waitTimeMinutes || 0;
+        const now = new Date();
+        const currentHour = now.getHours();
+        
+        // Usar configurações reais do sistema (serão carregadas via API)
+        const minWaitTime = this.systemConfig?.minWaitTime || 30;
+        const maxWaitTime = this.systemConfig?.maxWaitTime || 40;
+        const ignoreBusinessHours = this.systemConfig?.ignoreBusinessHours || false;
+        const endOfDayPaused = this.systemConfig?.endOfDayPaused || true;
+        
+        // Obter nomes dos action cards
+        const actionCard30Min = this.systemConfig?.selectedActionCard30Min;
+        const actionCardEndDay = this.systemConfig?.selectedActionCardEndDay;
+        const card30MinName = this.getActionCardName(actionCard30Min);
+        const cardEndDayName = this.getActionCardName(actionCardEndDay);
+        
+        // Verificar se mensagem de fim de dia está ativa e se é hora (17h55-18h00)
+        if (!endOfDayPaused && currentHour >= 17 && currentHour < 18) {
+            const endOfDayTime = new Date(now);
+            endOfDayTime.setHours(18, 0, 0, 0);
+            const timeRemaining = endOfDayTime.getTime() - now.getTime();
+            const minutes = Math.floor(timeRemaining / 60000);
+            const seconds = Math.floor((timeRemaining % 60000) / 1000);
+            const timeString = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            
+            return `
+                <div class="text-primary">
+                    <div class="fw-bold">${timeString}</div>
+                    <small class="text-muted">${cardEndDayName}</small>
+                </div>
+            `;
+        }
+        
+        // Verificar se está fora do horário comercial (apenas se ignoreBusinessHours for false)
+        if (!ignoreBusinessHours && (currentHour < 8 || currentHour >= 18)) {
+            return `
+                <div class="text-warning">
+                    <div class="fw-bold">Fora do horário</div>
+                    <small class="text-muted">${card30MinName}</small>
+                </div>
+            `;
+        }
+        
+        // Calcular tempo para mensagem baseado no tempo de espera
+        if (waitTime < minWaitTime) {
+            // Ainda não atingiu o tempo mínimo - calcular tempo restante
+            const timeRemaining = (minWaitTime - waitTime) * 60 * 1000;
+            const minutes = Math.floor(timeRemaining / 60000);
+            const seconds = Math.floor((timeRemaining % 60000) / 1000);
+            const timeString = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            
+            return `
+                <div class="text-primary">
+                    <div class="fw-bold">${timeString}</div>
+                    <small class="text-muted">${card30MinName}</small>
+                </div>
+            `;
+        } else if (waitTime >= minWaitTime && waitTime <= maxWaitTime) {
+            // Paciente está no intervalo ideal - PRONTO para receber mensagem AGORA
+            return `
+                <div class="text-success">
+                    <div class="fw-bold">PRONTO</div>
+                    <small class="text-muted">${card30MinName}</small>
+                </div>
+            `;
+        } else {
+            // Paciente já passou do tempo máximo
+            return `
+                <div class="text-danger">
+                    <div class="fw-bold">00:00</div>
+                    <small class="text-muted">Tempo excedido</small>
+                </div>
+            `;
+        }
+    }
+
+    /**
+     * Carrega configurações do sistema via API
+     */
+    async loadSystemConfig() {
+        try {
+            console.log('⚙️ Carregando configurações do sistema...');
+            const response = await fetch(`${this.apiBaseUrl}/config`);
+            if (response.ok) {
+                const data = await response.json();
+                if (data.success && data.data) {
+                    this.systemConfig = {
+                        minWaitTime: parseInt(data.data.minWaitTime) || 30,
+                        maxWaitTime: parseInt(data.data.maxWaitTime) || 40,
+                        ignoreBusinessHours: data.data.ignoreBusinessHours === 'true' || data.data.ignoreBusinessHours === true,
+                        endOfDayPaused: data.data.endOfDayPaused === 'true' || data.data.endOfDayPaused === true,
+                        selectedActionCard30Min: data.data.selectedActionCard30Min,
+                        selectedActionCardEndDay: data.data.selectedActionCardEndDay
+                    };
+                    console.log('✅ Configurações carregadas:', this.systemConfig);
+                }
+            }
+        } catch (error) {
+            console.error('❌ Erro ao carregar configurações:', error);
+            // Usar configurações padrão em caso de erro
+            this.systemConfig = {
+                minWaitTime: 30,
+                maxWaitTime: 40,
+                ignoreBusinessHours: false,
+                endOfDayPaused: true,
+                selectedActionCard30Min: '68cbfa96b8640e9721e4feab',
+                selectedActionCardEndDay: '631f2b4f307d23f46ac80a2b'
+            };
+        }
+    }
+
+    /**
+     * Inicia timer para atualizar countdowns a cada 30 segundos
+     */
+    startCountdownTimer() {
+        console.log('🕐 Iniciando timer de countdown...');
+        
+        // Atualizar countdowns a cada 30 segundos (não a cada segundo!)
+        setInterval(() => {
+            this.refreshCountdowns();
+        }, 30000);
+    }
+
+    /**
+     * Atualiza todos os countdowns na página
+     */
+    async refreshCountdowns() {
+        // Só atualizar se estivermos na página de atendimentos
+        if (this.currentRoute === 'atendimentos') {
+            // Recarregar apenas dados dos pacientes (configurações não mudam frequentemente)
+            this.loadPatients();
+        }
     }
 
     formatWaitTime(minutes) {
@@ -926,6 +1156,9 @@ class AutomationInterface {
     }
 
     displayActionCards(actionCards) {
+        // Armazenar action cards para uso posterior
+        this.actionCards = actionCards || [];
+        
         // Função para popular um select com action cards
         const populateSelect = (selectId, placeholder) => {
             const selectElement = document.getElementById(selectId);
@@ -2476,6 +2709,43 @@ class AutomationInterface {
     }
 
     /**
+     * Carrega mensagens enviadas para os pacientes
+     */
+    async loadMessagesSentForPatients() {
+        try {
+            console.log('📨 Carregando histórico de mensagens enviadas...');
+            
+            // Buscar todas as mensagens enviadas hoje
+            const response = await fetch(`${this.apiBaseUrl}/messages/history`);
+            if (response.ok) {
+                const data = await response.json();
+                if (data.success && data.data) {
+                    const messagesHistory = data.data;
+                    console.log(`📨 ${messagesHistory.length} mensagens encontradas no histórico`);
+                    
+                    // Associar mensagens aos pacientes
+                    console.log(`🔍 Associando mensagens a ${this.patients.length} pacientes...`);
+                    for (const patient of this.patients) {
+                        const patientMessages = messagesHistory.filter(msg => msg.patientId === patient.id);
+                        console.log(`🔍 ${patient.name} (ID: ${patient.id}): ${patientMessages.length} mensagem(ns) encontrada(s)`);
+                        if (patientMessages.length > 0) {
+                            // Pegar a última mensagem enviada
+                            const lastMessage = patientMessages.sort((a, b) => new Date(b.sentAt) - new Date(a.sentAt))[0];
+                            patient.lastMessageSent = lastMessage;
+                            console.log(`✅ ${patient.name}: última mensagem ${lastMessage.messageType} em ${lastMessage.sentAtFormatted}`);
+                        }
+                    }
+                }
+            } else {
+                console.warn('⚠️ Não foi possível carregar histórico de mensagens');
+            }
+            
+        } catch (error) {
+            console.error('Erro ao carregar mensagens enviadas:', error);
+        }
+    }
+
+    /**
      * Carrega dados dos pacientes da API
      */
     async loadPatients() {
@@ -2492,8 +2762,16 @@ class AutomationInterface {
             
             if (data.success && data.data) {
                 this.patients = data.data;
+                
+                // Buscar mensagens enviadas para cada paciente
+                console.log('🔄 Carregando mensagens enviadas...');
+                await this.loadMessagesSentForPatients();
+                console.log('✅ Mensagens enviadas carregadas');
+                
                 this.displayPatients(this.patients);
                 this.updateLastCheckTime();
+                
+                // Countdown já está integrado na renderização
             } else {
                 console.warn('Formato de dados inesperado:', data);
                 this.displayPatients([]);
@@ -2544,7 +2822,7 @@ class AutomationInterface {
                     <td>${this.escapeHtml(patient.sectorName || 'Setor não informado')}</td>
                     <td>${this.formatWaitTime(patient.waitTimeMinutes || 0)}</td>
                     <td>
-                        <span class="badge bg-warning">Aguardando</span>
+                        ${this.generateNextMessageInfo(patient)}
                     </td>
                     <td>${messageStatus}</td>
                 </tr>
@@ -2728,6 +3006,103 @@ class AutomationInterface {
         setInterval(() => {
             this.loadPatients();
         }, 30000);
+    }
+
+    /**
+     * Função removida - substituída por startCountdownTimer()
+     */
+
+    /**
+     * Função removida - não está sendo usada
+     */
+
+    /**
+     * Calcula contagem regressiva individual para um paciente
+     */
+    calculateIndividualCountdown(waitTime, minWaitTime, maxWaitTime, ignoreBusinessHours, endOfDayPaused) {
+        const now = new Date();
+        const currentHour = now.getHours();
+        
+        console.log(`🧮 Calculando para ${waitTime}min - Hora atual: ${currentHour}h`);
+        
+        // Verificar se mensagem de fim de dia está ativa e se é hora (17h55-18h00)
+        if (!endOfDayPaused && currentHour >= 17 && currentHour < 18) {
+            const endOfDayTime = new Date(now);
+            endOfDayTime.setHours(18, 0, 0, 0);
+            const timeRemaining = endOfDayTime.getTime() - now.getTime();
+            
+            console.log(`🌅 Horário de fim de dia - Tempo restante: ${timeRemaining}ms`);
+            
+            return {
+                timeString: this.formatTimeRemaining(timeRemaining),
+                timeRemaining: timeRemaining,
+                messageType: `Fim de dia - ${this.getActionCardName(this.systemConfig?.selectedActionCardEndDay)}`
+            };
+        }
+        
+        // Verificar se está fora do horário comercial (apenas se ignoreBusinessHours for false)
+        if (!ignoreBusinessHours && (currentHour < 8 || currentHour >= 18)) {
+            const nextBusinessDay = new Date(now);
+            nextBusinessDay.setDate(nextBusinessDay.getDate() + (nextBusinessDay.getDay() === 6 ? 2 : 1));
+            nextBusinessDay.setHours(8, 0, 0, 0);
+            const timeRemaining = nextBusinessDay.getTime() - now.getTime();
+            
+            console.log(`📅 Fora do horário comercial - Próximo dia útil: ${nextBusinessDay}`);
+            
+            return {
+                timeString: this.formatTimeRemaining(timeRemaining),
+                timeRemaining: timeRemaining,
+                messageType: `Fora do horário - ${this.getActionCardName(this.systemConfig?.selectedActionCard30Min)}`
+            };
+        }
+        
+        // Calcular tempo para mensagem de 30min baseado no tempo de espera atual
+        if (waitTime < minWaitTime) {
+            // Paciente ainda não atingiu o tempo mínimo
+            const timeRemaining = (minWaitTime - waitTime) * 60 * 1000; // Converter para millisegundos
+            
+            console.log(`⏳ Ainda não atingiu tempo mínimo - Faltam: ${timeRemaining}ms`);
+            
+            return {
+                timeString: this.formatTimeRemaining(timeRemaining),
+                timeRemaining: timeRemaining,
+                messageType: `${this.getActionCardName(this.systemConfig?.selectedActionCard30Min)} - ${minWaitTime}min`
+            };
+        } else if (waitTime >= minWaitTime && waitTime <= maxWaitTime) {
+            // Paciente está no intervalo ideal - pode receber mensagem a qualquer momento
+            const maxTimeRemaining = (maxWaitTime - waitTime) * 60 * 1000;
+            
+            console.log(`✅ No intervalo ideal - Tempo restante: ${maxTimeRemaining}ms`);
+            
+            return {
+                timeString: this.formatTimeRemaining(maxTimeRemaining),
+                timeRemaining: maxTimeRemaining,
+                messageType: `${this.getActionCardName(this.systemConfig?.selectedActionCard30Min)} (PRONTO)`
+            };
+        } else {
+            // Paciente já passou do tempo máximo - deve ter recebido mensagem
+            console.log(`⚠️ Tempo excedido - ${waitTime}min > ${maxWaitTime}min`);
+            
+            return {
+                timeString: '00:00',
+                timeRemaining: 0,
+                messageType: 'Tempo excedido'
+            };
+        }
+    }
+
+    /**
+     * Formata tempo restante em string legível com segundos
+     */
+    formatTimeRemaining(timeRemaining) {
+        if (timeRemaining <= 0) {
+            return '00:00';
+        }
+        
+        const minutes = Math.floor(timeRemaining / (1000 * 60));
+        const seconds = Math.floor((timeRemaining % (1000 * 60)) / 1000);
+        
+        return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
     }
 
     /**

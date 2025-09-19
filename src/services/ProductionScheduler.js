@@ -23,7 +23,7 @@ class ProductionScheduler {
     
     // Configurações
     this.config = {
-      patientCheckInterval: '3min', // ou '1min' para monitoramento intensivo
+      patientCheckInterval: '1min', // Verificação principal a cada minuto
       enable30MinuteMessages: true,
       enableEndOfDayMessages: true,
       enableDailyCleanup: true,
@@ -73,16 +73,10 @@ class ProductionScheduler {
 
       console.log('🚀 Iniciando agendamento de produção...');
       
-      // Agendar verificação de pacientes
-      if (this.config.patientCheckInterval === '1min') {
-        this.cronService.scheduleIntensivePatientCheck(() => 
-          this.handlePatientCheck()
-        );
-      } else {
-        this.cronService.schedulePatientCheck(() => 
-          this.handlePatientCheck()
-        );
-      }
+      // Agendar verificação de pacientes (sempre a cada minuto para verificação principal)
+      this.cronService.scheduleIntensivePatientCheck(() => 
+        this.handlePatientCheck()
+      );
       
       // Agendar mensagens de fim de dia
       if (this.config.enableEndOfDayMessages) {
@@ -94,7 +88,7 @@ class ProductionScheduler {
       // Agendar limpeza diária
       if (this.config.enableDailyCleanup) {
         this.cronService.scheduleDailyCleanup(() => 
-          this.handleDailyCleanup()
+          this.handleDailyCleanup(), this.configManager
         );
       }
       
@@ -148,8 +142,9 @@ class ProductionScheduler {
     try {
       console.log('🔍 Executando verificação de pacientes...');
       
-      // Verificar se é horário comercial
-      if (!TimeUtils.isBusinessHours() || !TimeUtils.isWorkingDay()) {
+      // Verificar se é horário comercial (considerando configuração ignoreBusinessHours)
+      const ignoreBusinessHours = this.configManager.shouldIgnoreBusinessHours();
+      if (!ignoreBusinessHours && (!TimeUtils.isBusinessHours() || !TimeUtils.isWorkingDay())) {
         console.log('🕐 Fora do horário comercial - apenas monitorando');
         return;
       }
@@ -169,7 +164,10 @@ class ProductionScheduler {
       }
       
       // Processar pacientes elegíveis para mensagem de fim de dia
-      if (this.config.enableEndOfDayMessages && TimeUtils.isEndOfDayTime() && checkResult.eligibleEndOfDay.length > 0) {
+      const isEndOfDayPaused = this.configManager.isEndOfDayPaused();
+      const isEndOfDayTime = TimeUtils.isEndOfDayTimeWithTolerance(5);
+      
+      if (this.config.enableEndOfDayMessages && !isEndOfDayPaused && isEndOfDayTime && checkResult.eligibleEndOfDay.length > 0) {
         await this.handleEndOfDayMessages(checkResult.eligibleEndOfDay);
       }
       
@@ -191,7 +189,7 @@ class ProductionScheduler {
       
       // Marcar pacientes como processados no JsonPatientManager
       for (const patient of eligiblePatients) {
-        await this.monitoringService.jsonPatientManager.markPatientAsProcessed(patient.id);
+        await this.monitoringService.jsonPatientManager.markPatientAsProcessed(patient.id, results.messageInfo);
       }
       
       console.log(`✅ Mensagens de 30min processadas: ${results.sent} enviadas, ${results.failed} falharam`);
@@ -223,7 +221,7 @@ class ProductionScheduler {
         
         // Marcar pacientes como processados no JsonPatientManager
         for (const patient of patientsToProcess) {
-          await this.monitoringService.jsonPatientManager.markPatientAsProcessed(patient.id);
+          await this.monitoringService.jsonPatientManager.markPatientAsProcessed(patient.id, results.messageInfo);
         }
         
         console.log(`✅ Mensagens de fim de dia processadas: ${results.sent} enviadas, ${results.failed} falharam`);

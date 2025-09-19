@@ -162,9 +162,9 @@ class CronService {
   }
 
   /**
-   * Agenda limpeza diária às 18:05 (após mensagens de fim de dia)
+   * Agenda limpeza diária usando horário configurado
    */
-  scheduleDailyCleanup(callback) {
+  scheduleDailyCleanup(callback, configManager) {
     try {
       const jobName = 'daily-cleanup';
       
@@ -174,10 +174,15 @@ class CronService {
         this.jobStatus.set(jobName, false);
       }
 
-      // Criar novo job: todos os dias às 18:05
-      const job = cron.schedule('5 18 * * *', async () => {
+      // Obter horário configurado
+      const cleanupTime = configManager.getLogCleanupTime();
+      const [hours, minutes] = cleanupTime.split(':');
+      
+      // Criar novo job usando horário configurado
+      const cronExpression = `${minutes} ${hours} * * *`;
+      const job = cron.schedule(cronExpression, async () => {
         try {
-          console.log(`🧹 [${new Date().toLocaleString('pt-BR')}] Executando limpeza diária (18:05)`);
+          console.log(`🧹 [${new Date().toLocaleString('pt-BR')}] Executando limpeza diária (${cleanupTime})`);
           await callback();
         } catch (error) {
           this.errorHandler.logError(error, 'CronService.dailyCleanup');
@@ -190,7 +195,7 @@ class CronService {
       this.jobs.set(jobName, job);
       this.jobStatus.set(jobName, true); // Marcar como ativo
       
-      console.log('✅ Limpeza diária agendada (18:05 diariamente)');
+      console.log(`✅ Limpeza diária agendada (${cleanupTime} diariamente)`);
       return job;
 
     } catch (error) {

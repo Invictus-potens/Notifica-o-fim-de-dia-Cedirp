@@ -152,6 +152,17 @@ app.post('/api/action-cards', async (req, res) => {
   }
 });
 
+// Informações da próxima mensagem
+app.get('/api/next-message-info', (req, res) => {
+  try {
+    const nextMessageInfo = mainController.getNextMessageInfo();
+    res.json(nextMessageInfo);
+  } catch (error) {
+    console.error('Erro ao obter informações da próxima mensagem:', error);
+    res.status(500).json({ error: 'Erro ao obter informações da próxima mensagem' });
+  }
+});
+
 // Logs do sistema
 app.get('/api/logs', (req, res) => {
   try {
@@ -387,6 +398,39 @@ app.get('/api/metrics', async (req, res) => {
   }
 });
 
+// Obter histórico de mensagens enviadas
+app.get('/api/messages/history', async (req, res) => {
+  try {
+    const patientId = req.query.patientId;
+    
+    if (patientId) {
+      // Buscar mensagens para um paciente específico
+      const messageHistory = mainController.getMessageHistoryForPatient(patientId);
+      res.json({
+        success: true,
+        data: messageHistory,
+        timestamp: new Date().toISOString()
+      });
+    } else {
+      // Buscar todas as mensagens do dia
+      const todaysMessages = mainController.getTodaysMessages();
+      res.json({
+        success: true,
+        data: todaysMessages,
+        timestamp: new Date().toISOString()
+      });
+    }
+  } catch (error) {
+    console.error('Erro ao obter histórico de mensagens:', error);
+    res.status(500).json({ 
+      success: false,
+      error: 'Erro ao obter histórico de mensagens',
+      message: error.message,
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
 // Envio manual de action cards
 app.post('/api/messages/send-action-card', async (req, res) => {
   try {
@@ -559,7 +603,7 @@ async function startServer() {
     await mainController.start();
     
     console.log('🚀 Sistema pronto para processar mensagens');
-    console.log('⏰ Ciclos de monitoramento iniciados (60s)');
+    console.log('⏰ Ciclos de monitoramento iniciados (60s - verificação principal)');
     console.log('📝 Logs de ciclo serão exibidos no console');
     console.log('===========================================\\n');
     

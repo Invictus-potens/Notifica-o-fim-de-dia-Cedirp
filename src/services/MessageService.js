@@ -1,5 +1,6 @@
 const { KrolikApiClient } = require('./KrolikApiClient');
 const { ConfigManager } = require('./ConfigManager');
+const { MessageHistoryManager } = require('./MessageHistoryManager');
 
 /**
  * Serviço de envio de mensagens
@@ -10,6 +11,7 @@ class MessageService {
     this.errorHandler = errorHandler;
     this.configManager = configManager;
     this.krolikApiClient = null;
+    this.messageHistoryManager = new MessageHistoryManager(errorHandler);
     
     this.stats = {
       totalSent: 0,
@@ -84,6 +86,17 @@ class MessageService {
       this.stats.totalSent++;
       this.stats.lastSent = new Date().toISOString();
       
+      // Registrar mensagem no histórico
+      await this.messageHistoryManager.recordMessageSent({
+        patientId: patient.id,
+        patientName: patient.name,
+        patientPhone: patient.phone,
+        actionCardId: cardId,
+        messageType: 'manual', // Apenas para envios manuais via API
+        sentAt: new Date(),
+        success: true
+      });
+      
       console.log(`✅ Action card enviado com sucesso para ${patient.name}`);
       
       return {
@@ -117,9 +130,72 @@ class MessageService {
   }
 
   /**
+   * Envia action card para um paciente (versão interna sem registro no histórico)
+   */
+  async sendActionCardInternal(patient, cardId = null, messageType = 'manual') {
+    try {
+      if (!this.krolikApiClient) {
+        throw new Error('Cliente Krolik não inicializado');
+      }
+
+      const actionCardId = cardId || this.configManager.getDefaultActionCardId();
+      
+      if (!actionCardId) {
+        throw new Error('ID do action card não fornecido');
+      }
+
+      console.log(`📤 Enviando action card ${actionCardId} para ${patient.name} (${patient.phone})`);
+
+      const payload = {
+        action_card_id: actionCardId,
+        contactId: patient.contactId,
+        number: patient.phone
+      };
+
+      console.log(`📋 Payload:`, payload);
+
+      // Enviar mensagem
+      const result = await this.krolikApiClient.sendActionCard(payload);
+      
+      // Atualizar estatísticas
+      this.stats.totalSent++;
+      this.stats.lastSent = new Date().toISOString();
+      
+      console.log(`✅ Action card enviado com sucesso para ${patient.name}`);
+      
+      return {
+        success: true,
+        patient: patient.name,
+        phone: patient.phone,
+        actionCardId: actionCardId,
+        result: result,
+        timestamp: new Date().toISOString()
+      };
+
+    } catch (error) {
+      this.stats.totalFailed++;
+      this.stats.errors.push({
+        patient: patient.name,
+        error: error.message,
+        timestamp: new Date().toISOString()
+      });
+      
+      console.error(`❌ Erro ao enviar action card para ${patient.name}:`, error.message);
+      
+      return {
+        success: false,
+        patient: patient.name,
+        phone: patient.phone,
+        error: error.message,
+        timestamp: new Date().toISOString()
+      };
+    }
+  }
+
+  /**
    * Envia action cards para múltiplos pacientes
    */
-  async sendActionCardsToMultiple(patients, actionCardId = null, delayBetweenMessages = 1000) {
+  async sendActionCardsToMultiple(patients, actionCardId = null, delayBetweenMessages = 1000, messageType = 'manual') {
     try {
       console.log(`📤 Enviando action cards para ${patients.length} pacientes...`);
       
@@ -134,7 +210,7 @@ class MessageService {
         const patient = patients[i];
         
         try {
-          const result = await this.sendActionCard(patient, actionCardId);
+          const result = await this.sendActionCardInternal(patient, actionCardId, messageType);
           results.details.push(result);
           
           if (result.success) {
@@ -180,12 +256,35 @@ class MessageService {
       console.log(`⏰ Enviando mensagens de 30min para ${eligiblePatients.length} pacientes...`);
       
       const actionCardId = this.configManager.get30MinActionCardId();
+      const sentAt = new Date();
       
       const results = await this.sendActionCardsToMultiple(
         eligiblePatients, 
         actionCardId, 
-        2000 // 2 segundos entre mensagens
+        2000, // 2 segundos entre mensagens
+        '30min' // Tipo de mensagem correto
       );
+      
+      // Registrar mensagens no histórico
+      for (const patient of eligiblePatients) {
+        await this.messageHistoryManager.recordMessageSent({
+          patientId: patient.id,
+          patientName: patient.name,
+          patientPhone: patient.phone,
+          actionCardId,
+          messageType: '30min',
+          sentAt,
+          success: true
+        });
+      }
+      
+      // Adicionar informações da mensagem aos resultados
+      results.messageInfo = {
+        actionCardId,
+        messageType: '30min',
+        sentAt,
+        sentAtFormatted: sentAt.toLocaleString('pt-BR')
+      };
       
       // Marcar pacientes como processados
       for (const patient of eligiblePatients) {
@@ -211,12 +310,35 @@ class MessageService {
       console.log(`🌅 Enviando mensagens de fim de dia para ${eligiblePatients.length} pacientes...`);
       
       const actionCardId = this.configManager.getEndOfDayActionCardId();
+      const sentAt = new Date();
       
       const results = await this.sendActionCardsToMultiple(
         eligiblePatients, 
         actionCardId, 
-        1500 // 1.5 segundos entre mensagens
+        1500, // 1.5 segundos entre mensagens
+        'end_of_day' // Tipo de mensagem correto
       );
+      
+      // Registrar mensagens no histórico
+      for (const patient of eligiblePatients) {
+        await this.messageHistoryManager.recordMessageSent({
+          patientId: patient.id,
+          patientName: patient.name,
+          patientPhone: patient.phone,
+          actionCardId,
+          messageType: 'end_of_day',
+          sentAt,
+          success: true
+        });
+      }
+      
+      // Adicionar informações da mensagem aos resultados
+      results.messageInfo = {
+        actionCardId,
+        messageType: 'end_of_day',
+        sentAt,
+        sentAtFormatted: sentAt.toLocaleString('pt-BR')
+      };
       
       // Marcar pacientes como processados
       for (const patient of eligiblePatients) {

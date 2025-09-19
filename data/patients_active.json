@@ -1,45 +1,59 @@
 [
   {
-    "id": "68cc50193762f719ba3bd87f",
-    "contactId": "681e4536c0081a98b5f55ed7",
-    "name": "Otomais Centro Auditivo Santos",
-    "phone": "5513998082756",
+    "id": "68cc8754502643b3c4aa6a43",
+    "contactId": "6863f9b7762b73008f223c5e",
+    "name": "Felipe Prado",
+    "phone": "5516981892476",
     "sectorId": "6401f4f49b1ff8512b525e9c",
     "sectorName": "Suporte Telefonia",
     "channelId": "63e68f168a48875131856df8",
     "channelType": "WhatsApp Business (Principal)",
-    "waitStartTime": "2025-09-18T18:31:53.326Z",
-    "waitTimeMinutes": 1,
+    "waitStartTime": "2025-09-18T22:27:32.781Z",
+    "waitTimeMinutes": 148,
     "status": "waiting",
-    "enteredAt": "2025-09-18T18:36:01.141Z"
+    "enteredAt": "2025-09-19T00:56:00.972Z"
   },
   {
-    "id": "68cc415849547237fc47b342",
-    "contactId": "67599b5e277827c7191c589d",
-    "name": "Nikolas",
-    "phone": "5511930058665",
-    "sectorId": "6401f4f49b1ff8512b525e9c",
-    "sectorName": "Suporte Telefonia",
+    "id": "68cc6764854917a269feb2b2",
+    "contactId": "68b6d772d44c24923f7cac7b",
+    "name": "Larine Silva",
+    "phone": "557996399309",
+    "sectorId": "631f7d27307d23f46af88983",
+    "sectorName": "Administrativo/Financeiro",
     "channelId": "63e68f168a48875131856df8",
     "channelType": "WhatsApp Business (Principal)",
-    "waitStartTime": "2025-09-18T17:28:56.751Z",
-    "waitTimeMinutes": 33,
+    "waitStartTime": "2025-09-18T20:11:16.075Z",
+    "waitTimeMinutes": 283,
     "status": "waiting",
-    "enteredAt": "2025-09-18T18:03:00.931Z"
+    "enteredAt": "2025-09-19T00:34:01.217Z"
   },
   {
-    "id": "68cc29e67643caf663bbb8e1",
-    "contactId": "64dbb2598c25792422874429",
-    "name": "Ana Paula",
-    "phone": "5516991025029",
-    "sectorId": "6401f4f49b1ff8512b525e9c",
-    "sectorName": "Suporte Telefonia",
+    "id": "68cc57d33762f719ba85c7f2",
+    "contactId": "64dbb35e1979fae90a260b81",
+    "name": "Taise Gaspareto 🧿🌎",
+    "phone": "5516999621515",
+    "sectorId": "6400efb5343817d4ddbb2a4c",
+    "sectorName": "Suporte CAM",
     "channelId": "63e68f168a48875131856df8",
     "channelType": "WhatsApp Business (Principal)",
-    "waitStartTime": "2025-09-18T15:48:54.978Z",
-    "waitTimeMinutes": 162,
+    "waitStartTime": "2025-09-18T19:04:51.161Z",
+    "waitTimeMinutes": 304,
     "status": "waiting",
-    "enteredAt": "2025-09-18T15:57:00.878Z"
+    "enteredAt": "2025-09-19T00:34:01.217Z"
+  },
+  {
+    "id": "68cc4c9d9e70c2d974d8b532",
+    "contactId": "651466f5192996022660c695",
+    "name": "IMAD Imóveis",
+    "phone": "5511975554044",
+    "sectorId": "6400efb5343817d4ddbb2a4c",
+    "sectorName": "Suporte CAM",
+    "channelId": "63e68f168a48875131856df8",
+    "channelType": "WhatsApp Business (Principal)",
+    "waitStartTime": "2025-09-18T18:17:01.654Z",
+    "waitTimeMinutes": 274,
+    "status": "waiting",
+    "enteredAt": "2025-09-19T00:34:01.217Z"
   },
   {
     "id": "68cc21314762d682d45dca38",
@@ -51,37 +65,9 @@
     "channelId": "63e68f168a48875131856df8",
     "channelType": "WhatsApp Business (Principal)",
     "waitStartTime": "2025-09-18T15:11:45.776Z",
-    "waitTimeMinutes": 139,
+    "waitTimeMinutes": 435,
     "status": "waiting",
-    "enteredAt": "2025-09-18T16:21:00.845Z"
-  },
-  {
-    "id": "68cc0079de6145a3b3221497",
-    "contactId": "68b71b6994178d61e42d192f",
-    "name": "Maria Eduarda",
-    "phone": "555381388551",
-    "sectorId": "6401f4f49b1ff8512b525e9c",
-    "sectorName": "Suporte Telefonia",
-    "channelId": "63e68f168a48875131856df8",
-    "channelType": "WhatsApp Business (Principal)",
-    "waitStartTime": "2025-09-18T12:52:09.092Z",
-    "waitTimeMinutes": 107,
-    "status": "waiting",
-    "enteredAt": "2025-09-18T18:03:00.931Z"
-  },
-  {
-    "id": "68cbed18f22d799dcfb9fb0c",
-    "contactId": "65a92040301f5c36fa5f881d",
-    "name": "Show dos Colchões Franca",
-    "phone": "5516994452367",
-    "sectorId": "6400efb5343817d4ddbb2a4c",
-    "sectorName": "Suporte CAM",
-    "channelId": "63e68f168a48875131856df8",
-    "channelType": "WhatsApp Business (Principal)",
-    "waitStartTime": "2025-09-18T11:29:28.428Z",
-    "waitTimeMinutes": 60,
-    "status": "waiting",
-    "enteredAt": "2025-09-18T17:36:01.283Z"
+    "enteredAt": "2025-09-19T00:34:01.217Z"
   },
   {
     "id": "68cbecf9a56a3d64bbba352a",
@@ -93,8 +79,8 @@
     "channelId": "63e68f168a48875131856df8",
     "channelType": "WhatsApp Business (Principal)",
     "waitStartTime": "2025-09-18T11:28:57.776Z",
-    "waitTimeMinutes": 60,
+    "waitTimeMinutes": 441,
     "status": "waiting",
-    "enteredAt": "2025-09-18T17:36:01.283Z"
+    "enteredAt": "2025-09-19T00:34:01.217Z"
   }
 ]

@@ -126,8 +126,9 @@ class MainController {
     try {
       console.log(`🔄 [${new Date().toLocaleString('pt-BR')}] Iniciando ciclo de monitoramento...`);
       
-      // Verificar se é horário comercial
-      if (!TimeUtils.isBusinessHours() || !TimeUtils.isWorkingDay()) {
+      // Verificar se é horário comercial (considerando configuração ignoreBusinessHours)
+      const ignoreBusinessHours = this.configManager.shouldIgnoreBusinessHours();
+      if (!ignoreBusinessHours && (!TimeUtils.isBusinessHours() || !TimeUtils.isWorkingDay())) {
         console.log(`🕐 [${new Date().toLocaleString('pt-BR')}] Fora do horário comercial - apenas monitorando`);
         return;
       }
@@ -214,6 +215,51 @@ class MainController {
   }
 
   /**
+   * Pausa mensagem de fim de dia (18h)
+   */
+  pauseEndOfDayMessage() {
+    this.configManager.updateSystemConfig({ endOfDayPaused: true });
+    console.log('⏸️ Mensagem de fim de dia (18h) pausada');
+  }
+
+  /**
+   * Ativa mensagem de fim de dia (18h)
+   */
+  resumeEndOfDayMessage() {
+    this.configManager.updateSystemConfig({ endOfDayPaused: false });
+    console.log('▶️ Mensagem de fim de dia (18h) ativada');
+  }
+
+  /**
+   * Ignora verificação de horário comercial (permite mensagens 24h)
+   */
+  ignoreBusinessHours() {
+    this.configManager.updateSystemConfig({ ignoreBusinessHours: true });
+    console.log('🕐 Verificação de horário comercial DESABILITADA - mensagens 24h');
+  }
+
+  /**
+   * Ativa verificação de horário comercial (apenas 8h às 18h)
+   */
+  enableBusinessHours() {
+    this.configManager.updateSystemConfig({ ignoreBusinessHours: false });
+    console.log('🕐 Verificação de horário comercial ATIVADA - apenas 8h às 18h');
+  }
+
+  /**
+   * Define o intervalo de tempo para mensagens de espera
+   * @param {number} minTime - Tempo mínimo em minutos
+   * @param {number} maxTime - Tempo máximo em minutos
+   */
+  setWaitTimeInterval(minTime, maxTime) {
+    this.configManager.updateSystemConfig({ 
+      minWaitTime: minTime, 
+      maxWaitTime: maxTime 
+    });
+    console.log(`⏱️ Intervalo de espera configurado: ${minTime}-${maxTime} minutos`);
+  }
+
+  /**
    * Verifica se sistema foi inicializado
    * @returns {boolean} True se inicializado
    */
@@ -255,6 +301,118 @@ class MainController {
       thirtyMin: this.configManager.get30MinActionCardId(),
       endOfDay: this.configManager.getEndOfDayActionCardId()
     };
+  }
+
+  /**
+   * Obtém histórico de mensagens para um paciente específico
+   * @param {string} patientId - ID do paciente
+   * @returns {Array} Lista de mensagens enviadas
+   */
+  getMessageHistoryForPatient(patientId) {
+    try {
+      if (this.productionScheduler && this.productionScheduler.messageService) {
+        return this.productionScheduler.messageService.messageHistoryManager.getMessagesForPatient(patientId);
+      }
+      return [];
+    } catch (error) {
+      this.errorHandler.logError(error, 'MainController.getMessageHistoryForPatient');
+      return [];
+    }
+  }
+
+  /**
+   * Obtém mensagens enviadas hoje
+   * @returns {Array} Lista de mensagens enviadas hoje
+   */
+  getTodaysMessages() {
+    try {
+      if (this.productionScheduler && this.productionScheduler.messageService) {
+        return this.productionScheduler.messageService.messageHistoryManager.getTodaysMessages();
+      }
+      return [];
+    } catch (error) {
+      this.errorHandler.logError(error, 'MainController.getTodaysMessages');
+      return [];
+    }
+  }
+
+  /**
+   * Obtém informações da próxima mensagem
+   * @returns {Object} Informações da próxima mensagem
+   */
+  getNextMessageInfo() {
+    try {
+      const systemConfig = this.configManager.getSystemConfig();
+      const now = new Date();
+      const currentHour = now.getHours();
+      const currentMinute = now.getMinutes();
+      
+      // Determinar qual tipo de mensagem será enviada próxima
+      let nextMessageType = null;
+      let timeUntilNext = null;
+      let actionCardId = null;
+      let actionCardName = 'N/A';
+      
+      // Verificar se mensagem de fim de dia está ativa
+      if (!systemConfig.endOfDayPaused && currentHour >= 17 && currentHour < 18) {
+        // Próxima mensagem será de fim de dia (18h)
+        nextMessageType = 'end_of_day';
+        const endOfDayTime = new Date(now);
+        endOfDayTime.setHours(18, 0, 0, 0);
+        timeUntilNext = endOfDayTime.getTime() - now.getTime();
+        actionCardId = systemConfig.selectedActionCardEndDay;
+      } else if (currentHour >= 8 && currentHour < 18) {
+        // Durante horário comercial, próxima mensagem será de 30min
+        nextMessageType = '30min';
+        // Simular próximo envio em 3 minutos (intervalo de verificação)
+        timeUntilNext = 3 * 60 * 1000; // 3 minutos em millisegundos
+        actionCardId = systemConfig.selectedActionCard30Min;
+      } else {
+        // Fora do horário comercial
+        nextMessageType = 'outside_hours';
+        const nextBusinessDay = new Date(now);
+        nextBusinessDay.setDate(nextBusinessDay.getDate() + (nextBusinessDay.getDay() === 6 ? 2 : 1)); // Próxima segunda
+        nextBusinessDay.setHours(8, 0, 0, 0);
+        timeUntilNext = nextBusinessDay.getTime() - now.getTime();
+        actionCardId = systemConfig.selectedActionCard30Min;
+      }
+      
+      // Definir nome do action card baseado no tipo
+      if (actionCardId) {
+        if (nextMessageType === 'end_of_day') {
+          actionCardName = `Fim de Dia - ${actionCardId}`;
+        } else if (nextMessageType === '30min') {
+          actionCardName = `30 Minutos - ${actionCardId}`;
+        } else {
+          actionCardName = `Action Card ${actionCardId}`;
+        }
+      }
+      
+      return {
+        nextMessageType,
+        timeUntilNext: Math.max(0, timeUntilNext),
+        actionCardId,
+        actionCardName,
+        timestamp: now.toISOString(),
+        systemConfig: {
+          endOfDayPaused: systemConfig.endOfDayPaused,
+          ignoreBusinessHours: systemConfig.ignoreBusinessHours,
+          minWaitTime: systemConfig.minWaitTime,
+          maxWaitTime: systemConfig.maxWaitTime
+        }
+      };
+      
+    } catch (error) {
+      this.errorHandler.logError(error, 'MainController.getNextMessageInfo');
+      return {
+        nextMessageType: 'error',
+        timeUntilNext: 0,
+        actionCardId: null,
+        actionCardName: 'Erro ao carregar',
+        timestamp: new Date().toISOString(),
+        error: error.message
+      };
+    }
   }
 
   /**

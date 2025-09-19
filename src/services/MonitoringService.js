@@ -157,8 +157,10 @@ class MonitoringService {
    */
   async isPatientEligibleFor30MinMessage(patient) {
     try {
-      // 1. Verificar tempo de espera (30-40 minutos para evitar spam)
-      if (!patient.waitTimeMinutes || patient.waitTimeMinutes < 30 || patient.waitTimeMinutes > 40) {
+      // 1. Verificar tempo de espera (usando configuração personalizada)
+      const minWaitTime = this.configManager.getMinWaitTime();
+      const maxWaitTime = this.configManager.getMaxWaitTime();
+      if (!patient.waitTimeMinutes || patient.waitTimeMinutes < minWaitTime || patient.waitTimeMinutes > maxWaitTime) {
         return false;
       }
       
@@ -169,17 +171,17 @@ class MonitoringService {
       
       // 3. Verificar se está na lista de exclusões
       const patientKey = this.jsonPatientManager.getPatientKey(patient);
-      if (this.configManager.isAttendanceExcluded(patientKey)) {
+      if (await this.configManager.isAttendanceExcluded(patientKey, '30min')) {
         return false;
       }
       
-      // 4. Verificar horário comercial
-      if (!TimeUtils.isBusinessHours()) {
+      // 4. Verificar horário comercial (se não estiver configurado para ignorar)
+      if (!this.configManager.shouldIgnoreBusinessHours() && !TimeUtils.isBusinessHours()) {
         return false;
       }
       
-      // 5. Verificar dia útil
-      if (!TimeUtils.isWorkingDay()) {
+      // 5. Verificar dia útil (apenas se não estiver configurado para ignorar horário comercial)
+      if (!this.configManager.shouldIgnoreBusinessHours() && !TimeUtils.isWorkingDay()) {
         return false;
       }
       
@@ -202,22 +204,28 @@ class MonitoringService {
    */
   async isPatientEligibleForEndOfDayMessage(patient) {
     try {
-      // 1. Verificar se é fim de dia (18h)
-      if (!TimeUtils.isEndOfDayTime()) {
+      // 1. Verificar se é fim de dia (18h) com tolerância de 5 minutos
+      if (!TimeUtils.isEndOfDayTimeWithTolerance(5)) {
         return false;
       }
       
-      // 2. Verificar dia útil
-      if (!TimeUtils.isWorkingDay()) {
+      // 2. Verificar dia útil (apenas se não estiver configurado para ignorar horário comercial)
+      if (!this.configManager.shouldIgnoreBusinessHours() && !TimeUtils.isWorkingDay()) {
         return false;
       }
       
-      // 3. Verificar se fluxo não está pausado
+      // 3. Verificar se mensagem de fim de dia (18h) está pausada
+      if (this.configManager.isEndOfDayPaused()) {
+        console.log('🚫 Mensagem de fim de dia (18h) está PAUSADA via configuração');
+        return false;
+      }
+      
+      // 4. Verificar se fluxo não está pausado
       if (this.configManager.isFlowPaused()) {
         return false;
       }
       
-      // 4. TODOS os pacientes aguardando são elegíveis para fim de dia
+      // 5. TODOS os pacientes aguardando são elegíveis para fim de dia
       // (removido: verificação de processamento e exclusões)
       
       return true;
@@ -308,7 +316,7 @@ class MonitoringService {
       await this.jsonPatientManager.clearAllFiles();
       
       // Limpar lista de exclusões
-      this.configManager.clearExclusionList();
+      await this.configManager.cleanupDailyData();
       
       // Resetar estatísticas
       this.stats = {

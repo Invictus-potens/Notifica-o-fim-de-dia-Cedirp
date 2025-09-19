@@ -1,0 +1,19 @@
+{
+  "messages": [
+    {
+      "id": "msg_1758243301746_yupvsjf8a",
+      "patientId": "68cc8754502643b3c4aa6a43",
+      "patientName": "Felipe Prado",
+      "patientPhone": "5516981892476",
+      "actionCardId": "68cbfa96b8640e9721e4feab",
+      "messageType": "30min",
+      "sentAt": "2025-09-19T00:55:01.316Z",
+      "sentAtFormatted": "18/09/2025, 21:55:01",
+      "success": true,
+      "createdAt": "2025-09-19T00:55:01.746Z"
+    }
+  ],
+  "lastCleanup": null,
+  "totalSent": 1,
+  "createdAt": "2025-09-19T00:45:57.736Z"
+}

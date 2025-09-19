@@ -393,13 +393,27 @@ class JsonPatientManager {
   /**
    * Marca paciente como processado (recebeu mensagem)
    * @param {string} patientId - ID do paciente
+   * @param {Object} messageInfo - Informações da mensagem enviada
+   * @param {string} messageInfo.actionCardId - ID do action card enviado
+   * @param {string} messageInfo.messageType - Tipo da mensagem (30min, end_of_day)
+   * @param {Date} messageInfo.sentAt - Horário do envio
    */
-  async markPatientAsProcessed(patientId) {
+  async markPatientAsProcessed(patientId, messageInfo = null) {
     try {
       const activePatients = await this.loadPatientsFromFile(this.files.active);
       const patient = activePatients.find(p => p.id === patientId);
 
       if (patient) {
+        // Adicionar informações da mensagem ao paciente
+        if (messageInfo) {
+          patient.messageSent = {
+            actionCardId: messageInfo.actionCardId,
+            messageType: messageInfo.messageType,
+            sentAt: messageInfo.sentAt || new Date(),
+            sentAtFormatted: (messageInfo.sentAt || new Date()).toLocaleString('pt-BR')
+          };
+        }
+
         // Remover da lista ativa
         const updatedActive = activePatients.filter(p => p.id !== patientId);
         await this.savePatientsToFile(this.files.active, updatedActive);
