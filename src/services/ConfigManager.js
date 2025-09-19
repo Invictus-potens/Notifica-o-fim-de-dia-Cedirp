@@ -87,9 +87,12 @@ class ConfigManager {
           maxWaitTime: parseInt(parsedConfig.maxWaitTime) || 180,
           excludedSectors: this.parseJsonArray(parsedConfig.excludedSectors),
           excludedChannels: this.parseJsonArray(parsedConfig.excludedChannels),
-          selectedActionCard: parsedConfig.selectedActionCard || '631f2b4f307d23f46ac80a2b',
+          selectedActionCard: parsedConfig.selectedActionCard || '631f2b4f307d23f46ac80a10',
+          selectedActionCardDescription: parsedConfig.selectedActionCardDescription || 'Mensagem transferência padrão',
           selectedActionCard30Min: parsedConfig.selectedActionCard30Min || '631f2b4f307d23f46ac80a2b',
+          selectedActionCard30MinDescription: parsedConfig.selectedActionCard30MinDescription || 'Mensagem de 30 Minutos',
           selectedActionCardEndDay: parsedConfig.selectedActionCardEndDay || '631f2b4f307d23f46ac80a2b',
+          selectedActionCardEndDayDescription: parsedConfig.selectedActionCardEndDayDescription || 'Fim de Expediente',
           selectedTemplate: parsedConfig.selectedTemplate || '',
           startOfDayTime: parsedConfig.startOfDayTime || '08:00',
           endOfDayTime: parsedConfig.endOfDayTime || '18:00',
@@ -429,6 +432,37 @@ class ConfigManager {
     }
     
     await this.updateSystemConfig(updates);
+  }
+
+  /**
+   * Obtém configuração completa do sistema
+   * @returns {Object} Configuração completa
+   */
+  getSystemConfig() {
+    // Forçar recarga se os campos importantes estão undefined
+    if (!this.systemConfig.selectedActionCard30Min || !this.systemConfig.selectedActionCardEndDay) {
+      console.log('⚠️ Action Cards não carregados, forçando recarga...');
+      this.loadSystemConfig();
+    }
+    
+    return {
+      ...this.systemConfig,
+      // Garantir que todos os campos estejam presentes com valores corretos do arquivo
+      flowPaused: this.systemConfig.flowPaused || false,
+      endOfDayPaused: this.systemConfig.endOfDayPaused || false,
+      ignoreBusinessHours: this.systemConfig.ignoreBusinessHours || false,
+      minWaitTime: this.systemConfig.minWaitTime || 30,
+      maxWaitTime: this.systemConfig.maxWaitTime || 40,
+      selectedActionCard: this.systemConfig.selectedActionCard || '631f2b4f307d23f46ac80a10',
+      selectedActionCardDescription: this.systemConfig.selectedActionCardDescription || 'Mensagem transferência padrão',
+      selectedActionCard30Min: this.systemConfig.selectedActionCard30Min || '68cbfa96b8640e9721e4feab',
+      selectedActionCard30MinDescription: this.systemConfig.selectedActionCard30MinDescription || 'Mensagem de 30 Minutos',
+      selectedActionCardEndDay: this.systemConfig.selectedActionCardEndDay || '631f2b4f307d23f46ac80a2b',
+      selectedActionCardEndDayDescription: this.systemConfig.selectedActionCardEndDayDescription || 'Fim de Expediente',
+      startOfDayTime: this.systemConfig.startOfDayTime || '08:00',
+      endOfDayTime: this.systemConfig.endOfDayTime || '18:00',
+      logCleanupTime: this.systemConfig.logCleanupTime || '02:00'
+    };
   }
 
   /**

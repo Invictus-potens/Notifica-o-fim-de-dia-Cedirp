@@ -339,6 +339,75 @@ app.get('/api/patients/live', async (req, res) => {
   }
 });
 
+// Histórico de mensagens enviadas
+app.get('/api/messages/history', async (req, res) => {
+  try {
+    console.log('📨 API: Carregando histórico de mensagens...');
+    
+    const fs = require('fs').promises;
+    const path = require('path');
+    const messagesFilePath = path.join(__dirname, '../data/messages_sent.json');
+    
+    // Verificar se arquivo existe
+    try {
+      await fs.access(messagesFilePath);
+    } catch (error) {
+      console.log('📨 API: Arquivo messages_sent.json não encontrado, retornando histórico vazio');
+      return res.json({
+        messages: [],
+        lastCleanup: null,
+        totalSent: 0,
+        createdAt: new Date().toISOString()
+      });
+    }
+    
+    // Ler arquivo de mensagens
+    const messagesData = await fs.readFile(messagesFilePath, 'utf8');
+    const messageHistory = JSON.parse(messagesData);
+    
+    console.log(`📨 API: Histórico carregado com ${messageHistory.messages?.length || 0} mensagens`);
+    
+    res.json(messageHistory);
+    
+  } catch (error) {
+    console.error('❌ Erro ao carregar histórico de mensagens:', error);
+    res.status(500).json({
+      error: 'Erro ao carregar histórico de mensagens',
+      message: error.message,
+      messages: [],
+      lastCleanup: null,
+      totalSent: 0
+    });
+  }
+});
+
+// Action Cards disponíveis da API CAM Krolik
+app.get('/api/action-cards/available', async (req, res) => {
+  try {
+    console.log('🃏 API: Buscando Action Cards da API CAM Krolik...');
+    
+    const actionCards = await krolikApiClient.listActionCards();
+    console.log(`🃏 API: Encontrados ${actionCards.length} Action Cards`);
+    
+    res.json({
+      success: true,
+      data: actionCards,
+      total: actionCards.length,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('❌ Erro ao buscar Action Cards:', error);
+    res.status(500).json({ 
+      success: false,
+      error: 'Erro ao buscar Action Cards da API CAM Krolik',
+      message: error.message,
+      data: [],
+      total: 0,
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
 // Setores disponíveis
 app.get('/api/sectors', async (req, res) => {
   try {

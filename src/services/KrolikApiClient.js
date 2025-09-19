@@ -196,6 +196,21 @@ class KrolikApiClient {
   }
 
   /**
+   * Lista Action Cards disponíveis
+   * Rota correta: GET /core/v2/api/action-cards
+   */
+  async listActionCards() {
+    try {
+      const response = await this.axiosInstance.get('/core/v2/api/action-cards');
+      console.log(`🃏 Encontrados ${response.data.length} Action Cards`);
+      return response.data;
+    } catch (error) {
+      console.error('Erro ao listar Action Cards:', error.message);
+      throw error;
+    }
+  }
+
+  /**
    * Testa conexão com a API
    */
   async testConnection() {

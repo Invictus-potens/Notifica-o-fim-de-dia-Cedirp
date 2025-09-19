@@ -6,10 +6,14 @@
   "ignoreBusinessHours": "false",
   "minWaitTime": "30",
   "maxWaitTime": "35",
-  "selectedActionCard": "63c9484d4632f8bd1b0a7e1b",
+  "selectedActionCard": "631f2b4f307d23f46ac80a10",
+  "selectedActionCardDescription": "Mensagem transferência padrão",
   "selectedActionCard30Min": "68cbfa96b8640e9721e4feab",
+  "selectedActionCard30MinDescription": "Mensagem de 30 Minutos",
   "selectedActionCardEndDay": "631f2b4f307d23f46ac80a2b",
+  "selectedActionCardEndDayDescription": "Fim de Expediente",
   "selectedTemplate": "",
   "endOfDayTime": "18:00",
-  "logCleanupTime": "23:59"
+  "logCleanupTime": "23:59",
+  "startOfDayTime": "08:00"
 }

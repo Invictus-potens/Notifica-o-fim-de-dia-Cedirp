@@ -27,6 +27,7 @@ class AutomationInterface {
         this.timerInterval = null;
         this.systemConfig = {}; // Armazenar configurações do sistema
         this.actionCards = []; // Armazenar action cards da API
+        this.messageHistory = null; // Histórico de mensagens enviadas
         
         this.init();
     }
@@ -57,6 +58,8 @@ class AutomationInterface {
             this.startRealtimeTimer(); // Iniciar timer em tempo real
             // Carregar configurações do sistema ANTES de outras operações
             await this.loadSystemConfig();
+            // Carregar action cards para nomes corretos
+            await this.loadActionCards();
             // Iniciar timer para atualizar countdowns
             this.startCountdownTimer();
             
@@ -550,6 +553,16 @@ class AutomationInterface {
             if (loadingElement) loadingElement.classList.remove('d-none');
             if (tableContainer) tableContainer.classList.add('d-none');
 
+            // PRIMEIRO: Carregar Action Cards para ter os nomes corretos
+            if (!this.actionCards || this.actionCards.length === 0) {
+                console.log('🃏 Carregando Action Cards antes dos pacientes...');
+                await this.loadActionCards();
+            }
+
+            // SEGUNDO: Carregar histórico de mensagens para verificar status dos pacientes
+            await this.loadMessageHistory();
+
+            // TERCEIRO: Carregar pacientes
             const response = await fetch('/api/patients');
             const data = await response.json();
 
@@ -561,6 +574,12 @@ class AutomationInterface {
 
             const patients = data.data || [];
             console.log(`📊 Exibindo ${patients.length} pacientes na interface`);
+            
+            // GARANTIR que Action Cards estão carregados antes de exibir
+            if (!this.actionCards || this.actionCards.length === 0) {
+                console.log('⚠️ Action Cards não carregados, tentando novamente...');
+                await this.loadActionCards();
+            }
             
             this.displayPatients(patients);
             
@@ -640,29 +659,28 @@ class AutomationInterface {
     }
 
     /**
-     * Obtém o nome do action card pelo ID
+     * Obtém o nome do action card pelo ID - 100% DINÂMICO DA API
      */
     getActionCardName(cardId) {
         if (!cardId) {
-            return 'Card N/A';
+            return 'Sem Card';
         }
         
+        // Se Action Cards ainda não foram carregados, retornar "Carregando..."
         if (!this.actionCards || this.actionCards.length === 0) {
-            console.warn(`⚠️ Action cards não carregados. Tentando carregar...`);
-            // Tentar carregar action cards se não estiverem carregados
-            this.loadActionCards();
-            return `Card ${cardId} (carregando...)`;
+            return 'Carregando...';
         }
         
-        const card = this.actionCards.find(c => c.id === cardId);
-        if (!card) {
-            console.warn(`⚠️ Action card não encontrado: ${cardId}`);
-            return `Card ${cardId} (não encontrado)`;
+        // BUSCAR DIRETAMENTE NOS ACTION CARDS CARREGADOS DA API
+        const foundCard = this.actionCards.find(card => card.id === cardId);
+        
+        if (foundCard) {
+            // Retornar o nome/descrição REAL da API CAM Krolik
+            return foundCard.description || foundCard.name || foundCard.title || 'Action Card';
         }
         
-        // Usar description primeiro (que é o que a API retorna), depois name, title, com fallback para id
-        const cardName = card.description || card.name || card.title || `Card ${cardId}`;
-        return cardName;
+        // Se não encontrou o ID na API, mostrar que não existe
+        return `ID não encontrado na API`;
     }
 
 
@@ -677,32 +695,47 @@ class AutomationInterface {
         // Usar configurações reais do sistema (serão carregadas via API)
         const minWaitTime = this.systemConfig?.minWaitTime || 30;
         const maxWaitTime = this.systemConfig?.maxWaitTime || 40;
-        const ignoreBusinessHours = this.systemConfig?.ignoreBusinessHours || false;
-        const endOfDayPaused = this.systemConfig?.endOfDayPaused || true;
+        const ignoreBusinessHours = this.systemConfig?.ignoreBusinessHours === 'true' || this.systemConfig?.ignoreBusinessHours === true;
+        const endOfDayPaused = this.systemConfig?.endOfDayPaused === 'true' || this.systemConfig?.endOfDayPaused === true;
         
-        // Obter nomes dos action cards
+        // Obter IDs dos action cards do config e buscar nomes na API
         const actionCard30Min = this.systemConfig?.selectedActionCard30Min;
         const actionCardEndDay = this.systemConfig?.selectedActionCardEndDay;
         const card30MinName = this.getActionCardName(actionCard30Min);
         const cardEndDayName = this.getActionCardName(actionCardEndDay);
         
-        // Verificar se mensagem de fim de dia está ativa e se é hora (17h55-18h00)
-        if (!endOfDayPaused && currentHour >= 17 && currentHour < 18) {
+        
+        // Verificar se paciente já recebeu mensagem de 30 minutos
+        const hasReceived30MinMessage = this.hasPatientReceivedMessage(patient);
+        
+        // Se paciente já recebeu mensagem de 30min E não está pausado, mostrar countdown para fim de expediente
+        if (hasReceived30MinMessage && !endOfDayPaused) {
             const endOfDayTime = new Date(now);
-            // Usar configuração dinâmica do sistema
             const endHour = parseInt(this.systemConfig?.endOfDayTime?.split(':')[0] || '18');
             endOfDayTime.setHours(endHour, 0, 0, 0);
             const timeRemaining = endOfDayTime.getTime() - now.getTime();
-            const minutes = Math.floor(timeRemaining / 60000);
-            const seconds = Math.floor((timeRemaining % 60000) / 1000);
-            const timeString = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
             
-            return `
-                <div class="text-primary">
-                    <div class="fw-bold">${timeString}</div>
-                    <small class="text-muted">${cardEndDayName}</small>
-                </div>
-            `;
+            // Se ainda há tempo até o fim do expediente
+            if (timeRemaining > 0) {
+                const minutes = Math.floor(timeRemaining / 60000);
+                const seconds = Math.floor((timeRemaining % 60000) / 1000);
+                const timeString = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                
+                return `
+                    <div class="text-primary">
+                        <div class="fw-bold">${timeString}</div>
+                        <small class="text-muted">${cardEndDayName}</small>
+                    </div>
+                `;
+            } else {
+                // Fim de expediente já passou
+                return `
+                    <div class="text-warning">
+                        <div class="fw-bold">Expediente encerrado</div>
+                        <small class="text-muted">${cardEndDayName}</small>
+                    </div>
+                `;
+            }
         }
         
         // Verificar se está fora do horário comercial (apenas se ignoreBusinessHours for false)
@@ -751,6 +784,27 @@ class AutomationInterface {
     }
 
     /**
+     * Carrega histórico de mensagens para verificar status dos pacientes
+     */
+    async loadMessageHistory() {
+        try {
+            console.log('📨 Carregando histórico de mensagens...');
+            const response = await fetch(`${this.apiBaseUrl}/messages/history`);
+            
+            if (response.ok) {
+                this.messageHistory = await response.json();
+                console.log(`✅ Histórico carregado: ${this.messageHistory?.messages?.length || 0} mensagens`);
+            } else {
+                console.warn('⚠️ Não foi possível carregar o histórico de mensagens');
+                this.messageHistory = { messages: [] };
+            }
+        } catch (error) {
+            console.error('❌ Erro ao carregar histórico de mensagens:', error);
+            this.messageHistory = { messages: [] };
+        }
+    }
+
+    /**
      * Carrega configurações do sistema via API
      */
     async loadSystemConfig() {
@@ -766,7 +820,9 @@ class AutomationInterface {
                         ignoreBusinessHours: data.data.ignoreBusinessHours === 'true' || data.data.ignoreBusinessHours === true,
                         endOfDayPaused: data.data.endOfDayPaused === 'true' || data.data.endOfDayPaused === true,
                         selectedActionCard30Min: data.data.selectedActionCard30Min,
+                        selectedActionCard30MinDescription: data.data.selectedActionCard30MinDescription,
                         selectedActionCardEndDay: data.data.selectedActionCardEndDay,
+                        selectedActionCardEndDayDescription: data.data.selectedActionCardEndDayDescription,
                         startOfDayTime: data.data.startOfDayTime || '08:00',
                         endOfDayTime: data.data.endOfDayTime || '18:00'
                     };
@@ -1001,6 +1057,7 @@ class AutomationInterface {
 
     async loadActionCards() {
         try {
+            console.log('🃏 Carregando Action Cards...');
             
             const response = await fetch('/api/action-cards/available');
             const result = await response.json();
@@ -1009,13 +1066,12 @@ class AutomationInterface {
                 throw new Error(result.error || 'Erro ao carregar cartões de ação');
             }
 
-            // Verificar se é fallback
-            if (result.fallback) {
-                console.warn('⚠️ Usando dados de fallback para cartões de ação');
-                this.showWarning('Usando dados de exemplo - API não disponível');
-            }
+            console.log(`🃏 ${result.data?.length || 0} Action Cards carregados`);
+            
+            // Armazenar para uso em outras funções
+            this.actionCards = result.data || [];
 
-            this.displayActionCards(result.data || result);
+            this.displayActionCards(result.data || []);
             
             // Carregar configurações salvas dos cartões
             await this.loadSavedActionCardConfig();
@@ -2844,7 +2900,28 @@ class AutomationInterface {
     hasPatientReceivedMessage(patient) {
         // Verificar se está na lista de pacientes processados
         const patientKey = `${patient.name}_${patient.phone}_${patient.sectorId}`;
-        return this.processedPatients.has(patientKey);
+        if (this.processedPatients.has(patientKey)) {
+            return true;
+        }
+        
+        // Verificar também se há mensagens enviadas para este paciente hoje
+        // (usando ID do paciente ou combinação nome+telefone)
+        if (this.messageHistory && this.messageHistory.messages) {
+            const today = new Date().toDateString();
+            
+            // Buscar mensagens que correspondam ao paciente
+            const matchingMessages = this.messageHistory.messages.filter(msg => {
+                const msgDate = new Date(msg.sentAt).toDateString();
+                const matchesDate = msgDate === today;
+                const matchesId = msg.patientId === patient.id;
+                const matchesNamePhone = msg.patientName === patient.name && msg.patientPhone === patient.phone;
+                
+                return matchesDate && (matchesId || matchesNamePhone);
+            });
+            
+            return matchingMessages.length > 0;
+        }
+        return false;
     }
 
     /**
