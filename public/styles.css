@@ -1951,3 +1951,93 @@ hanced Mobile Responsiveness */
         max-width: calc(100vw - 2rem);
     }
 }
+
+/* Estilos para a aba Métricas */
+#metricas-route .metric-item {
+    padding: 1rem;
+    border-radius: 8px;
+    background-color: #f8f9fa;
+    border: 1px solid #e9ecef;
+    transition: all 0.2s ease;
+}
+
+#metricas-route .metric-item:hover {
+    background-color: #e9ecef;
+    transform: translateY(-1px);
+}
+
+#metricas-route .metric-row {
+    padding: 0.75rem;
+    border-radius: 6px;
+    background-color: #f8f9fa;
+    border-left: 3px solid #dee2e6;
+    transition: all 0.2s ease;
+}
+
+#metricas-route .metric-row:hover {
+    background-color: #e9ecef;
+    border-left-color: #0d6efd;
+}
+
+#metricas-route .metric-label {
+    font-size: 0.9rem;
+    color: #495057;
+}
+
+#metricas-route .metric-value {
+    font-size: 1rem;
+    color: #212529;
+}
+
+#metricas-route .card-header {
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #dee2e6;
+}
+
+#metricas-route .h4, #metricas-route .h5 {
+    margin: 0;
+    font-weight: 600;
+}
+
+/* Animação para valores que mudam */
+#metricas-route .metric-value,
+#metricas-route .h4,
+#metricas-route .h5 {
+    transition: all 0.3s ease;
+}
+
+#metricas-route .metric-value.updated,
+#metricas-route .h4.updated,
+#metricas-route .h5.updated {
+    transform: scale(1.1);
+    animation: pulse 0.6s ease;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+}
+
+/* Responsividade para métricas */
+@media (max-width: 768px) {
+    #metricas-route .col-md-6 {
+        margin-bottom: 1rem;
+    }
+    
+    #metricas-route .h4 {
+        font-size: 1.5rem;
+    }
+    
+    #metricas-route .h5 {
+        font-size: 1.25rem;
+    }
+    
+    #metricas-route .metric-row {
+        padding: 0.5rem;
+    }
+    
+    #metricas-route .metric-item {
+        padding: 0.75rem;
+    }
+}

@@ -52,6 +52,7 @@ class AutomationInterface {
             this.initializePatientSelection();
             this.initializePatientData();
             this.initializeSystemTab(); // Inicializar aba Sistema
+            this.initializeMetricsTab(); // Inicializar aba Métricas
             this.startRealtimeTimer(); // Iniciar timer em tempo real
             // Carregar configurações do sistema
             this.loadSystemConfig();
@@ -3282,6 +3283,177 @@ class AutomationInterface {
             this.systemElements.configWarningText.textContent = 'Há alterações não salvas.';
         } else {
             this.systemElements.configWarning?.classList.add('d-none');
+        }
+    }
+
+    /**
+     * Métricas Tab - Implementação completa das métricas do sistema
+     */
+    initializeMetricsTab() {
+        // Elementos da interface de métricas
+        this.metricsElements = {
+            // Métricas de Mensagens
+            messagesSent: document.getElementById('messages-sent'),
+            messagesFailed: document.getElementById('messages-failed'),
+            messages30Min: document.getElementById('messages-30min'),
+            messagesEndDay: document.getElementById('messages-endday'),
+            
+            // Métricas de Sistema
+            systemUptime: document.getElementById('system-uptime'),
+            totalRequests: document.getElementById('total-requests'),
+            apiSuccess: document.getElementById('api-success'),
+            apiFailures: document.getElementById('api-failures'),
+            
+            // Botão de atualizar
+            refreshBtn: document.getElementById('refresh-metrics-btn')
+        };
+
+        // Setup event listeners
+        this.setupMetricsEventListeners();
+        
+        // Carregar métricas iniciais
+        this.loadMetrics();
+        
+        // Auto-refresh a cada 30 segundos
+        this.metricsInterval = setInterval(() => {
+            this.loadMetrics();
+        }, 30000);
+    }
+
+    setupMetricsEventListeners() {
+        // Botão de atualizar métricas
+        this.metricsElements.refreshBtn?.addEventListener('click', () => {
+            this.loadMetrics();
+        });
+    }
+
+    async loadMetrics() {
+        try {
+            // Carregar métricas de mensagens
+            await this.loadMessageMetrics();
+            
+            // Carregar métricas de sistema
+            await this.loadSystemMetrics();
+            
+        } catch (error) {
+            console.error('Erro ao carregar métricas:', error);
+            this.showNotification('Erro ao carregar métricas', 'error');
+        }
+    }
+
+    async loadMessageMetrics() {
+        try {
+            // Tentar carregar dados reais de mensagens
+            const response = await fetch('/api/messages/history');
+            
+            if (response.ok) {
+                const data = await response.json();
+                
+                // Processar dados de mensagens
+                let sent = 0, failed = 0, thirtyMin = 0, endDay = 0;
+                
+                if (data.success && Array.isArray(data.data)) {
+                    const today = new Date().toDateString();
+                    const todayMessages = data.data.filter(msg => 
+                        new Date(msg.sentAt).toDateString() === today
+                    );
+                    
+                    sent = todayMessages.filter(msg => msg.success).length;
+                    failed = todayMessages.filter(msg => !msg.success).length;
+                    thirtyMin = todayMessages.filter(msg => msg.messageType === '30min').length;
+                    endDay = todayMessages.filter(msg => msg.messageType === 'end_of_day').length;
+                }
+                
+                this.updateMessageMetrics(sent, failed, thirtyMin, endDay);
+            } else {
+                // Se não conseguir carregar, usar zeros
+                this.updateMessageMetrics(0, 0, 0, 0);
+            }
+        } catch (error) {
+            console.log('Dados de mensagens não disponíveis, usando zeros');
+            this.updateMessageMetrics(0, 0, 0, 0);
+        }
+    }
+
+    async loadSystemMetrics() {
+        try {
+            // Tentar carregar dados do sistema
+            const response = await fetch('/api/status');
+            
+            if (response.ok) {
+                const data = await response.json();
+                
+                // Extrair métricas do sistema
+                const uptimeMs = data.uptime || 0;
+                const uptime = this.formatUptime(uptimeMs);
+                const requests = data.totalRequests || 0;
+                const apiSuccess = data.apiSuccess || 0;
+                const apiFailures = data.apiFailures || 0;
+                
+                this.updateSystemMetrics(uptime, requests, apiSuccess, apiFailures);
+            } else {
+                // Se não conseguir carregar, usar valores padrão
+                this.updateSystemMetrics('--', 0, 0, 0);
+            }
+        } catch (error) {
+            console.log('Dados do sistema não disponíveis, usando valores padrão');
+            this.updateSystemMetrics('--', 0, 0, 0);
+        }
+    }
+
+    updateMessageMetrics(sent, failed, thirtyMin, endDay) {
+        this.updateMetricValue(this.metricsElements.messagesSent, sent);
+        this.updateMetricValue(this.metricsElements.messagesFailed, failed);
+        this.updateMetricValue(this.metricsElements.messages30Min, thirtyMin);
+        this.updateMetricValue(this.metricsElements.messagesEndDay, endDay);
+    }
+
+    updateSystemMetrics(uptime, requests, apiSuccess, apiFailures) {
+        this.updateMetricValue(this.metricsElements.systemUptime, uptime);
+        this.updateMetricValue(this.metricsElements.totalRequests, requests);
+        this.updateMetricValue(this.metricsElements.apiSuccess, apiSuccess);
+        this.updateMetricValue(this.metricsElements.apiFailures, apiFailures);
+    }
+
+    updateMetricValue(element, value) {
+        if (element) {
+            const oldValue = element.textContent;
+            element.textContent = value;
+            
+            // Adicionar animação se o valor mudou
+            if (oldValue !== value.toString()) {
+                element.classList.add('updated');
+                setTimeout(() => {
+                    element.classList.remove('updated');
+                }, 600);
+            }
+        }
+    }
+
+    formatUptime(uptimeMs) {
+        if (!uptimeMs || uptimeMs === 0) return '--';
+        
+        const seconds = Math.floor(uptimeMs / 1000);
+        const minutes = Math.floor(seconds / 60);
+        const hours = Math.floor(minutes / 60);
+        const days = Math.floor(hours / 24);
+        
+        if (days > 0) {
+            return `${days}d ${hours % 24}h ${minutes % 60}m`;
+        } else if (hours > 0) {
+            return `${hours}h ${minutes % 60}m`;
+        } else if (minutes > 0) {
+            return `${minutes}m ${seconds % 60}s`;
+        } else {
+            return `${seconds}s`;
+        }
+    }
+
+    // Limpar interval quando necessário
+    destroyMetricsTab() {
+        if (this.metricsInterval) {
+            clearInterval(this.metricsInterval);
+            this.metricsInterval = null;
         }
     }
 

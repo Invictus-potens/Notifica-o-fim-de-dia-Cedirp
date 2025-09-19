@@ -1,31 +1,17 @@
 [
   {
-    "id": "68cc57d33762f719ba85c7f2",
-    "contactId": "64dbb35e1979fae90a260b81",
-    "name": "Taise Gaspareto 🧿🌎",
-    "phone": "5516999621515",
-    "sectorId": "6400efb5343817d4ddbb2a4c",
-    "sectorName": "Suporte CAM",
+    "id": "68cd4b165a6f2df91a6f7df1",
+    "contactId": "66c49f5de32cb0f8d4d53967",
+    "name": "Wilson Lopes - Comercial Izahub",
+    "phone": "5591993273001",
+    "sectorId": "631f2b4f307d23f46ac80a1c",
+    "sectorName": "Setor 631f2b4f307d23f46ac80a1c",
     "channelId": "63e68f168a48875131856df8",
     "channelType": "WhatsApp Business (Principal)",
-    "waitStartTime": "2025-09-18T19:04:51.161Z",
-    "waitTimeMinutes": 992,
+    "waitStartTime": "2025-09-19T12:22:46.970Z",
+    "waitTimeMinutes": 28,
     "status": "waiting",
-    "enteredAt": "2025-09-19T00:34:01.217Z"
-  },
-  {
-    "id": "68cc4c9d9e70c2d974d8b532",
-    "contactId": "651466f5192996022660c695",
-    "name": "IMAD Imóveis",
-    "phone": "5511975554044",
-    "sectorId": "6400efb5343817d4ddbb2a4c",
-    "sectorName": "Suporte CAM",
-    "channelId": "63e68f168a48875131856df8",
-    "channelType": "WhatsApp Business (Principal)",
-    "waitStartTime": "2025-09-18T18:17:01.654Z",
-    "waitTimeMinutes": 962,
-    "status": "waiting",
-    "enteredAt": "2025-09-19T00:34:01.217Z"
+    "enteredAt": "2025-09-19T12:26:00.410Z"
   },
   {
     "id": "68cbecf9a56a3d64bbba352a",
@@ -37,22 +23,8 @@
     "channelId": "63e68f168a48875131856df8",
     "channelType": "WhatsApp Business (Principal)",
     "waitStartTime": "2025-09-18T11:28:57.776Z",
-    "waitTimeMinutes": 1129,
+    "waitTimeMinutes": 1158,
     "status": "waiting",
     "enteredAt": "2025-09-19T00:34:01.217Z"
-  },
-  {
-    "id": "68cac3d7f22d799dcf185ec4",
-    "contactId": "6899e01b94178d61e4c0b528",
-    "name": "Ianca Manuela",
-    "phone": "5577999778504",
-    "sectorId": "631f7d27307d23f46af88983",
-    "sectorName": "Administrativo/Financeiro",
-    "channelId": "63e68f168a48875131856df8",
-    "channelType": "WhatsApp Business (Principal)",
-    "waitStartTime": "2025-09-17T14:21:11.888Z",
-    "waitTimeMinutes": 39,
-    "status": "waiting",
-    "enteredAt": "2025-09-19T12:17:00.744Z"
   }
 ]
