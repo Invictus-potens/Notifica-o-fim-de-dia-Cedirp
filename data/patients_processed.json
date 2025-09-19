@@ -9,15 +9,30 @@
     "channelId": "63e68f168a48875131856df8",
     "channelType": "WhatsApp Business (Principal)",
     "waitStartTime": "2025-09-18T22:27:32.781Z",
-    "waitTimeMinutes": 146,
+    "waitTimeMinutes": 173,
     "status": "waiting",
-    "enteredAt": "2025-09-19T00:54:00.489Z",
+    "enteredAt": "2025-09-19T00:56:00.972Z",
     "messageSent": {
       "actionCardId": "68cbfa96b8640e9721e4feab",
       "messageType": "30min",
-      "sentAt": "2025-09-19T00:55:01.316Z",
-      "sentAtFormatted": "18/09/2025, 21:55:01"
+      "sentAt": "2025-09-19T01:22:00.503Z",
+      "sentAtFormatted": "18/09/2025, 22:22:00"
     },
-    "processedAt": "2025-09-19T00:55:01.747Z"
+    "processedAt": "2025-09-19T01:22:01.035Z"
+  },
+  {
+    "id": "68cc8754502643b3c4aa6a43",
+    "contactId": "6863f9b7762b73008f223c5e",
+    "name": "Felipe Prado",
+    "phone": "5516981892476",
+    "sectorId": "6401f4f49b1ff8512b525e9c",
+    "sectorName": "Suporte Telefonia",
+    "channelId": "63e68f168a48875131856df8",
+    "channelType": "WhatsApp Business (Principal)",
+    "waitStartTime": "2025-09-18T22:27:32.781Z",
+    "waitTimeMinutes": 322,
+    "status": "waiting",
+    "enteredAt": "2025-09-19T01:23:01.341Z",
+    "processedAt": "2025-09-19T03:52:01.335Z"
   }
 ]

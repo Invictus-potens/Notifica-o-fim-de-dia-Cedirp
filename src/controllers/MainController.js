@@ -2,6 +2,7 @@ const { ErrorHandler } = require('../services/ErrorHandler');
 const { ConfigManager } = require('../services/ConfigManager');
 const { JsonPatientManager } = require('../services/JsonPatientManager');
 const { ProductionScheduler } = require('../services/ProductionScheduler');
+const { MessageHistoryManager } = require('../services/MessageHistoryManager');
 const { TimeUtils } = require('../utils/TimeUtils');
 
 /**
@@ -17,6 +18,9 @@ class MainController {
     
     // Inicializar JsonPatientManager
     this.jsonPatientManager = new JsonPatientManager(this.errorHandler);
+    
+    // Inicializar MessageHistoryManager
+    this.messageHistoryManager = new MessageHistoryManager(this.errorHandler);
     
     // Inicializar ProductionScheduler
     this.productionScheduler = new ProductionScheduler(this.errorHandler, this.configManager);
@@ -178,7 +182,15 @@ class MainController {
       
       const flowPaused = this.configManager.isFlowPaused();
       
-      return {
+      // Buscar dados reais para monitoringStats
+      const activePatients = await this.jsonPatientManager.loadPatientsFromFile(this.jsonPatientManager.files.active);
+      const messagesSent = await this.messageHistoryManager.getTodaysMessages();
+      
+      // Contar mensagens enviadas por tipo (do messages_sent.json)
+      const messages30Min = messagesSent.filter(msg => msg.messageType === '30min').length;
+      const messagesEndOfDay = messagesSent.filter(msg => msg.messageType === 'end_of_day').length;
+      
+      const result = {
         isRunning: this.isRunning,
         isInitialized: this.initialized,
         startTime: this.startTime,
@@ -190,10 +202,63 @@ class MainController {
         isPaused: flowPaused, // Nome que o frontend espera
         version: '1.0.0-js',
         environment: process.env.NODE_ENV || 'development',
-        productionScheduler: this.productionScheduler ? this.productionScheduler.getStatus() : null
+        productionScheduler: this.productionScheduler ? this.productionScheduler.getStatus() : null,
+        monitoringStats: {
+          totalPatients: activePatients.length,
+          patientsOver30Min: messages30Min,
+          patientsEndOfDay: messagesEndOfDay,
+          messagesSentToday: messagesSent.length,
+          lastCheck: new Date().toISOString()
+        }
       };
+      
+      return result;
     } catch (error) {
       this.errorHandler.logError(error, 'MainController.getStatus');
+      throw error;
+    }
+  }
+
+  /**
+   * Obtém métricas do sistema
+   */
+  async getMetrics() {
+    try {
+      // Buscar dados reais dos pacientes
+      const activePatients = await this.jsonPatientManager.loadPatientsFromFile(this.jsonPatientManager.files.active);
+      const processedPatients = await this.jsonPatientManager.loadPatientsFromFile(this.jsonPatientManager.files.processed);
+      
+      // Buscar mensagens enviadas hoje
+      const messagesSent = await this.messageHistoryManager.getTodaysMessages();
+      
+      const result = {
+        system: {
+          uptime: process.uptime(),
+          memory: process.memoryUsage(),
+          version: '1.0.0-js',
+          apiCallsSuccessful: 0, // TODO: Implementar contador
+          apiCallsFailed: 0, // TODO: Implementar contador
+          averageApiResponseTime: 0 // TODO: Implementar contador
+        },
+        messages: {
+          totalSent: messagesSent.length,
+          sent: messagesSent.length,
+          failed: 0, // TODO: Implementar contador
+          pending: 0,
+          averageResponseTime: 0 // TODO: Implementar contador
+        },
+        patients: {
+          active: activePatients.length,
+          processed: processedPatients.length,
+          waiting: activePatients.length,
+          total: activePatients.length + processedPatients.length
+        }
+      };
+      
+      return result;
+    } catch (error) {
+      console.error('❌ Erro em getMetrics:', error);
+      this.errorHandler.logError(error, 'MainController.getMetrics');
       throw error;
     }
   }
@@ -310,9 +375,15 @@ class MainController {
    */
   getMessageHistoryForPatient(patientId) {
     try {
+      console.log(`🔍 [TERMINAL] Buscando histórico para paciente: ${patientId}`);
+      
       if (this.productionScheduler && this.productionScheduler.messageService) {
-        return this.productionScheduler.messageService.messageHistoryManager.getMessagesForPatient(patientId);
+        const messages = this.productionScheduler.messageService.messageHistoryManager.getMessagesForPatient(patientId);
+        console.log(`📨 [TERMINAL] Encontradas ${messages.length} mensagens para paciente ${patientId}`);
+        return messages;
       }
+      
+      console.log(`⚠️ [TERMINAL] MessageService não disponível para paciente ${patientId}`);
       return [];
     } catch (error) {
       this.errorHandler.logError(error, 'MainController.getMessageHistoryForPatient');
@@ -326,9 +397,22 @@ class MainController {
    */
   getTodaysMessages() {
     try {
+      console.log(`📅 [TERMINAL] Buscando mensagens do dia...`);
+      
       if (this.productionScheduler && this.productionScheduler.messageService) {
-        return this.productionScheduler.messageService.messageHistoryManager.getTodaysMessages();
+        const messages = this.productionScheduler.messageService.messageHistoryManager.getTodaysMessages();
+        console.log(`📨 [TERMINAL] Total de mensagens hoje: ${messages.length}`);
+        
+        if (messages.length > 0) {
+          messages.forEach((msg, index) => {
+            console.log(`   ${index + 1}. ${msg.patientName} - ${msg.messageType} - ${msg.sentAtFormatted}`);
+          });
+        }
+        
+        return messages;
       }
+      
+      console.log(`⚠️ [TERMINAL] MessageService não disponível`);
       return [];
     } catch (error) {
       this.errorHandler.logError(error, 'MainController.getTodaysMessages');

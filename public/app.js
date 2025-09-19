@@ -392,21 +392,26 @@ class AutomationInterface {
             });
         }
 
+        // Sector filter
+        const sectorFilter = document.getElementById('sector-filter');
+        if (sectorFilter) {
+            sectorFilter.addEventListener('change', (e) => {
+                this.filterPatientsBySector(e.target.value);
+            });
+        } else {
+            console.error('❌ Select sector-filter não encontrado!');
+        }
+
         // Refresh status button
         const refreshStatusBtn = document.getElementById('refresh-status-btn');
         if (refreshStatusBtn) {
             refreshStatusBtn.addEventListener('click', () => {
                 this.loadStatus();
             });
+        } else {
+            console.error('❌ Botão refresh-status-btn não encontrado!');
         }
 
-        // Refresh metrics button
-        const refreshMetricsBtn = document.getElementById('refresh-metrics-btn');
-        if (refreshMetricsBtn) {
-            refreshMetricsBtn.addEventListener('click', () => {
-                this.loadMetrics();
-            });
-        }
 
         // Logs buttons
         const exportLogsBtn = document.getElementById('export-logs-btn');
@@ -501,7 +506,6 @@ class AutomationInterface {
         switch (route) {
             case 'dashboard':
                 this.loadStatus();
-                this.loadMetrics();
                 break;
             case 'atendimentos':
                 this.loadPatients();
@@ -519,7 +523,6 @@ class AutomationInterface {
                 this.checkFlowState();
                 break;
             case 'metricas':
-                this.loadMetrics();
                 // Always sync system status when loading metrics
                 this.checkFlowState();
                 break;
@@ -587,21 +590,25 @@ class AutomationInterface {
     }
 
     displayPatients(patients) {
-        const tbody = document.getElementById('patients-tbody');
-        if (!tbody) return;
+        try {
+            const tbody = document.getElementById('patients-tbody');
+            if (!tbody) {
+                return;
+            }
 
-        if (patients.length === 0) {
-            tbody.innerHTML = `
-                <tr>
-                    <td colspan="6" class="text-center text-muted py-4">
-                        Nenhum atendimento em espera
-                    </td>
-                </tr>
-            `;
-            return;
-        }
+            if (patients.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" class="text-center text-muted py-4">
+                            Nenhum atendimento em espera
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
 
-        tbody.innerHTML = patients.map(patient => `
+            tbody.innerHTML = patients.map(patient => {
+                return `
             <tr>
                 <td>
                     <input type="checkbox" class="form-check-input patient-checkbox" 
@@ -620,14 +627,15 @@ class AutomationInterface {
                 <td>
                     <span class="badge bg-warning">Aguardando</span>
                 </td>
-                <td>
-                    ${this.generateMessageSentInfo(patient)}
-                </td>
             </tr>
-        `).join('');
+        `;
+        }).join('');
 
-        // Adicionar event listeners para os checkboxes
-        this.setupPatientSelection();
+            // Adicionar event listeners para os checkboxes
+            this.setupPatientSelection();
+        } catch (error) {
+            console.error('Erro em displayPatients:', error);
+        }
     }
 
     /**
@@ -653,60 +661,9 @@ class AutomationInterface {
         
         // Usar description primeiro (que é o que a API retorna), depois name, title, com fallback para id
         const cardName = card.description || card.name || card.title || `Card ${cardId}`;
-        console.log(`✅ Action card encontrado: ${cardId} -> ${cardName}`);
         return cardName;
     }
 
-    /**
-     * Gera informação da mensagem enviada para um paciente
-     */
-    generateMessageSentInfo(patient) {
-        console.log(`🔍 Gerando info de mensagem para ${patient.name}:`, {
-            hasMessageSent: !!patient.messageSent,
-            hasLastMessageSent: !!patient.lastMessageSent,
-            lastMessageSent: patient.lastMessageSent
-        });
-        
-        // Verificar se o paciente tem informações de mensagem enviada
-        if (patient.messageSent) {
-            const messageInfo = patient.messageSent;
-            const cardName = this.getActionCardName(messageInfo.actionCardId);
-            
-            console.log(`✅ ${patient.name}: usando messageSent`);
-            return `
-                <div class="text-success">
-                    <div class="fw-bold">✅ Enviada</div>
-                    <small class="text-muted">${messageInfo.sentAtFormatted}</small>
-                    <br>
-                    <small class="text-info">${cardName}</small>
-                </div>
-            `;
-        }
-        
-        // Se não tem mensagem enviada, verificar se há mensagem no histórico
-        if (patient.lastMessageSent) {
-            const messageInfo = patient.lastMessageSent;
-            const cardName = this.getActionCardName(messageInfo.actionCardId);
-            
-            console.log(`✅ ${patient.name}: usando lastMessageSent - ${messageInfo.messageType}`);
-            return `
-                <div class="text-success">
-                    <div class="fw-bold">✅ Enviada</div>
-                    <small class="text-muted">${messageInfo.sentAtFormatted}</small>
-                    <br>
-                    <small class="text-info">${cardName}</small>
-                </div>
-            `;
-        }
-        
-        // Se não tem mensagem enviada
-        console.log(`❌ ${patient.name}: nenhuma mensagem encontrada`);
-        return `
-            <div class="text-muted">
-                <span class="badge bg-secondary">Não enviada</span>
-            </div>
-        `;
-    }
 
     /**
      * Gera informação da próxima mensagem para um paciente
@@ -907,19 +864,34 @@ class AutomationInterface {
             // Update total waiting patients
             const totalWaitingElement = document.getElementById('total-waiting');
             if (totalWaitingElement && statusData.monitoringStats) {
-                totalWaitingElement.textContent = statusData.monitoringStats.totalPatients || 0;
+                const value = statusData.monitoringStats.totalPatients || 0;
+                totalWaitingElement.textContent = value;
             }
 
             // Update 30min messages today
             const messages30MinElement = document.getElementById('messages-30min');
             if (messages30MinElement && statusData.monitoringStats) {
-                messages30MinElement.textContent = statusData.monitoringStats.patientsOver30Min || 0;
+                const value = statusData.monitoringStats.patientsOver30Min || 0;
+                if (value > 0) {
+                    messages30MinElement.textContent = value;
+                    messages30MinElement.className = 'h6 text-warning';
+                } else {
+                    messages30MinElement.textContent = 'Nenhum dado disponível';
+                    messages30MinElement.className = 'small text-muted';
+                }
             }
 
             // Update end of day messages
             const messagesEndDayElement = document.getElementById('messages-endday');
             if (messagesEndDayElement && statusData.monitoringStats) {
-                messagesEndDayElement.textContent = statusData.monitoringStats.patientsOver30Min || 0; // Using same data for now
+                const value = statusData.monitoringStats.patientsEndOfDay || 0;
+                if (value > 0) {
+                    messagesEndDayElement.textContent = value;
+                    messagesEndDayElement.className = 'h6 text-danger';
+                } else {
+                    messagesEndDayElement.textContent = 'Nenhum dado disponível';
+                    messagesEndDayElement.className = 'small text-muted';
+                }
             }
 
             // Update last check time
@@ -938,63 +910,7 @@ class AutomationInterface {
         }
     }
 
-    async loadMetrics() {
-        try {
-            const response = await fetch('/api/metrics');
-            const data = await response.json();
 
-            if (!response.ok) {
-                throw new Error(data.error || 'Erro ao carregar métricas');
-            }
-
-            // Update metrics elements with real data
-            this.updateDashboardMetricsData(data);
-
-        } catch (error) {
-            console.error('Erro ao carregar métricas:', error);
-            this.showError('Erro ao carregar métricas do sistema');
-        }
-    }
-
-    updateDashboardMetricsData(metricsData) {
-        try {
-            // Update messages sent
-            const messagesSentElement = document.getElementById('metrics-messages-sent');
-            if (messagesSentElement) {
-                const messagesSent = metricsData.messages?.totalSent || 0;
-                messagesSentElement.textContent = messagesSent;
-            }
-
-            // Update API calls
-            const apiCallsElement = document.getElementById('metrics-api-calls');
-            if (apiCallsElement) {
-                const apiCalls = (metricsData.system?.apiCallsSuccessful || 0) + (metricsData.system?.apiCallsFailed || 0);
-                apiCallsElement.textContent = apiCalls;
-            }
-
-            // Update average response time
-            const avgResponseElement = document.getElementById('metrics-avg-response');
-            if (avgResponseElement) {
-                const avgResponse = metricsData.system?.averageApiResponseTime || metricsData.messages?.averageResponseTime || 0;
-                avgResponseElement.textContent = `${Math.round(avgResponse)}ms`;
-            }
-
-            // Update error rate
-            const errorRateElement = document.getElementById('metrics-error-rate');
-            if (errorRateElement) {
-                const totalApiCalls = (metricsData.system?.apiCallsSuccessful || 0) + (metricsData.system?.apiCallsFailed || 0);
-                const errorRate = totalApiCalls > 0 ? 
-                    Math.round((metricsData.system?.apiCallsFailed || 0) / totalApiCalls * 100) : 0;
-                errorRateElement.textContent = `${errorRate}%`;
-            }
-
-            // Update detailed metrics if available
-            this.updateDetailedMetrics(metricsData);
-
-        } catch (error) {
-            console.error('Erro ao atualizar métricas do dashboard:', error);
-        }
-    }
 
     updateDetailedMetrics(metricsData) {
         try {
@@ -1076,7 +992,6 @@ class AutomationInterface {
 
     async loadActionCards() {
         try {
-            console.log('📋 Carregando cartões de ação...');
             
             const response = await fetch('/api/action-cards/available');
             const result = await response.json();
@@ -1091,7 +1006,6 @@ class AutomationInterface {
                 this.showWarning('Usando dados de exemplo - API não disponível');
             }
 
-            console.log(`📋 Carregados ${result.total || 0} cartões de ação`);
             this.displayActionCards(result.data || result);
             
             // Carregar configurações salvas dos cartões
@@ -1105,22 +1019,18 @@ class AutomationInterface {
 
     async loadSavedActionCardConfig() {
         try {
-            console.log('🔍 Carregando configurações salvas dos cartões...');
             const response = await fetch('/api/config');
             const result = await response.json();
 
-            console.log('📥 Resposta da API /api/config:', result);
 
             if (response.ok && result.success) {
                 const config = result.data;
-                console.log('📋 Configurações recebidas:', config);
                 
                 // Aplicar configurações salvas nos selects
                 if (config.selectedActionCard) {
                     const select = document.getElementById('action-card-select');
                     if (select) {
                         select.value = config.selectedActionCard;
-                        console.log('✅ Cartão geral carregado:', config.selectedActionCard);
                     } else {
                         console.warn('⚠️ Elemento action-card-select não encontrado');
                     }
@@ -1130,7 +1040,6 @@ class AutomationInterface {
                     const select = document.getElementById('action-card-30min-select');
                     if (select) {
                         select.value = config.selectedActionCard30Min;
-                        console.log('✅ Cartão 30min carregado:', config.selectedActionCard30Min);
                     } else {
                         console.warn('⚠️ Elemento action-card-30min-select não encontrado');
                     }
@@ -1140,13 +1049,11 @@ class AutomationInterface {
                     const select = document.getElementById('action-card-endday-select');
                     if (select) {
                         select.value = config.selectedActionCardEndDay;
-                        console.log('✅ Cartão fim de dia carregado:', config.selectedActionCardEndDay);
                     } else {
                         console.warn('⚠️ Elemento action-card-endday-select não encontrado');
                     }
                 }
                 
-                console.log('✅ Configurações de cartões de ação carregadas do backend');
             } else {
                 console.error('❌ Resposta inválida da API:', result);
             }
@@ -1190,13 +1097,11 @@ class AutomationInterface {
                     selectElement.appendChild(option);
                 });
                 
-                console.log(`📋 Exibindo ${actionCards.length} cartões de ação no seletor ${selectId}`);
             } else {
                 const option = document.createElement('option');
                 option.value = '';
                 option.textContent = 'Nenhum cartão disponível';
                 selectElement.appendChild(option);
-                console.log(`📋 Nenhum cartão de ação encontrado para ${selectId}`);
             }
         };
 
@@ -1867,16 +1772,13 @@ class AutomationInterface {
 
     async loadMessageConfig() {
         try {
-            console.log('📋 Carregando configurações de mensagem...');
             
             const response = await fetch('/api/config');
             const result = await response.json();
             
-            console.log('📥 Resposta da API /api/config (loadMessageConfig):', result);
             
             if (response.ok && result.success) {
                 const config = result.data;
-                console.log('📋 Configurações recebidas da API:', config);
                 
                 // Update action card selects
                 const actionCardSelect = document.getElementById('action-card-select');
@@ -1886,34 +1788,25 @@ class AutomationInterface {
                 if (actionCardSelect) {
                     if (config.selectedActionCard) {
                         actionCardSelect.value = config.selectedActionCard;
-                        console.log('✅ Action card geral selecionado:', config.selectedActionCard);
                     } else {
-                        console.log('⚠️ Nenhum action card geral selecionado');
                     }
                 } else {
-                    console.log('❌ Elemento action-card-select não encontrado');
                 }
 
                 if (actionCard30MinSelect) {
                     if (config.selectedActionCard30Min) {
                         actionCard30MinSelect.value = config.selectedActionCard30Min;
-                        console.log('✅ Action card 30min selecionado:', config.selectedActionCard30Min);
                     } else {
-                        console.log('⚠️ Nenhum action card 30min selecionado');
                     }
                 } else {
-                    console.log('❌ Elemento action-card-30min-select não encontrado');
                 }
 
                 if (actionCardEndDaySelect) {
                     if (config.selectedActionCardEndDay) {
                         actionCardEndDaySelect.value = config.selectedActionCardEndDay;
-                        console.log('✅ Action card fim de dia selecionado:', config.selectedActionCardEndDay);
                     } else {
-                        console.log('⚠️ Nenhum action card fim de dia selecionado');
                     }
                 } else {
-                    console.log('❌ Elemento action-card-endday-select não encontrado');
                 }
                 
                 console.log('✅ Configurações de mensagem carregadas:', config);
@@ -1946,25 +1839,13 @@ class AutomationInterface {
             const selectedActionCard30Min = actionCard30MinSelect ? actionCard30MinSelect.value : '';
             const selectedActionCardEndDay = actionCardEndDaySelect ? actionCardEndDaySelect.value : '';
             
-            console.log('📋 Valores selecionados no formulário:');
-            console.log('   Default:', selectedActionCard || '(vazio)');
-            console.log('   30Min:', selectedActionCard30Min || '(vazio)');
-            console.log('   EndDay:', selectedActionCardEndDay || '(vazio)');
             
-            console.log('📋 Valores atuais no sistema:');
-            console.log('   Default:', currentConfig.selectedActionCard || '(vazio)');
-            console.log('   30Min:', currentConfig.selectedActionCard30Min || '(vazio)');
-            console.log('   EndDay:', currentConfig.selectedActionCardEndDay || '(vazio)');
             
             // 2. Aplicar lógica: se não selecionou novo, manter o antigo
             const finalActionCard = selectedActionCard || currentConfig.selectedActionCard;
             const finalActionCard30Min = selectedActionCard30Min || currentConfig.selectedActionCard30Min;
             const finalActionCardEndDay = selectedActionCardEndDay || currentConfig.selectedActionCardEndDay;
             
-            console.log('💾 Valores finais que serão salvos:');
-            console.log('   Default:', finalActionCard || '(vazio)');
-            console.log('   30Min:', finalActionCard30Min || '(vazio)');
-            console.log('   EndDay:', finalActionCardEndDay || '(vazio)');
             
             // 3. Validar que pelo menos um está definido
             if (!finalActionCard && !finalActionCard30Min && !finalActionCardEndDay) {
@@ -2004,7 +1885,6 @@ class AutomationInterface {
                     endOfDay: finalActionCardEndDay
                 };
                 
-                console.log('📤 Enviando para /api/action-cards:', actionCardData);
                 response = await fetch('/api/action-cards', {
                     method: 'POST',
                     headers: {
@@ -2293,14 +2173,12 @@ class AutomationInterface {
         const actionCardSelect = document.getElementById('action-card-select');
         
         console.log('🔍 Verificando tipo de mensagem...');
-        console.log('Action card select:', actionCardSelect ? actionCardSelect.value : 'não encontrado');
         
         if (actionCardSelect && actionCardSelect.value) {
             const selectedOption = actionCardSelect.options[actionCardSelect.selectedIndex];
             messageTypeInfo.innerHTML = `Enviando <strong>Cartão de Ação</strong>: ${selectedOption.textContent}`;
             this.currentMessageType = 'action_card';
             this.currentMessageId = actionCardSelect.value;
-            console.log('✅ Tipo de mensagem definido como action_card:', this.currentMessageId);
         } else {
             messageTypeInfo.innerHTML = '<span class="text-warning">⚠️ Nenhum cartão de ação selecionado nas configurações</span>';
             this.currentMessageType = null;
@@ -2394,7 +2272,6 @@ class AutomationInterface {
                     patients,
                     action_card_id: this.currentMessageId
                 };
-                console.log('🔍 Action Card ID sendo enviado:', this.currentMessageId);
                 console.log('🔍 Payload completo:', payload);
             }
 
@@ -2708,49 +2585,12 @@ class AutomationInterface {
         this.startPatientDataRefresh(); // Iniciar atualização automática
     }
 
-    /**
-     * Carrega mensagens enviadas para os pacientes
-     */
-    async loadMessagesSentForPatients() {
-        try {
-            console.log('📨 Carregando histórico de mensagens enviadas...');
-            
-            // Buscar todas as mensagens enviadas hoje
-            const response = await fetch(`${this.apiBaseUrl}/messages/history`);
-            if (response.ok) {
-                const data = await response.json();
-                if (data.success && data.data) {
-                    const messagesHistory = data.data;
-                    console.log(`📨 ${messagesHistory.length} mensagens encontradas no histórico`);
-                    
-                    // Associar mensagens aos pacientes
-                    console.log(`🔍 Associando mensagens a ${this.patients.length} pacientes...`);
-                    for (const patient of this.patients) {
-                        const patientMessages = messagesHistory.filter(msg => msg.patientId === patient.id);
-                        console.log(`🔍 ${patient.name} (ID: ${patient.id}): ${patientMessages.length} mensagem(ns) encontrada(s)`);
-                        if (patientMessages.length > 0) {
-                            // Pegar a última mensagem enviada
-                            const lastMessage = patientMessages.sort((a, b) => new Date(b.sentAt) - new Date(a.sentAt))[0];
-                            patient.lastMessageSent = lastMessage;
-                            console.log(`✅ ${patient.name}: última mensagem ${lastMessage.messageType} em ${lastMessage.sentAtFormatted}`);
-                        }
-                    }
-                }
-            } else {
-                console.warn('⚠️ Não foi possível carregar histórico de mensagens');
-            }
-            
-        } catch (error) {
-            console.error('Erro ao carregar mensagens enviadas:', error);
-        }
-    }
 
     /**
      * Carrega dados dos pacientes da API
      */
     async loadPatients() {
         try {
-            console.log('Carregando dados dos pacientes...');
             
             const response = await fetch(`${this.apiBaseUrl}/patients`);
             if (!response.ok) {
@@ -2762,11 +2602,6 @@ class AutomationInterface {
             
             if (data.success && data.data) {
                 this.patients = data.data;
-                
-                // Buscar mensagens enviadas para cada paciente
-                console.log('🔄 Carregando mensagens enviadas...');
-                await this.loadMessagesSentForPatients();
-                console.log('✅ Mensagens enviadas carregadas');
                 
                 this.displayPatients(this.patients);
                 this.updateLastCheckTime();
@@ -2830,6 +2665,27 @@ class AutomationInterface {
         }).join('');
 
         this.setupPatientSelection();
+    }
+
+    /**
+     * Filtra pacientes por setor
+     */
+    filterPatientsBySector(sectorId) {
+        console.log('🔍 Filtrando pacientes por setor:', sectorId);
+        
+        if (!sectorId) {
+            // Mostrar todos os pacientes
+            this.displayPatients(this.patients);
+            return;
+        }
+        
+        // Filtrar pacientes pelo setor selecionado
+        const filteredPatients = this.patients.filter(patient => 
+            patient.sectorId === sectorId
+        );
+        
+        console.log(`📊 Filtrados ${filteredPatients.length} pacientes do setor ${sectorId}`);
+        this.displayPatients(filteredPatients);
     }
 
     /**

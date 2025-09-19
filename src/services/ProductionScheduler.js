@@ -140,7 +140,9 @@ class ProductionScheduler {
    */
   async handlePatientCheck() {
     try {
-      console.log('🔍 Executando verificação de pacientes...');
+      console.log('\n\n\n🔍 ===============================================');
+      console.log('   INICIANDO NOVO CICLO DE VERIFICAÇÃO');
+      console.log('===============================================');
       
       // Verificar se é horário comercial (considerando configuração ignoreBusinessHours)
       const ignoreBusinessHours = this.configManager.shouldIgnoreBusinessHours();
@@ -171,9 +173,12 @@ class ProductionScheduler {
         await this.handleEndOfDayMessages(checkResult.eligibleEndOfDay);
       }
       
-      console.log('✅ Verificação de pacientes concluída');
+      console.log('✅ CICLO DE VERIFICAÇÃO CONCLUÍDO');
+      console.log('===============================================\n');
       
     } catch (error) {
+      console.log('❌ ERRO NO CICLO DE VERIFICAÇÃO');
+      console.log('===============================================\n');
       this.errorHandler.logError(error, 'ProductionScheduler.handlePatientCheck');
     }
   }

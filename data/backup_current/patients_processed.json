@@ -1,50 +1,23 @@
 [
   {
-    "id": "68cadf7b8654a32c661363ca",
-    "name": "Gabriel",
-    "phone": "5511990075158",
+    "id": "68cc8754502643b3c4aa6a43",
+    "contactId": "6863f9b7762b73008f223c5e",
+    "name": "Felipe Prado",
+    "phone": "5516981892476",
     "sectorId": "6401f4f49b1ff8512b525e9c",
     "sectorName": "Suporte Telefonia",
     "channelId": "63e68f168a48875131856df8",
-    "channelType": "normal",
-    "waitStartTime": "2025-09-17T16:19:07.041Z",
-    "waitTimeMinutes": 104,
-    "enteredAt": "2025-09-17T18:40:57.813Z"
-  },
-  {
-    "id": "68cae641f22d799dcf67d677",
-    "name": "Marcus",
-    "phone": "5516991942267",
-    "sectorId": "6401f4f49b1ff8512b525e9c",
-    "sectorName": "Suporte Telefonia",
-    "channelId": "63e68f168a48875131856df8",
-    "channelType": "normal",
-    "waitStartTime": "2025-09-17T16:48:01.623Z",
-    "waitTimeMinutes": 115,
-    "enteredAt": "2025-09-17T18:44:13.434Z"
-  },
-  {
-    "id": "68cb000026180b5fa0ecef49",
-    "name": "Alan Lopes",
-    "phone": "5516981443200",
-    "sectorId": "6400efb5343817d4ddbb2a4c",
-    "sectorName": "Suporte CAM",
-    "channelId": "63e68f168a48875131856df8",
-    "channelType": "normal",
-    "waitStartTime": "2025-09-17T18:37:52.526Z",
-    "waitTimeMinutes": 14,
-    "enteredAt": "2025-09-17T18:53:24.530Z"
-  },
-  {
-    "id": "68cb01c4e74cafc575221731",
-    "name": "Leticia Lira",
-    "phone": "5521996443939",
-    "sectorId": "6400efb5343817d4ddbb2a4c",
-    "sectorName": "Suporte CAM",
-    "channelId": "63e68f168a48875131856df8",
-    "channelType": "normal",
-    "waitStartTime": "2025-09-17T18:45:24.187Z",
-    "waitTimeMinutes": 11,
-    "enteredAt": "2025-09-17T18:57:31.417Z"
+    "channelType": "WhatsApp Business (Principal)",
+    "waitStartTime": "2025-09-18T22:27:32.781Z",
+    "waitTimeMinutes": 173,
+    "status": "waiting",
+    "enteredAt": "2025-09-19T00:56:00.972Z",
+    "messageSent": {
+      "actionCardId": "68cbfa96b8640e9721e4feab",
+      "messageType": "30min",
+      "sentAt": "2025-09-19T01:22:00.503Z",
+      "sentAtFormatted": "18/09/2025, 22:22:00"
+    },
+    "processedAt": "2025-09-19T01:22:01.035Z"
   }
 ]

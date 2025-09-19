@@ -262,7 +262,7 @@ app.post('/api/logs/clear', (req, res) => {
 // Pacientes em espera
 app.get('/api/patients', async (req, res) => {
   try {
-    console.log('📋 API: Buscando pacientes na API CAM Krolik...');
+    console.log('\n\n\n\n\n\n📋 API: Buscando pacientes na API CAM Krolik...');
     
     // Buscar pacientes reais da API CAM Krolik
     const patients = await krolikApiClient.listWaitingAttendances();
@@ -369,24 +369,7 @@ app.get('/api/channels', async (req, res) => {
 // Métricas do sistema
 app.get('/api/metrics', async (req, res) => {
   try {
-    const metrics = {
-      system: {
-        uptime: process.uptime(),
-        memory: process.memoryUsage(),
-        version: '1.0.0-js'
-      },
-      messages: {
-        sent: 0,
-        failed: 0,
-        pending: 0
-      },
-      patients: {
-        active: 0,
-        processed: 0,
-        waiting: 0
-      }
-    };
-    
+    const metrics = await mainController.getMetrics();
     res.json({
       success: true,
       data: metrics,
@@ -398,14 +381,29 @@ app.get('/api/metrics', async (req, res) => {
   }
 });
 
+// Endpoint para debug de logs do frontend
+app.post('/api/debug-log', (req, res) => {
+  try {
+    const { message, hasMessageSent, hasLastMessageSent } = req.body;
+    console.log(`🔍 [DEBUG] ${message}`);
+    console.log(`   - hasMessageSent: ${hasMessageSent}`);
+    console.log(`   - hasLastMessageSent: ${hasLastMessageSent}`);
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 // Obter histórico de mensagens enviadas
 app.get('/api/messages/history', async (req, res) => {
   try {
     const patientId = req.query.patientId;
+    console.log(`\n\n\n\n\n\n🌐 [TERMINAL] API /api/messages/history chamada - patientId: ${patientId || 'todos'}`);
     
     if (patientId) {
       // Buscar mensagens para um paciente específico
       const messageHistory = mainController.getMessageHistoryForPatient(patientId);
+      console.log(`📤 [TERMINAL] Retornando ${messageHistory.length} mensagens para paciente ${patientId}`);
       res.json({
         success: true,
         data: messageHistory,
@@ -414,6 +412,7 @@ app.get('/api/messages/history', async (req, res) => {
     } else {
       // Buscar todas as mensagens do dia
       const todaysMessages = mainController.getTodaysMessages();
+      console.log(`📤 [TERMINAL] Retornando ${todaysMessages.length} mensagens do dia`);
       res.json({
         success: true,
         data: todaysMessages,
@@ -421,7 +420,7 @@ app.get('/api/messages/history', async (req, res) => {
       });
     }
   } catch (error) {
-    console.error('Erro ao obter histórico de mensagens:', error);
+    console.error('❌ [TERMINAL] Erro ao obter histórico de mensagens:', error);
     res.status(500).json({ 
       success: false,
       error: 'Erro ao obter histórico de mensagens',

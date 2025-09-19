@@ -1,17 +1,17 @@
 [
   {
-    "id": "68cc8754502643b3c4aa6a43",
+    "id": "68ccd82fc7470630be58881e",
     "contactId": "6863f9b7762b73008f223c5e",
     "name": "Felipe Prado",
     "phone": "5516981892476",
-    "sectorId": "6401f4f49b1ff8512b525e9c",
-    "sectorName": "Suporte Telefonia",
+    "sectorId": "64d4db384f04cb80ac059912",
+    "sectorName": "Suporte Geral",
     "channelId": "63e68f168a48875131856df8",
     "channelType": "WhatsApp Business (Principal)",
-    "waitStartTime": "2025-09-18T22:27:32.781Z",
-    "waitTimeMinutes": 148,
+    "waitStartTime": "2025-09-19T04:12:31.329Z",
+    "waitTimeMinutes": 6,
     "status": "waiting",
-    "enteredAt": "2025-09-19T00:56:00.972Z"
+    "enteredAt": "2025-09-19T04:13:01.353Z"
   },
   {
     "id": "68cc6764854917a269feb2b2",
@@ -23,7 +23,7 @@
     "channelId": "63e68f168a48875131856df8",
     "channelType": "WhatsApp Business (Principal)",
     "waitStartTime": "2025-09-18T20:11:16.075Z",
-    "waitTimeMinutes": 283,
+    "waitTimeMinutes": 484,
     "status": "waiting",
     "enteredAt": "2025-09-19T00:34:01.217Z"
   },
@@ -37,7 +37,7 @@
     "channelId": "63e68f168a48875131856df8",
     "channelType": "WhatsApp Business (Principal)",
     "waitStartTime": "2025-09-18T19:04:51.161Z",
-    "waitTimeMinutes": 304,
+    "waitTimeMinutes": 506,
     "status": "waiting",
     "enteredAt": "2025-09-19T00:34:01.217Z"
   },
@@ -51,7 +51,7 @@
     "channelId": "63e68f168a48875131856df8",
     "channelType": "WhatsApp Business (Principal)",
     "waitStartTime": "2025-09-18T18:17:01.654Z",
-    "waitTimeMinutes": 274,
+    "waitTimeMinutes": 476,
     "status": "waiting",
     "enteredAt": "2025-09-19T00:34:01.217Z"
   },
@@ -65,7 +65,7 @@
     "channelId": "63e68f168a48875131856df8",
     "channelType": "WhatsApp Business (Principal)",
     "waitStartTime": "2025-09-18T15:11:45.776Z",
-    "waitTimeMinutes": 435,
+    "waitTimeMinutes": 637,
     "status": "waiting",
     "enteredAt": "2025-09-19T00:34:01.217Z"
   },
@@ -79,7 +79,7 @@
     "channelId": "63e68f168a48875131856df8",
     "channelType": "WhatsApp Business (Principal)",
     "waitStartTime": "2025-09-18T11:28:57.776Z",
-    "waitTimeMinutes": 441,
+    "waitTimeMinutes": 643,
     "status": "waiting",
     "enteredAt": "2025-09-19T00:34:01.217Z"
   }

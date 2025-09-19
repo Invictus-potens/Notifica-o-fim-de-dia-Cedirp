@@ -65,7 +65,7 @@ class MonitoringService {
         throw new Error('MonitoringService não inicializado ou API não disponível');
       }
 
-      console.log('🔍 Verificando pacientes elegíveis...');
+      console.log('🔍 Verificando pacientes elegíveis...\n');
       
       // 1. Buscar pacientes atuais da API
       const apiPatients = await this.krolikApiClient.listWaitingAttendances();
