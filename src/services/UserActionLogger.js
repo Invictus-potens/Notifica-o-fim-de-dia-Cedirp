@@ -97,7 +97,7 @@ class UserActionLogger {
       let logs = await this.loadLogs();
       
       // Aplicar filtros
-      if (filters.level) {
+      if (filters.level && filters.level.trim() !== '') {
         logs = logs.filter(log => log.level === filters.level.toLowerCase());
       }
       

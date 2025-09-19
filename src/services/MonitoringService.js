@@ -8,9 +8,10 @@ const { TimeUtils } = require('../utils/TimeUtils');
  * Responsável por verificar pacientes elegíveis e coordenar o envio de mensagens
  */
 class MonitoringService {
-  constructor(errorHandler, configManager) {
+  constructor(errorHandler, configManager, messageService = null) {
     this.errorHandler = errorHandler;
     this.configManager = configManager;
+    this.messageService = messageService; // Receber MessageService para evitar duplicação
     this.jsonPatientManager = new JsonPatientManager(errorHandler);
     this.krolikApiClient = null; // Será inicializado com credenciais
     
@@ -241,6 +242,11 @@ class MonitoringService {
    */
   async sendMessagesToEligiblePatients(eligiblePatients, messageType = '30min') {
     try {
+      // VALIDAÇÃO RIGOROSA: Apenas 30min e end_of_day são permitidos
+      if (messageType !== '30min' && messageType !== 'end_of_day') {
+        throw new Error(`Tipo de mensagem não permitido: ${messageType}. Apenas '30min' e 'end_of_day' são permitidos.`);
+      }
+      
       if (!this.krolikApiClient) {
         throw new Error('KrolikApiClient não inicializado');
       }
@@ -255,26 +261,28 @@ class MonitoringService {
       
       for (const patient of eligiblePatients) {
         try {
-          // Preparar payload para envio
-          const payload = {
-            number: patient.phone,
-            contactId: patient.contactId,
-            action_card_id: this.configManager.get30MinActionCardId(), // ID do action card para 30min
-            forceSend: true
-          };
+          // Verificar se MessageService está disponível
+          if (!this.messageService) {
+            throw new Error('MessageService não está disponível');
+          }
           
-          // Enviar mensagem
-          await this.krolikApiClient.sendActionCard(payload);
+          // Enviar mensagem através do MessageService (evita duplicação)
+          const actionCardId = this.configManager.get30MinActionCardId();
+          const result = await this.messageService.sendActionCard(patient, actionCardId, true, messageType);
           
-          // Marcar como processado
-          await this.jsonPatientManager.markPatientAsProcessed(patient.id);
-          
-          // Adicionar à lista de exclusões
-          const patientKey = this.jsonPatientManager.getPatientKey(patient);
-          this.configManager.addToExclusionList(patientKey);
-          
-          results.sent++;
-          console.log(`✅ Mensagem enviada para ${patient.name} (${patient.phone})`);
+          if (result.success) {
+            // Marcar como processado
+            await this.jsonPatientManager.markPatientAsProcessed(patient.id);
+            
+            // Adicionar à lista de exclusões
+            const patientKey = this.jsonPatientManager.getPatientKey(patient);
+            this.configManager.addToExclusionList(patientKey);
+            
+            results.sent++;
+            console.log(`✅ Mensagem enviada para ${patient.name} (${patient.phone})`);
+          } else {
+            throw new Error(result.error || 'Falha no envio');
+          }
           
           // Pequena pausa entre envios para evitar spam
           await new Promise(resolve => setTimeout(resolve, 1000));

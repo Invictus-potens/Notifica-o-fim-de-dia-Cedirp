@@ -39,8 +39,8 @@ class ProductionScheduler {
       console.log('🔧 Inicializando ProductionScheduler...');
       
       // Inicializar serviços
-      this.monitoringService = new MonitoringService(this.errorHandler, this.configManager);
       this.messageService = new MessageService(this.errorHandler, this.configManager);
+      this.monitoringService = new MonitoringService(this.errorHandler, this.configManager, this.messageService);
       this.cronService = new CronService(this.errorHandler);
       
       // Inicializar serviços individuais

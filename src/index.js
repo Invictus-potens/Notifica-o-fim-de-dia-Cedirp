@@ -259,15 +259,67 @@ app.post('/api/logs/clear', (req, res) => {
   }
 });
 
-// Pacientes em espera
+// Pacientes em espera (busca da API CAM Krolik e sincroniza com arquivo local)
 app.get('/api/patients', async (req, res) => {
   try {
-    console.log('\n\n\n\n\n\n📋 API: Buscando pacientes na API CAM Krolik...');
+    console.log('📋 API: Buscando pacientes da API CAM Krolik...');
+    
+    // Buscar pacientes reais da API CAM Krolik
+    const livePatients = await krolikApiClient.listWaitingAttendances();
+    console.log(`📋 API: Encontrados ${livePatients.length} pacientes na API CAM Krolik`);
+    
+    // Atualizar arquivo local com dados da API
+    if (livePatients.length > 0) {
+      await mainController.jsonPatientManager.updateActivePatients(livePatients);
+      console.log(`📋 API: Arquivo local atualizado com ${livePatients.length} pacientes`);
+    }
+    
+    // Retornar dados atualizados
+    res.json({
+      success: true,
+      data: livePatients,
+      total: livePatients.length,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('Erro ao buscar pacientes:', error);
+    
+    // Fallback: tentar dados locais se API falhar
+    try {
+      console.log('📋 API: Tentando fallback para dados locais...');
+      const localPatients = await mainController.jsonPatientManager.loadPatientsFromFile(
+        mainController.jsonPatientManager.files.active
+      );
+      
+      res.json({
+        success: true,
+        data: localPatients,
+        total: localPatients.length,
+        timestamp: new Date().toISOString(),
+        fallback: true
+      });
+    } catch (fallbackError) {
+      res.status(500).json({ 
+        success: false,
+        error: 'Erro ao buscar pacientes da API CAM Krolik e dados locais',
+        message: error.message,
+        data: [],
+        total: 0,
+        timestamp: new Date().toISOString()
+      });
+    }
+  }
+});
+
+// Pacientes em espera (dados diretos da API CAM Krolik)
+app.get('/api/patients/live', async (req, res) => {
+  try {
+    console.log('📋 API: Buscando pacientes na API CAM Krolik...');
     
     // Buscar pacientes reais da API CAM Krolik
     const patients = await krolikApiClient.listWaitingAttendances();
     
-    console.log(`📋 API: Retornando ${patients.length} pacientes`);
+    console.log(`📋 API: Retornando ${patients.length} pacientes da API CAM Krolik`);
     res.json({
       success: true,
       data: patients,
@@ -275,7 +327,7 @@ app.get('/api/patients', async (req, res) => {
       timestamp: new Date().toISOString()
     });
   } catch (error) {
-    console.error('Erro ao buscar pacientes:', error);
+    console.error('Erro ao buscar pacientes da API CAM Krolik:', error);
     res.status(500).json({ 
       success: false,
       error: 'Erro ao buscar pacientes da API CAM Krolik',

@@ -9,9 +9,37 @@
     "channelId": "63e68f168a48875131856df8",
     "channelType": "WhatsApp Business (Principal)",
     "waitStartTime": "2025-09-19T13:20:25.923Z",
-    "waitTimeMinutes": 32,
+    "waitTimeMinutes": 100,
     "status": "waiting",
     "enteredAt": "2025-09-19T13:55:01.173Z"
+  },
+  {
+    "id": "68cd5393cd7eca0c249dcac7",
+    "contactId": "66265fec0067060a1d0eb86d",
+    "name": "Leandro 💀",
+    "phone": "5521970070632",
+    "sectorId": "6401f4f49b1ff8512b525e9c",
+    "sectorName": "Suporte Telefonia",
+    "channelId": "63e68f168a48875131856df8",
+    "channelType": "WhatsApp Business (Principal)",
+    "waitStartTime": "2025-09-19T12:58:59.090Z",
+    "waitTimeMinutes": 33,
+    "status": "waiting",
+    "enteredAt": "2025-09-19T15:00:09.347Z"
+  },
+  {
+    "id": "68cc415849547237fc47b342",
+    "contactId": "67599b5e277827c7191c589d",
+    "name": "Nikolas",
+    "phone": "5511930058665",
+    "sectorId": "6401f4f49b1ff8512b525e9c",
+    "sectorName": "Suporte Telefonia",
+    "channelId": "63e68f168a48875131856df8",
+    "channelType": "WhatsApp Business (Principal)",
+    "waitStartTime": "2025-09-18T17:28:56.751Z",
+    "waitTimeMinutes": 195,
+    "status": "waiting",
+    "enteredAt": "2025-09-19T14:30:00.548Z"
   },
   {
     "id": "68cbecf9a56a3d64bbba352a",
@@ -23,7 +51,7 @@
     "channelId": "63e68f168a48875131856df8",
     "channelType": "WhatsApp Business (Principal)",
     "waitStartTime": "2025-09-18T11:28:57.776Z",
-    "waitTimeMinutes": 1220,
+    "waitTimeMinutes": 1287,
     "status": "waiting",
     "enteredAt": "2025-09-19T00:34:01.217Z"
   }

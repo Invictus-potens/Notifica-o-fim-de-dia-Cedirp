@@ -52,7 +52,7 @@ class MessageService {
   /**
    * Envia action card para um paciente
    */
-  async sendActionCard(patient, actionCardId = null, forceSend = true) {
+  async sendActionCard(patient, actionCardId = null, forceSend = true, messageType = 'manual') {
     try {
       if (!this.krolikApiClient) {
         throw new Error('KrolikApiClient não inicializado');
@@ -94,7 +94,7 @@ class MessageService {
         patientName: patient.name,
         patientPhone: patient.phone,
         actionCardId: cardId,
-        messageType: 'manual', // Apenas para envios manuais via API
+        messageType: messageType, // Usar tipo fornecido como parâmetro
         sentAt: new Date(),
         success: true
       });
@@ -105,7 +105,7 @@ class MessageService {
       await this.userActionLogger.logAutomaticMessage(
         patient.name,
         cardId,
-        messageData.messageType || 'automática',
+        messageType,
         true,
         {
           patientPhone: patient.phone,

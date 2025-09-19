@@ -59,9 +59,21 @@
       "sentAtFormatted": "19/09/2025, 10:54:00",
       "success": true,
       "createdAt": "2025-09-19T13:54:01.173Z"
+    },
+    {
+      "id": "msg_1758294000973_lfoopr48x",
+      "patientId": "68cd5393cd7eca0c249dcac7",
+      "patientName": "Leandro 💀",
+      "patientPhone": "5521970070632",
+      "actionCardId": "68cbfa96b8640e9721e4feab",
+      "messageType": "30min",
+      "sentAt": "2025-09-19T15:00:00.561Z",
+      "sentAtFormatted": "19/09/2025, 12:00:00",
+      "success": true,
+      "createdAt": "2025-09-19T15:00:00.974Z"
     }
   ],
   "lastCleanup": null,
-  "totalSent": 5,
+  "totalSent": 6,
   "createdAt": "2025-09-19T00:45:57.736Z"
 }

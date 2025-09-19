@@ -42,7 +42,7 @@ class AutomationInterface {
         }
     }
 
-    initializeApp() {
+    async initializeApp() {
         try {
             console.log('Inicializando aplicação...');
             this.setupEventListeners();
@@ -55,10 +55,8 @@ class AutomationInterface {
             this.initializeMetricsTab(); // Inicializar aba Métricas
             this.initializeLogsTab(); // Inicializar aba Logs
             this.startRealtimeTimer(); // Iniciar timer em tempo real
-            // Carregar configurações do sistema
-            this.loadSystemConfig();
-            // Carregar action cards para nomes corretos
-            this.loadActionCards();
+            // Carregar configurações do sistema ANTES de outras operações
+            await this.loadSystemConfig();
             // Iniciar timer para atualizar countdowns
             this.startCountdownTimer();
             
@@ -692,7 +690,7 @@ class AutomationInterface {
         if (!endOfDayPaused && currentHour >= 17 && currentHour < 18) {
             const endOfDayTime = new Date(now);
             // Usar configuração dinâmica do sistema
-            const endHour = parseInt(systemConfig?.endOfDayTime?.split(':')[0] || '18');
+            const endHour = parseInt(this.systemConfig?.endOfDayTime?.split(':')[0] || '18');
             endOfDayTime.setHours(endHour, 0, 0, 0);
             const timeRemaining = endOfDayTime.getTime() - now.getTime();
             const minutes = Math.floor(timeRemaining / 60000);
@@ -708,8 +706,8 @@ class AutomationInterface {
         }
         
         // Verificar se está fora do horário comercial (apenas se ignoreBusinessHours for false)
-        const startHour = parseInt(systemConfig?.startOfDayTime?.split(':')[0] || '8');
-        const endHour = parseInt(systemConfig?.endOfDayTime?.split(':')[0] || '18');
+        const startHour = parseInt(this.systemConfig?.startOfDayTime?.split(':')[0] || '8');
+        const endHour = parseInt(this.systemConfig?.endOfDayTime?.split(':')[0] || '18');
         if (!ignoreBusinessHours && (currentHour < startHour || currentHour >= endHour)) {
             return `
                 <div class="text-warning">
@@ -768,7 +766,9 @@ class AutomationInterface {
                         ignoreBusinessHours: data.data.ignoreBusinessHours === 'true' || data.data.ignoreBusinessHours === true,
                         endOfDayPaused: data.data.endOfDayPaused === 'true' || data.data.endOfDayPaused === true,
                         selectedActionCard30Min: data.data.selectedActionCard30Min,
-                        selectedActionCardEndDay: data.data.selectedActionCardEndDay
+                        selectedActionCardEndDay: data.data.selectedActionCardEndDay,
+                        startOfDayTime: data.data.startOfDayTime || '08:00',
+                        endOfDayTime: data.data.endOfDayTime || '18:00'
                     };
                     console.log('✅ Configurações carregadas:', this.systemConfig);
                 }
@@ -782,7 +782,9 @@ class AutomationInterface {
                 ignoreBusinessHours: false,
                 endOfDayPaused: true,
                 selectedActionCard30Min: '68cbfa96b8640e9721e4feab',
-                selectedActionCardEndDay: '631f2b4f307d23f46ac80a2b'
+                selectedActionCardEndDay: '631f2b4f307d23f46ac80a2b',
+                startOfDayTime: '08:00',
+                endOfDayTime: '18:00'
             };
         }
     }
@@ -2105,6 +2107,106 @@ class AutomationInterface {
         }
     }
 
+    navigateToRoute(route) {
+        try {
+            // Hide all route contents
+            document.querySelectorAll('.route-content').forEach(content => {
+                content.classList.remove('active');
+            });
+
+            // Remove active class from all nav links
+            document.querySelectorAll('.nav-link').forEach(link => {
+                link.classList.remove('active');
+            });
+
+            // Show selected route content
+            const routeContent = document.getElementById(`${route}-route`);
+            if (routeContent) {
+                routeContent.classList.add('active');
+            } else {
+                console.error(`Conteúdo da rota não encontrado: ${route}-route`);
+                return;
+            }
+
+            // Add active class to nav link
+            const navLink = document.querySelector(`[data-route="${route}"]`);
+            if (navLink) {
+                navLink.classList.add('active');
+            }
+
+            // Update page title
+            const titles = {
+                'dashboard': 'Dashboard',
+                'atendimentos': 'Atendimentos',
+                'controle': 'Controle do Fluxo',
+                'configuracoes': 'Configurações',
+                'logs': 'Logs do Sistema',
+                'metricas': 'Métricas',
+                'sistema': 'Sistema'
+            };
+
+            const pageTitle = document.getElementById('page-title');
+            if (pageTitle && titles[route]) {
+                pageTitle.textContent = titles[route];
+            }
+
+            // Update URL hash
+            window.location.hash = route;
+
+            // Update current route
+            this.currentRoute = route;
+
+            // Show/hide real-time timer based on route
+            const realtimeTimer = document.getElementById('realtime-timer');
+            if (realtimeTimer) {
+                if (route === 'dashboard') {
+                    realtimeTimer.style.display = 'flex';
+                } else {
+                    realtimeTimer.style.display = 'none';
+                }
+            }
+
+            // Carregar dados específicos da rota
+            this.handleRouteSpecificActions(route);
+
+        } catch (error) {
+            console.error('Erro na navegação:', error);
+        }
+    }
+
+    handleRouteSpecificActions(route) {
+        switch (route) {
+            case 'logs':
+                // Carregar logs sempre que a aba for acessada
+                console.log('📋 Carregando logs da aba Logs...');
+                if (this.loadUserLogs) {
+                    this.loadUserLogs();
+                }
+                break;
+            case 'metricas':
+                // Carregar métricas sempre que a aba for acessada
+                console.log('📊 Carregando métricas da aba Métricas...');
+                if (this.loadMetrics) {
+                    this.loadMetrics();
+                }
+                break;
+            case 'atendimentos':
+                // Carregar pacientes sempre que a aba for acessada
+                console.log('👥 Carregando pacientes da aba Atendimentos...');
+                if (this.loadPatients) {
+                    this.loadPatients();
+                }
+                break;
+            case 'sistema':
+                // Carregar configurações sempre que a aba for acessada
+                console.log('⚙️ Carregando configurações da aba Sistema...');
+                if (this.loadSystemConfig) {
+                    this.loadSystemConfig();
+                }
+                break;
+        }
+    }
+
     // Métodos para gerenciar seleção de pacientes
     initializePatientSelection() {
         this.selectedPatients = [];
@@ -2665,37 +2767,6 @@ class AutomationInterface {
     }
 
 
-    /**
-     * Carrega dados dos pacientes da API
-     */
-    async loadPatients() {
-        try {
-            
-            const response = await fetch(`${this.apiBaseUrl}/patients`);
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            
-            const data = await response.json();
-            console.log('Dados dos pacientes recebidos:', data);
-            
-            if (data.success && data.data) {
-                this.patients = data.data;
-                
-                this.displayPatients(this.patients);
-                this.updateLastCheckTime();
-                
-                // Countdown já está integrado na renderização
-            } else {
-                console.warn('Formato de dados inesperado:', data);
-                this.displayPatients([]);
-            }
-            
-        } catch (error) {
-            console.error('Erro ao carregar pacientes:', error);
-            this.displayPatients([]);
-        }
-    }
 
     /**
      * Exibe pacientes na tabela
@@ -3524,12 +3595,23 @@ class AutomationInterface {
         try {
             const level = this.logsElements.levelFilter?.value || '';
             
-            const response = await fetch(`/api/logs/user?level=${level}&limit=100`);
+            // Construir URL com parâmetros condicionais
+            let url = '/api/logs/user?limit=100';
+            if (level && level.trim() !== '') {
+                url += `&level=${encodeURIComponent(level)}`;
+            }
+            
+            console.log(`📋 Carregando logs com URL: ${url}`);
+            
+            const response = await fetch(url);
             const result = await response.json();
+            
+            console.log(`📋 Resposta da API:`, result);
             
             if (response.ok && result.success) {
                 this.displayUserLogs(result.data);
             } else {
+                console.error('Erro na resposta da API:', result);
                 this.displayUserLogs([]);
             }
         } catch (error) {
