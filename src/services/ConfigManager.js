@@ -7,6 +7,7 @@
  * @property {string} [selectedActionCard30Min] - Action card para 30min
  * @property {string} [selectedActionCardEndDay] - Action card para fim do dia
  * @property {string} [selectedTemplate] - Template selecionado
+ * @property {string} startOfDayTime - Horário de início de expediente
  * @property {string} endOfDayTime - Horário de fim de expediente
  */
 
@@ -46,6 +47,7 @@ class ConfigManager {
       selectedActionCard30Min: undefined,
       selectedActionCardEndDay: undefined,
       selectedTemplate: undefined,
+      startOfDayTime: '08:00',
       endOfDayTime: '18:00',
       logCleanupTime: '02:00'
     };
@@ -89,6 +91,7 @@ class ConfigManager {
           selectedActionCard30Min: parsedConfig.selectedActionCard30Min || '631f2b4f307d23f46ac80a2b',
           selectedActionCardEndDay: parsedConfig.selectedActionCardEndDay || '631f2b4f307d23f46ac80a2b',
           selectedTemplate: parsedConfig.selectedTemplate || '',
+          startOfDayTime: parsedConfig.startOfDayTime || '08:00',
           endOfDayTime: parsedConfig.endOfDayTime || '18:00',
           logCleanupTime: parsedConfig.logCleanupTime || '02:00'
         };
@@ -123,6 +126,7 @@ class ConfigManager {
           selectedActionCard30Min: '631f2b4f307d23f46ac80a2b',
           selectedActionCardEndDay: '631f2b4f307d23f46ac80a2b',
           selectedTemplate: '',
+          startOfDayTime: '08:00',
           endOfDayTime: '18:00',
           logCleanupTime: '02:00'
         };
@@ -233,6 +237,22 @@ class ConfigManager {
   }
 
   /**
+   * Obtém o horário de início do dia configurado
+   * @returns {string} Horário no formato HH:MM
+   */
+  getStartOfDayTime() {
+    return this.systemConfig.startOfDayTime || '08:00';
+  }
+
+  /**
+   * Obtém o horário de fim do dia configurado
+   * @returns {string} Horário no formato HH:MM
+   */
+  getEndOfDayTime() {
+    return this.systemConfig.endOfDayTime || '18:00';
+  }
+
+  /**
    * Obtém o horário de limpeza de logs configurado
    * @returns {string} Horário no formato HH:MM
    */
@@ -324,6 +344,7 @@ class ConfigManager {
         selectedActionCard30Min: this.systemConfig.selectedActionCard30Min,
         selectedActionCardEndDay: this.systemConfig.selectedActionCardEndDay,
         selectedTemplate: this.systemConfig.selectedTemplate,
+        startOfDayTime: this.systemConfig.startOfDayTime,
         endOfDayTime: this.systemConfig.endOfDayTime,
         logCleanupTime: this.systemConfig.logCleanupTime
       };

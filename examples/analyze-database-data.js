@@ -29,6 +29,7 @@ async function analyzeDatabaseData() {
     console.log('   - excludedChannels: string[] (canais excluídos)');
     console.log('   - selectedActionCard: string (cartão de ação selecionado)');
     console.log('   - selectedTemplate: string (template selecionado)');
+    console.log('   - startOfDayTime: string (horário de início de dia)');
     console.log('   - endOfDayTime: string (horário de fim de dia)');
     
     const configResponse = await axios.get(`${LOCAL_API_CONFIG.baseUrl}/api/config`);
@@ -38,6 +39,7 @@ async function analyzeDatabaseData() {
     console.log(`   - Canais excluídos: ${configResponse.data.excludedChannels.length} canais`);
     console.log(`   - Cartão de ação: ${configResponse.data.selectedActionCard || 'Nenhum'}`);
     console.log(`   - Template: ${configResponse.data.selectedTemplate || 'Nenhum'}`);
+    console.log(`   - Horário início de dia: ${configResponse.data.startOfDayTime}`);
     console.log(`   - Horário fim de dia: ${configResponse.data.endOfDayTime}`);
 
     // 2. Verificar dados de exclusão

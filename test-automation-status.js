@@ -63,6 +63,7 @@ async function testAutomationStatus() {
       console.log(`   ⏰ Tempo máximo de espera: ${config.maxWaitTime} min`);
       console.log(`   🕐 Ignorar horário comercial: ${config.ignoreBusinessHours ? 'Sim' : 'Não'}`);
       console.log(`   🌅 Fim de dia pausado: ${config.endOfDayPaused ? 'Sim' : 'Não'}`);
+      console.log(`   🕐 Horário início de dia: ${config.startOfDayTime}`);
       console.log(`   🕐 Horário fim de dia: ${config.endOfDayTime}`);
       console.log(`   📋 Action Card 30min: ${config.selectedActionCard30Min || 'Não configurado'}`);
       console.log(`   📋 Action Card Fim de Dia: ${config.selectedActionCardEndDay || 'Não configurado'}`);

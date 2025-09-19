@@ -51,6 +51,7 @@ class AutomationInterface {
             this.initializeFlowControl();
             this.initializePatientSelection();
             this.initializePatientData();
+            this.initializeSystemTab(); // Inicializar aba Sistema
             this.startRealtimeTimer(); // Iniciar timer em tempo real
             // Carregar configurações do sistema
             this.loadSystemConfig();
@@ -688,7 +689,9 @@ class AutomationInterface {
         // Verificar se mensagem de fim de dia está ativa e se é hora (17h55-18h00)
         if (!endOfDayPaused && currentHour >= 17 && currentHour < 18) {
             const endOfDayTime = new Date(now);
-            endOfDayTime.setHours(18, 0, 0, 0);
+            // Usar configuração dinâmica do sistema
+            const endHour = parseInt(systemConfig?.endOfDayTime?.split(':')[0] || '18');
+            endOfDayTime.setHours(endHour, 0, 0, 0);
             const timeRemaining = endOfDayTime.getTime() - now.getTime();
             const minutes = Math.floor(timeRemaining / 60000);
             const seconds = Math.floor((timeRemaining % 60000) / 1000);
@@ -703,7 +706,9 @@ class AutomationInterface {
         }
         
         // Verificar se está fora do horário comercial (apenas se ignoreBusinessHours for false)
-        if (!ignoreBusinessHours && (currentHour < 8 || currentHour >= 18)) {
+        const startHour = parseInt(systemConfig?.startOfDayTime?.split(':')[0] || '8');
+        const endHour = parseInt(systemConfig?.endOfDayTime?.split(':')[0] || '18');
+        if (!ignoreBusinessHours && (currentHour < startHour || currentHour >= endHour)) {
             return `
                 <div class="text-warning">
                     <div class="fw-bold">Fora do horário</div>
@@ -2003,6 +2008,60 @@ class AutomationInterface {
         }
     }
 
+    showNotification(message, type = 'info') {
+        // Create toast notification
+        const toastContainer = document.getElementById('toast-container');
+        if (toastContainer) {
+            let icon, bgColor, textColor, title;
+            
+            switch (type) {
+                case 'success':
+                    icon = 'bi-check-circle-fill';
+                    textColor = 'text-success';
+                    title = 'Sucesso';
+                    break;
+                case 'error':
+                    icon = 'bi-x-circle-fill';
+                    textColor = 'text-danger';
+                    title = 'Erro';
+                    break;
+                case 'warning':
+                    icon = 'bi-exclamation-triangle-fill';
+                    textColor = 'text-warning';
+                    title = 'Aviso';
+                    break;
+                case 'info':
+                default:
+                    icon = 'bi-info-circle-fill';
+                    textColor = 'text-info';
+                    title = 'Informação';
+                    break;
+            }
+
+            const toast = document.createElement('div');
+            toast.className = 'toast show';
+            toast.innerHTML = `
+                <div class="toast-header">
+                    <i class="bi ${icon} ${textColor} me-2"></i>
+                    <strong class="me-auto">${title}</strong>
+                    <button type="button" class="btn-close" data-bs-dismiss="toast"></button>
+                </div>
+                <div class="toast-body">
+                    ${this.escapeHtml(message)}
+                </div>
+            `;
+            toastContainer.appendChild(toast);
+            
+            // Auto remove after 5 seconds for success, 6 seconds for others
+            const duration = type === 'success' ? 5000 : 6000;
+            setTimeout(() => {
+                if (toast.parentNode) {
+                    toast.remove();
+                }
+            }, duration);
+        }
+    }
+
     setupRouter() {
         // Handle hash changes
         window.addEventListener('hashchange', (e) => {
@@ -2884,7 +2943,9 @@ class AutomationInterface {
         // Verificar se mensagem de fim de dia está ativa e se é hora (17h55-18h00)
         if (!endOfDayPaused && currentHour >= 17 && currentHour < 18) {
             const endOfDayTime = new Date(now);
-            endOfDayTime.setHours(18, 0, 0, 0);
+            // Usar configuração dinâmica do sistema
+            const endHour = parseInt(this.systemConfig?.endOfDayTime?.split(':')[0] || '18');
+            endOfDayTime.setHours(endHour, 0, 0, 0);
             const timeRemaining = endOfDayTime.getTime() - now.getTime();
             
             console.log(`🌅 Horário de fim de dia - Tempo restante: ${timeRemaining}ms`);
@@ -2897,10 +2958,13 @@ class AutomationInterface {
         }
         
         // Verificar se está fora do horário comercial (apenas se ignoreBusinessHours for false)
-        if (!ignoreBusinessHours && (currentHour < 8 || currentHour >= 18)) {
+        const startHour = parseInt(this.systemConfig?.startOfDayTime?.split(':')[0] || '8');
+        const endHour = parseInt(this.systemConfig?.endOfDayTime?.split(':')[0] || '18');
+        if (!ignoreBusinessHours && (currentHour < startHour || currentHour >= endHour)) {
             const nextBusinessDay = new Date(now);
             nextBusinessDay.setDate(nextBusinessDay.getDate() + (nextBusinessDay.getDay() === 6 ? 2 : 1));
-            nextBusinessDay.setHours(8, 0, 0, 0);
+            // Usar configuração dinâmica do sistema (startHour já foi declarado acima)
+            nextBusinessDay.setHours(startHour, 0, 0, 0);
             const timeRemaining = nextBusinessDay.getTime() - now.getTime();
             
             console.log(`📅 Fora do horário comercial - Próximo dia útil: ${nextBusinessDay}`);
@@ -3000,6 +3064,227 @@ class AutomationInterface {
             console.error('Erro ao adicionar log de ação do usuário:', error);
         }
     }
+
+    /**
+     * Sistema Tab - Gerenciamento completo das configurações do sistema
+     */
+    initializeSystemTab() {
+        // Elementos da interface
+        this.systemElements = {
+            // Horários
+            startOfDayTime: document.getElementById('start-of-day-time'),
+            endOfDayTime: document.getElementById('end-of-day-time'),
+            logCleanupTime: document.getElementById('log-cleanup-time'),
+            
+            // Tempos de espera
+            minWaitTime: document.getElementById('min-wait-time'),
+            maxWaitTime: document.getElementById('max-wait-time'),
+            
+            // Botões
+            saveBtn: document.getElementById('save-system-config-btn'),
+            
+            // Status
+            configWarning: document.getElementById('config-warning'),
+            configWarningText: document.getElementById('config-warning-text')
+        };
+
+        // Configuração original para detectar mudanças
+        this.originalSystemConfig = null;
+        this.hasUnsavedChanges = false;
+
+        // Event listeners
+        this.setupSystemEventListeners();
+        
+        // Carregar configurações iniciais
+        this.loadSystemConfig();
+    }
+
+    setupSystemEventListeners() {
+        // Salvar configurações
+        this.systemElements.saveBtn?.addEventListener('click', () => {
+            this.saveSystemConfig();
+        });
+
+        // Detectar mudanças nos campos
+        Object.values(this.systemElements).forEach(element => {
+            if (element && (element.type === 'time' || element.type === 'number' || element.type === 'checkbox' || element.tagName === 'SELECT')) {
+                element.addEventListener('change', () => {
+                    this.detectConfigChanges();
+                });
+                element.addEventListener('input', () => {
+                    this.detectConfigChanges();
+                });
+            }
+        });
+
+        // Validação em tempo real
+        this.systemElements.minWaitTime?.addEventListener('input', () => {
+            this.validateWaitTimes();
+        });
+        this.systemElements.maxWaitTime?.addEventListener('input', () => {
+            this.validateWaitTimes();
+        });
+    }
+
+    async loadSystemConfig() {
+        try {
+            const response = await fetch('/api/config');
+            const config = await response.json();
+            
+            if (response.ok) {
+                this.populateSystemConfig(config);
+                this.originalSystemConfig = { ...config };
+                this.hasUnsavedChanges = false;
+                this.updateWarningState();
+            } else {
+                throw new Error(config.message || 'Erro ao carregar configurações');
+            }
+        } catch (error) {
+            console.error('Erro ao carregar configurações do sistema:', error);
+            this.showNotification('Erro ao carregar configurações do sistema', 'error');
+        }
+    }
+
+    populateSystemConfig(config) {
+        // Horários
+        if (this.systemElements.startOfDayTime) {
+            this.systemElements.startOfDayTime.value = config.startOfDayTime || '08:00';
+        }
+        if (this.systemElements.endOfDayTime) {
+            this.systemElements.endOfDayTime.value = config.endOfDayTime || '18:00';
+        }
+        if (this.systemElements.logCleanupTime) {
+            this.systemElements.logCleanupTime.value = config.logCleanupTime || '23:59';
+        }
+
+        // Tempos de espera
+        if (this.systemElements.minWaitTime) {
+            this.systemElements.minWaitTime.value = parseInt(config.minWaitTime) || 30;
+        }
+        if (this.systemElements.maxWaitTime) {
+            this.systemElements.maxWaitTime.value = parseInt(config.maxWaitTime) || 35;
+        }
+    }
+
+    async saveSystemConfig() {
+        try {
+            // Validar configurações antes de salvar
+            if (!this.validateSystemConfig()) {
+                return;
+            }
+
+            this.systemElements.saveBtn.disabled = true;
+
+            const configData = this.collectSystemConfig();
+            
+            const response = await fetch('/api/config', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(configData)
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                this.originalSystemConfig = { ...configData };
+                this.hasUnsavedChanges = false;
+                this.updateWarningState();
+                this.showNotification('Configurações do sistema salvas com sucesso!', 'success');
+                
+                // Recarregar configurações para garantir sincronização
+                setTimeout(() => this.loadSystemConfig(), 1000);
+            } else {
+                throw new Error(result.message || 'Erro ao salvar configurações');
+            }
+        } catch (error) {
+            console.error('Erro ao salvar configurações:', error);
+            this.showNotification('Erro ao salvar configurações do sistema', 'error');
+        } finally {
+            this.systemElements.saveBtn.disabled = false;
+        }
+    }
+
+    collectSystemConfig() {
+        return {
+            // Horários
+            startOfDayTime: this.systemElements.startOfDayTime?.value || '08:00',
+            endOfDayTime: this.systemElements.endOfDayTime?.value || '18:00',
+            logCleanupTime: this.systemElements.logCleanupTime?.value || '23:59',
+            
+            // Tempos de espera
+            minWaitTime: this.systemElements.minWaitTime?.value || '30',
+            maxWaitTime: this.systemElements.maxWaitTime?.value || '35'
+        };
+    }
+
+    validateSystemConfig() {
+        let isValid = true;
+        const errors = [];
+
+        // Validar tempos de espera
+        const minWait = parseInt(this.systemElements.minWaitTime?.value);
+        const maxWait = parseInt(this.systemElements.maxWaitTime?.value);
+
+        if (minWait >= maxWait) {
+            errors.push('O tempo máximo deve ser maior que o tempo mínimo');
+            isValid = false;
+        }
+
+        if (minWait < 1 || maxWait < 1) {
+            errors.push('Os tempos de espera devem ser maiores que 0');
+            isValid = false;
+        }
+
+        // Validar horários
+        const startTime = this.systemElements.startOfDayTime?.value;
+        const endTime = this.systemElements.endOfDayTime?.value;
+
+        if (startTime && endTime && startTime >= endTime) {
+            errors.push('O horário de fim do dia deve ser posterior ao horário de início');
+            isValid = false;
+        }
+
+        if (!isValid) {
+            this.showNotification(`Erro de validação: ${errors.join(', ')}`, 'error');
+        }
+
+        return isValid;
+    }
+
+    validateWaitTimes() {
+        const minWait = parseInt(this.systemElements.minWaitTime?.value);
+        const maxWait = parseInt(this.systemElements.maxWaitTime?.value);
+        
+        if (minWait && maxWait && minWait >= maxWait) {
+            this.systemElements.maxWaitTime.setCustomValidity('O tempo máximo deve ser maior que o mínimo');
+        } else {
+            this.systemElements.maxWaitTime.setCustomValidity('');
+        }
+    }
+
+    detectConfigChanges() {
+        if (!this.originalSystemConfig) return;
+
+        const currentConfig = this.collectSystemConfig();
+        const hasChanges = JSON.stringify(currentConfig) !== JSON.stringify(this.originalSystemConfig);
+        
+        if (hasChanges !== this.hasUnsavedChanges) {
+            this.hasUnsavedChanges = hasChanges;
+            this.updateWarningState();
+        }
+    }
+
+    updateWarningState() {
+        if (this.hasUnsavedChanges) {
+            this.systemElements.configWarning?.classList.remove('d-none');
+            this.systemElements.configWarningText.textContent = 'Há alterações não salvas.';
+        } else {
+            this.systemElements.configWarning?.classList.add('d-none');
+        }
+    }
+
 }
 
 // Initialize when DOM is loaded

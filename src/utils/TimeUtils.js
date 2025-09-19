@@ -11,6 +11,43 @@ class TimeUtils {
   static END_OF_DAY_HOUR = 18;
   static END_OF_DAY_MINUTE = 0;
 
+  // ConfigManager será injetado para permitir horários dinâmicos
+  static configManager = null;
+
+  /**
+   * Configura o ConfigManager para horários dinâmicos
+   * @param {ConfigManager} configManager - Instância do ConfigManager
+   */
+  static setConfigManager(configManager) {
+    this.configManager = configManager;
+  }
+
+  /**
+   * Obtém o horário de início do dia (dinâmico ou padrão)
+   * @returns {number} Hora de início (0-23)
+   */
+  static getBusinessStartHour() {
+    if (this.configManager) {
+      const startTime = this.configManager.getStartOfDayTime();
+      const [hour] = startTime.split(':').map(Number);
+      return hour;
+    }
+    return this.BUSINESS_START_HOUR;
+  }
+
+  /**
+   * Obtém o horário de fim do dia (dinâmico ou padrão)
+   * @returns {number} Hora de fim (0-23)
+   */
+  static getBusinessEndHour() {
+    if (this.configManager) {
+      const endTime = this.configManager.getEndOfDayTime();
+      const [hour] = endTime.split(':').map(Number);
+      return hour;
+    }
+    return this.BUSINESS_END_HOUR;
+  }
+
   /**
    * Obtém o horário atual de Brasília
    * @returns {DateTime} Horário de Brasília
@@ -20,13 +57,15 @@ class TimeUtils {
   }
 
   /**
-   * Verifica se está em horário comercial (8h às 18h)
+   * Verifica se está em horário comercial (dinâmico baseado na configuração)
    * @returns {boolean} True se horário comercial
    */
   static isBusinessHours() {
     const brasiliaTime = this.getBrasiliaTime();
     const hour = brasiliaTime.hour;
-    return hour >= this.BUSINESS_START_HOUR && hour < this.BUSINESS_END_HOUR;
+    const startHour = this.getBusinessStartHour();
+    const endHour = this.getBusinessEndHour();
+    return hour >= startHour && hour < endHour;
   }
 
   /**
@@ -40,24 +79,25 @@ class TimeUtils {
   }
 
   /**
-   * Verifica se é horário de fim de expediente (18:00)
-   * @returns {boolean} True se 18:00
+   * Verifica se é horário de fim de expediente (dinâmico baseado na configuração)
+   * @returns {boolean} True se horário de fim de expediente
    */
   static isEndOfDayTime() {
     const brasiliaTime = this.getBrasiliaTime();
-    return brasiliaTime.hour === this.END_OF_DAY_HOUR && 
-           brasiliaTime.minute === this.END_OF_DAY_MINUTE;
+    const endHour = this.getBusinessEndHour();
+    return brasiliaTime.hour === endHour && brasiliaTime.minute === this.END_OF_DAY_MINUTE;
   }
 
   /**
-   * Verifica se é horário de fim de expediente com tolerância (18:00 ± 1 minuto)
+   * Verifica se é horário de fim de expediente com tolerância (dinâmico ± 1 minuto)
    * @param {number} toleranceMinutes - Tolerância em minutos (padrão: 1)
    * @returns {boolean} True se dentro da tolerância
    */
   static isEndOfDayTimeWithTolerance(toleranceMinutes = 1) {
     const brasiliaTime = this.getBrasiliaTime();
+    const endHour = this.getBusinessEndHour();
     const targetTime = brasiliaTime.set({
-      hour: this.END_OF_DAY_HOUR,
+      hour: endHour,
       minute: this.END_OF_DAY_MINUTE,
       second: 0,
       millisecond: 0
@@ -105,13 +145,14 @@ class TimeUtils {
   }
 
   /**
-   * Obtém o próximo horário de fim de expediente
+   * Obtém o próximo horário de fim de expediente (dinâmico)
    * @returns {DateTime} Próximo fim de expediente
    */
   static getNextEndOfDayTime() {
     const now = this.getBrasiliaTime();
+    const endHour = this.getBusinessEndHour();
     let nextEndOfDay = now.set({
-      hour: this.END_OF_DAY_HOUR,
+      hour: endHour,
       minute: this.END_OF_DAY_MINUTE,
       second: 0,
       millisecond: 0

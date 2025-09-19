@@ -16,6 +16,9 @@ class MainController {
     // Inicializar ConfigManager
     this.configManager = new ConfigManager(this.errorHandler);
     
+    // Configurar TimeUtils com ConfigManager para horários dinâmicos
+    TimeUtils.setConfigManager(this.configManager);
+    
     // Inicializar JsonPatientManager
     this.jsonPatientManager = new JsonPatientManager(this.errorHandler);
     
@@ -442,10 +445,11 @@ class MainController {
         // Próxima mensagem será de fim de dia (18h)
         nextMessageType = 'end_of_day';
         const endOfDayTime = new Date(now);
-        endOfDayTime.setHours(18, 0, 0, 0);
+        const endHour = TimeUtils.getBusinessEndHour();
+        endOfDayTime.setHours(endHour, 0, 0, 0);
         timeUntilNext = endOfDayTime.getTime() - now.getTime();
         actionCardId = systemConfig.selectedActionCardEndDay;
-      } else if (currentHour >= 8 && currentHour < 18) {
+      } else if (currentHour >= TimeUtils.getBusinessStartHour() && currentHour < TimeUtils.getBusinessEndHour()) {
         // Durante horário comercial, próxima mensagem será de 30min
         nextMessageType = '30min';
         // Simular próximo envio em 3 minutos (intervalo de verificação)
@@ -456,7 +460,8 @@ class MainController {
         nextMessageType = 'outside_hours';
         const nextBusinessDay = new Date(now);
         nextBusinessDay.setDate(nextBusinessDay.getDate() + (nextBusinessDay.getDay() === 6 ? 2 : 1)); // Próxima segunda
-        nextBusinessDay.setHours(8, 0, 0, 0);
+        const startHour = TimeUtils.getBusinessStartHour();
+        nextBusinessDay.setHours(startHour, 0, 0, 0);
         timeUntilNext = nextBusinessDay.getTime() - now.getTime();
         actionCardId = systemConfig.selectedActionCard30Min;
       }

@@ -23,9 +23,21 @@
       "sentAtFormatted": "18/09/2025, 22:22:00",
       "success": true,
       "createdAt": "2025-09-19T01:22:01.033Z"
+    },
+    {
+      "id": "msg_1758284161607_k911id6rz",
+      "patientId": "68cac3d7f22d799dcf185ec4",
+      "patientName": "Ianca Manuela",
+      "patientPhone": "5577999778504",
+      "actionCardId": "68cbfa96b8640e9721e4feab",
+      "messageType": "30min",
+      "sentAt": "2025-09-19T12:16:01.190Z",
+      "sentAtFormatted": "19/09/2025, 09:16:01",
+      "success": true,
+      "createdAt": "2025-09-19T12:16:01.608Z"
     }
   ],
   "lastCleanup": null,
-  "totalSent": 2,
+  "totalSent": 3,
   "createdAt": "2025-09-19T00:45:57.736Z"
 }

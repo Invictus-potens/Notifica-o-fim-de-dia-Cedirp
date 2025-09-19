@@ -1757,3 +1757,197 @@ hanced Mobile Responsiveness */
 #logs-container::-webkit-scrollbar-thumb:hover {
     background: #94a3b8;
 }
+
+/* Estilos específicos para a aba Sistema */
+#sistema-route .form-control:focus,
+#sistema-route .form-select:focus,
+#sistema-route .form-check-input:focus {
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+}
+
+#sistema-route .form-check-input:checked {
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+}
+
+#sistema-route .card-header {
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #dee2e6;
+}
+
+#sistema-route .badge {
+    font-size: 0.875rem;
+    padding: 0.375rem 0.75rem;
+}
+
+#sistema-route .alert-warning {
+    border-left: 4px solid #ffc107;
+    background-color: #fff3cd;
+    border-color: #ffeaa7;
+}
+
+#sistema-route .btn-primary {
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+}
+
+#sistema-route .btn-primary:hover {
+    background-color: #0b5ed7;
+    border-color: #0a58ca;
+}
+
+#sistema-route .btn-outline-secondary:hover {
+    background-color: #6c757d;
+    border-color: #6c757d;
+    color: white;
+}
+
+#sistema-route .btn-outline-info:hover {
+    background-color: #0dcaf0;
+    border-color: #0dcaf0;
+    color: white;
+}
+
+#sistema-route .btn-outline-warning:hover {
+    background-color: #ffc107;
+    border-color: #ffc107;
+    color: black;
+}
+
+/* Animações para feedback visual */
+#sistema-route .form-control.is-valid,
+#sistema-route .form-select.is-valid {
+    border-color: #198754;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3e%3cpath fill='%23198754' d='m2.3 6.73.94-.94 1.38 1.38 2.05-2.05.94.94-2.99 2.99z'/%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right calc(0.375em + 0.1875rem) center;
+    background-size: calc(0.75em + 0.375rem) calc(0.75em + 0.375rem);
+}
+
+#sistema-route .form-control.is-invalid,
+#sistema-route .form-select.is-invalid {
+    border-color: #dc3545;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12' width='12' height='12' fill='none' stroke='%23dc3545'%3e%3ccircle cx='6' cy='6' r='4.5'/%3e%3cpath d='m5.8 4.6 0 3.4M5.8 8.2l.01 0'/%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right calc(0.375em + 0.1875rem) center;
+    background-size: calc(0.75em + 0.375rem) calc(0.75em + 0.375rem);
+}
+
+/* Transições suaves */
+#sistema-route .form-control,
+#sistema-route .form-select,
+#sistema-route .btn {
+    transition: all 0.15s ease-in-out;
+}
+
+#sistema-route .alert {
+    transition: opacity 0.15s ease-in-out;
+}
+
+/* Melhorias para inputs de tempo */
+#sistema-route input[type="time"] {
+    min-width: 120px;
+}
+
+#sistema-route input[type="number"] {
+    min-width: 100px;
+}
+
+/* Status indicator melhorado */
+#config-status {
+    min-width: 140px;
+    text-align: center;
+}
+
+/* Botão Salvar Flutuante */
+.floating-save-button {
+    position: fixed;
+    bottom: 2rem;
+    left: 2rem;
+    z-index: 1000;
+}
+
+.floating-save-button .btn {
+    border-radius: 25px;
+    padding: 0.5rem 1rem;
+    font-weight: 600;
+    font-size: 0.875rem;
+    transition: all 0.3s ease;
+    border: none;
+    background: linear-gradient(135deg, #0d6efd 0%, #0b5ed7 100%);
+}
+
+.floating-save-button .btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(13, 110, 253, 0.3) !important;
+    background: linear-gradient(135deg, #0b5ed7 0%, #0a58ca 100%);
+}
+
+.floating-save-button .btn:active {
+    transform: translateY(0);
+}
+
+.floating-save-button .btn:disabled {
+    opacity: 0.6;
+    transform: none;
+    background: #6c757d;
+}
+
+/* Alerta Flutuante */
+.floating-warning {
+    position: fixed;
+    bottom: 6rem;
+    left: 2rem;
+    z-index: 999;
+    max-width: 300px;
+    border-radius: 10px;
+    border: none;
+    box-shadow: 0 4px 20px rgba(255, 193, 7, 0.3);
+    animation: slideInLeft 0.3s ease;
+}
+
+@keyframes slideInLeft {
+    from {
+        transform: translateX(-100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+/* Responsividade para a aba Sistema */
+@media (max-width: 768px) {
+    #sistema-route .col-md-6 {
+        margin-bottom: 1rem;
+    }
+    
+    .floating-save-button {
+        bottom: 1rem;
+        left: 1rem;
+    }
+    
+    .floating-save-button .btn {
+        padding: 0.4rem 0.8rem;
+        font-size: 0.8rem;
+    }
+    
+    .floating-warning {
+        bottom: 4rem;
+        left: 1rem;
+        max-width: calc(100vw - 2rem);
+    }
+}
