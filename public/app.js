@@ -485,27 +485,7 @@ class AutomationInterface {
             });
         }
 
-        // Action card selection - geral (legacy)
-        const actionCardSelect = document.getElementById('action-card-select');
-        if (actionCardSelect) {
-            actionCardSelect.addEventListener('change', (e) => {
-                const selectedCardId = e.target.value;
-                if (selectedCardId) {
-                    const selectedOption = e.target.selectedOptions[0];
-                    const cardName = selectedOption.textContent;
-                    
-                    this.addUserActionLog('info', 
-                        `Card de ação geral selecionado: ${cardName}`, 
-                        'Seleção de Card',
-                        { 
-                            cardId: selectedCardId,
-                            cardName: cardName,
-                            type: 'general'
-                        }
-                    );
-                }
-            });
-        }
+        // Action card selection - geral removido - sistema agora é apenas automático
     }
 
     loadRouteData(route) {
@@ -548,7 +528,7 @@ class AutomationInterface {
                 break;
             case 'logs':
                 console.log('📝 Carregando logs...');
-                this.loadLogs();
+                this.loadUserLogs();
                 // Always sync system status when loading logs
                 this.checkFlowState();
                 break;
@@ -1204,15 +1184,7 @@ class AutomationInterface {
             if (response.ok && result.success) {
                 const config = result.data;
                 
-                // Aplicar configurações salvas nos selects
-                if (config.selectedActionCard) {
-                    const select = document.getElementById('action-card-select');
-                    if (select) {
-                        select.value = config.selectedActionCard;
-                    } else {
-                        console.warn('⚠️ Elemento action-card-select não encontrado');
-                    }
-                }
+                // Aplicar configurações salvas nos selects (apenas para automação)
                 
                 if (config.selectedActionCard30Min) {
                     const select = document.getElementById('action-card-30min-select');
@@ -1283,10 +1255,9 @@ class AutomationInterface {
             }
         };
 
-        // Popular os três selects
+        // Popular os selects (apenas para automação)
         populateSelect('action-card-30min-select', 'Selecione cartão para 30min...');
         populateSelect('action-card-endday-select', 'Selecione cartão para fim de dia...');
-        populateSelect('action-card-select', 'Selecione cartão geral...');
     }
 
 
@@ -3379,6 +3350,7 @@ class AutomationInterface {
             }
             
             console.log(`📋 Carregando logs com URL: ${url}`);
+            console.log(`📋 Filtro selecionado: "${level}"`);
             
             const response = await fetch(url);
             const result = await response.json();
@@ -3386,6 +3358,7 @@ class AutomationInterface {
             console.log(`📋 Resposta da API:`, result);
             
             if (response.ok && result.success) {
+                console.log(`📋 Exibindo ${result.data.length} logs`);
                 this.displayUserLogs(result.data);
             } else {
                 console.error('Erro na resposta da API:', result);

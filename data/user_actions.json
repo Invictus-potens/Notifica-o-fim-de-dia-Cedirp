@@ -1,5 +1,18 @@
 [
   {
+    "id": "log_1758371434699_3yn8b8mrl",
+    "timestamp": "2025-09-20T12:30:34.699Z",
+    "level": "info",
+    "action": "Exportar Logs",
+    "details": "Usuário exportou logs do sistema",
+    "metadata": {
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0",
+      "ip": "::1"
+    },
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0",
+    "ip": "::1"
+  },
+  {
     "id": "log_1758338255082_xyhax43aa",
     "timestamp": "2025-09-20T03:17:35.082Z",
     "level": "info",
