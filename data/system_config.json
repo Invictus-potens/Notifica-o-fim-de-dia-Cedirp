@@ -11,5 +11,5 @@
   "startOfDayTime": "08:00",
   "endOfDayTime": "18:00",
   "logCleanupTime": "23:59",
-  "refreshInterval": "30"
+  "refreshInterval": "60"
 }

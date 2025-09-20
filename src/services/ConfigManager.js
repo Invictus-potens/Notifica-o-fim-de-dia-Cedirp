@@ -49,7 +49,8 @@ class ConfigManager {
       selectedTemplate: undefined,
       startOfDayTime: '08:00',
       endOfDayTime: '18:00',
-      logCleanupTime: '02:00'
+      logCleanupTime: '02:00',
+      refreshInterval: 30
     };
   }
 
@@ -96,7 +97,8 @@ class ConfigManager {
           selectedTemplate: parsedConfig.selectedTemplate || '',
           startOfDayTime: parsedConfig.startOfDayTime || '08:00',
           endOfDayTime: parsedConfig.endOfDayTime || '18:00',
-          logCleanupTime: parsedConfig.logCleanupTime || '02:00'
+          logCleanupTime: parsedConfig.logCleanupTime || '02:00',
+          refreshInterval: parseInt(parsedConfig.refreshInterval) || 30
         };
         
         console.log('✅ Configuração carregada do arquivo system_config.json');
@@ -105,6 +107,7 @@ class ConfigManager {
           '30min': this.systemConfig.selectedActionCard30Min,
           'fim_dia': this.systemConfig.selectedActionCardEndDay
         });
+        console.log(`⏰ Refresh Interval: ${this.systemConfig.refreshInterval}s`);
         
       } catch (fileError) {
         console.log('⚠️ Arquivo de configuração não encontrado, usando valores padrão');
@@ -131,7 +134,8 @@ class ConfigManager {
           selectedTemplate: '',
           startOfDayTime: '08:00',
           endOfDayTime: '18:00',
-          logCleanupTime: '02:00'
+          logCleanupTime: '02:00',
+          refreshInterval: 30
         };
       }
     } catch (error) {
@@ -349,7 +353,8 @@ class ConfigManager {
         selectedTemplate: this.systemConfig.selectedTemplate,
         startOfDayTime: this.systemConfig.startOfDayTime,
         endOfDayTime: this.systemConfig.endOfDayTime,
-        logCleanupTime: this.systemConfig.logCleanupTime
+        logCleanupTime: this.systemConfig.logCleanupTime,
+        refreshInterval: this.systemConfig.refreshInterval.toString()
       };
       
       // Salvar arquivo
@@ -461,7 +466,8 @@ class ConfigManager {
       selectedActionCardEndDayDescription: this.systemConfig.selectedActionCardEndDayDescription || 'Fim de Expediente',
       startOfDayTime: this.systemConfig.startOfDayTime || '08:00',
       endOfDayTime: this.systemConfig.endOfDayTime || '18:00',
-      logCleanupTime: this.systemConfig.logCleanupTime || '02:00'
+      logCleanupTime: this.systemConfig.logCleanupTime || '02:00',
+      refreshInterval: this.systemConfig.refreshInterval || 30
     };
   }
 
