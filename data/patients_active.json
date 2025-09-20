@@ -1,16 +1,16 @@
 [
   {
-    "id": "68cc415849547237fc47b342",
-    "contactId": "67599b5e277827c7191c589d",
-    "name": "Nikolas",
-    "phone": "5511930058665",
+    "id": "68cdf84af42aa528cdb2440e",
+    "contactId": "6863f9b7762b73008f223c5e",
+    "name": "Felipe Prado",
+    "phone": "5516981892476",
     "sectorId": "6401f4f49b1ff8512b525e9c",
     "sectorName": "Suporte Telefonia",
     "channelId": "63e68f168a48875131856df8",
     "channelType": "WhatsApp Business (Principal)",
-    "waitStartTime": "2025-09-18T17:28:56.751Z",
-    "waitTimeMinutes": 293,
+    "waitStartTime": "2025-09-20T00:41:46.599Z",
+    "waitTimeMinutes": 22,
     "status": "waiting",
-    "enteredAt": "2025-09-19T18:01:00.398Z"
+    "enteredAt": "2025-09-20T00:53:41.150Z"
   }
 ]

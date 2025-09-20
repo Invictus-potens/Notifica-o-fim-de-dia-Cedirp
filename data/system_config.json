@@ -3,7 +3,7 @@
   "excludedChannels": "[]",
   "flowPaused": "false",
   "endOfDayPaused": "false",
-  "ignoreBusinessHours": "false",
+  "ignoreBusinessHours": "true",
   "minWaitTime": "30",
   "maxWaitTime": "35",
   "selectedActionCard": "631f2b4f307d23f46ac80a10",
@@ -12,7 +12,6 @@
   "selectedActionCard30MinDescription": "Mensagem de 30 Minutos",
   "selectedActionCardEndDay": "631f2b4f307d23f46ac80a2b",
   "selectedActionCardEndDayDescription": "Fim de Expediente",
-  "selectedTemplate": "",
   "endOfDayTime": "18:00",
   "logCleanupTime": "23:59",
   "startOfDayTime": "08:00"

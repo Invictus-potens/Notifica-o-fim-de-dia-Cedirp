@@ -714,6 +714,17 @@ class AutomationInterface {
         const ignoreBusinessHours = this.systemConfig?.ignoreBusinessHours === 'true' || this.systemConfig?.ignoreBusinessHours === true;
         const endOfDayPaused = this.systemConfig?.endOfDayPaused === 'true' || this.systemConfig?.endOfDayPaused === true;
         
+        // DEBUG: Log das configurações para verificar se estão sendo carregadas
+        console.log(`🔍 generateNextMessageInfo para ${patient.name}:`, {
+            waitTime,
+            currentHour,
+            minWaitTime,
+            maxWaitTime,
+            ignoreBusinessHours,
+            endOfDayPaused,
+            systemConfig: this.systemConfig
+        });
+        
         // Obter IDs dos action cards do config e buscar nomes na API
         const actionCard30Min = this.systemConfig?.selectedActionCard30Min;
         const actionCardEndDay = this.systemConfig?.selectedActionCardEndDay;
@@ -757,7 +768,19 @@ class AutomationInterface {
         // Verificar se está fora do horário comercial (apenas se ignoreBusinessHours for false)
         const startHour = parseInt(this.systemConfig?.startOfDayTime?.split(':')[0] || '8');
         const endHour = parseInt(this.systemConfig?.endOfDayTime?.split(':')[0] || '18');
-        if (!ignoreBusinessHours && (currentHour < startHour || currentHour >= endHour)) {
+        const isOutsideBusinessHours = currentHour < startHour || currentHour >= endHour;
+        
+        console.log(`🕐 Verificação de horário comercial:`, {
+            startHour,
+            endHour,
+            currentHour,
+            isOutsideBusinessHours,
+            ignoreBusinessHours,
+            shouldShowOutsideHours: !ignoreBusinessHours && isOutsideBusinessHours
+        });
+        
+        if (!ignoreBusinessHours && isOutsideBusinessHours) {
+            console.log(`❌ Mostrando "Fora do horário" para ${patient.name}`);
             return `
                 <div class="text-warning">
                     <div class="fw-bold">Fora do horário</div>
@@ -2259,14 +2282,6 @@ class AutomationInterface {
         this.setupModalEventListeners();
     }
 
-    setupPatientSelection() {
-        const checkboxes = document.querySelectorAll('.patient-checkbox');
-        checkboxes.forEach(checkbox => {
-            checkbox.addEventListener('change', () => {
-                this.updatePatientSelection();
-            });
-        });
-    }
 
     toggleAllPatients(checked) {
         const checkboxes = document.querySelectorAll('.patient-checkbox');
@@ -2709,14 +2724,6 @@ class AutomationInterface {
         return icons[level] || 'bi-circle';
     }
 
-    /**
-     * Escapa HTML para segurança
-     */
-    escapeHtml(text) {
-        const div = document.createElement('div');
-        div.textContent = text;
-        return div.innerHTML;
-    }
 
     /**
      * Limpa todos os logs
@@ -2789,54 +2796,6 @@ class AutomationInterface {
 
 
 
-    /**
-     * Exibe pacientes na tabela
-     */
-    displayPatients(patients) {
-        const tbody = document.getElementById('patients-tbody');
-        if (!tbody) {
-            console.warn('Elemento patients-tbody não encontrado');
-            return;
-        }
-
-        if (patients.length === 0) {
-            tbody.innerHTML = `
-                <tr>
-                    <td colspan="7" class="text-center text-muted py-4">
-                        Nenhum atendimento em espera
-                    </td>
-                </tr>
-            `;
-            return;
-        }
-
-        tbody.innerHTML = patients.map(patient => {
-            const hasReceivedMessage = this.hasPatientReceivedMessage(patient);
-            const messageStatus = this.getMessageStatus(patient, hasReceivedMessage);
-            
-            return `
-                <tr>
-                    <td>
-                        <input type="checkbox" class="form-check-input patient-checkbox" 
-                               data-patient-id="${patient.id}" 
-                               data-patient-name="${this.escapeHtml(patient.name || 'Nome não informado')}"
-                               data-patient-phone="${this.escapeHtml(patient.phone || '')}"
-                               data-contact-id="${patient.contactId || patient.id}">
-                    </td>
-                    <td>${this.escapeHtml(patient.name || 'Nome não informado')}</td>
-                    <td>${this.escapeHtml(patient.phone || '')}</td>
-                    <td>${this.escapeHtml(patient.sectorName || 'Setor não informado')}</td>
-                    <td>${this.formatWaitTime(patient.waitTimeMinutes || 0)}</td>
-                    <td>
-                        ${this.generateNextMessageInfo(patient)}
-                    </td>
-                    <td>${messageStatus}</td>
-                </tr>
-            `;
-        }).join('');
-
-        this.setupPatientSelection();
-    }
 
     /**
      * Filtra pacientes por setor
@@ -2923,36 +2882,7 @@ class AutomationInterface {
         return hour >= 18;
     }
 
-    /**
-     * Formata tempo de espera
-     */
-    formatWaitTime(minutes) {
-        if (!minutes || minutes === 0) {
-            return '0 min';
-        }
-        
-        if (minutes < 60) {
-            return `${minutes} min`;
-        }
-        
-        const hours = Math.floor(minutes / 60);
-        const remainingMinutes = minutes % 60;
-        
-        if (remainingMinutes === 0) {
-            return `${hours}h`;
-        }
-        
-        return `${hours}h ${remainingMinutes}min`;
-    }
 
-    /**
-     * Escapa HTML para evitar XSS
-     */
-    escapeHtml(text) {
-        const div = document.createElement('div');
-        div.textContent = text;
-        return div.innerHTML;
-    }
 
     /**
      * Configura seleção de pacientes
@@ -3265,6 +3195,23 @@ class AutomationInterface {
             const config = await response.json();
             
             if (response.ok) {
+                // CRÍTICO: Atualizar this.systemConfig para que generateNextMessageInfo funcione
+                if (config.data) {
+                    this.systemConfig = {
+                        minWaitTime: parseInt(config.data.minWaitTime) || 30,
+                        maxWaitTime: parseInt(config.data.maxWaitTime) || 40,
+                        ignoreBusinessHours: config.data.ignoreBusinessHours === 'true' || config.data.ignoreBusinessHours === true,
+                        endOfDayPaused: config.data.endOfDayPaused === 'true' || config.data.endOfDayPaused === true,
+                        selectedActionCard30Min: config.data.selectedActionCard30Min,
+                        selectedActionCard30MinDescription: config.data.selectedActionCard30MinDescription,
+                        selectedActionCardEndDay: config.data.selectedActionCardEndDay,
+                        selectedActionCardEndDayDescription: config.data.selectedActionCardEndDayDescription,
+                        startOfDayTime: config.data.startOfDayTime || '08:00',
+                        endOfDayTime: config.data.endOfDayTime || '18:00'
+                    };
+                    console.log('✅ systemConfig atualizado na aba Sistema:', this.systemConfig);
+                }
+                
                 this.populateSystemConfig(config);
                 this.originalSystemConfig = { ...config };
                 this.hasUnsavedChanges = false;
@@ -3713,23 +3660,6 @@ class AutomationInterface {
         container.scrollTop = 0;
     }
 
-    getLogLevelClass(level) {
-        switch (level) {
-            case 'info': return 'border-info';
-            case 'warning': return 'border-warning';
-            case 'error': return 'border-danger';
-            default: return 'border-secondary';
-        }
-    }
-
-    getLogLevelIcon(level) {
-        switch (level) {
-            case 'info': return 'bi-info-circle-fill';
-            case 'warning': return 'bi-exclamation-triangle-fill';
-            case 'error': return 'bi-x-circle-fill';
-            default: return 'bi-circle-fill';
-        }
-    }
 
     formatMetadata(metadata) {
         const relevantFields = [];
