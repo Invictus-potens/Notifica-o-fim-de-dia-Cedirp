@@ -10,5 +10,6 @@
   "selectedActionCardEndDay": "631f2b4f307d23f46ac80a2b",
   "startOfDayTime": "08:00",
   "endOfDayTime": "18:00",
-  "logCleanupTime": "23:59"
+  "logCleanupTime": "23:59",
+  "refreshInterval": "30"
 }

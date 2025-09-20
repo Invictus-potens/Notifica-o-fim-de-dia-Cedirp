@@ -5,6 +5,12 @@ class KrolikApiClient {
     this.baseURL = config.baseURL || process.env.KROLIK_API_BASE_URL || 'https://api.camkrolik.com.br';
     this.token = config.token || process.env.KROLIK_API_TOKEN;
     
+    // Contadores de API
+    this.apiCalls = 0;
+    this.apiSuccess = 0;
+    this.apiFailures = 0;
+    this.systemMetrics = config.systemMetrics || null;
+    
     this.axiosInstance = axios.create({
       baseURL: this.baseURL,
       timeout: config.timeout || 10000,
@@ -14,6 +20,72 @@ class KrolikApiClient {
         'Accept': 'application/json'
       }
     });
+
+    // Interceptor para contar requisições
+    this.setupInterceptors();
+  }
+
+  /**
+   * Configura interceptors para contar requisições
+   */
+  setupInterceptors() {
+    // Request interceptor
+    this.axiosInstance.interceptors.request.use(
+      (config) => {
+        config.startTime = Date.now();
+        this.apiCalls++;
+        if (this.systemMetrics && typeof this.systemMetrics.incrementRequests === 'function') {
+          this.systemMetrics.incrementRequests();
+        }
+        return config;
+      },
+      (error) => {
+        this.apiFailures++;
+        if (this.systemMetrics && typeof this.systemMetrics.incrementApiFailures === 'function') {
+          this.systemMetrics.incrementApiFailures();
+        }
+        return Promise.reject(error);
+      }
+    );
+
+    // Response interceptor
+    this.axiosInstance.interceptors.response.use(
+      (response) => {
+        const responseTime = Date.now() - response.config.startTime;
+        this.apiSuccess++;
+        if (this.systemMetrics && typeof this.systemMetrics.incrementApiSuccess === 'function') {
+          this.systemMetrics.incrementApiSuccess();
+          this.systemMetrics.addResponseTime(responseTime);
+        }
+        return response;
+      },
+      (error) => {
+        this.apiFailures++;
+        if (this.systemMetrics && typeof this.systemMetrics.incrementApiFailures === 'function') {
+          this.systemMetrics.incrementApiFailures();
+        }
+        return Promise.reject(error);
+      }
+    );
+  }
+
+  /**
+   * Define o SystemMetricsManager para contagem
+   */
+  setSystemMetrics(systemMetrics) {
+    this.systemMetrics = systemMetrics;
+  }
+
+  /**
+   * Obtém estatísticas de API
+   */
+  getApiStats() {
+    return {
+      totalCalls: this.apiCalls,
+      success: this.apiSuccess,
+      failures: this.apiFailures,
+      successRate: this.apiCalls > 0 ? ((this.apiSuccess / this.apiCalls) * 100).toFixed(2) : 0
+    };
   }
 
   /**

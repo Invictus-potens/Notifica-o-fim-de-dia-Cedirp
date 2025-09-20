@@ -57,6 +57,20 @@ const krolikApiClient = new KrolikApiClient({
   timeout: 10000
 });
 
+// Conectar métricas do sistema ao KrolikApiClient após inicialização
+mainController.initialize().then(() => {
+  // Acessar diretamente o SystemMetricsManager do MainController
+  const systemMetricsManager = mainController.systemMetricsManager;
+  if (systemMetricsManager && typeof systemMetricsManager.incrementRequests === 'function') {
+    krolikApiClient.setSystemMetrics(systemMetricsManager);
+    console.log('🔗 Métricas do sistema conectadas ao KrolikApiClient');
+  } else {
+    console.error('❌ SystemMetricsManager não disponível ou métodos não encontrados');
+  }
+}).catch(error => {
+  console.error('❌ Erro ao conectar métricas:', error);
+});
+
 // Servir arquivos estáticos da interface web
 app.use(express.static(path.join(__dirname, '../public')));
 

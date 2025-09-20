@@ -29,6 +29,13 @@ class AutomationInterface {
         this.actionCards = []; // Armazenar action cards da API
         this.messageHistory = null; // Histórico de mensagens enviadas
         
+        // Gerenciador centralizado de timers
+        this.timerManager = {
+            refreshInterval: 30000, // Padrão 30 segundos
+            intervals: new Map(), // Armazena todos os intervalos ativos
+            isRunning: false
+        };
+        
         this.init();
     }
 
@@ -42,6 +49,130 @@ class AutomationInterface {
             this.initializeApp();
         }
     }
+
+    /**
+     * Gerenciador centralizado de timers
+     */
+    
+    /**
+     * Inicializa o gerenciador de timers com o intervalo do system_config.json
+     */
+    initializeTimerManager() {
+        // Carregar intervalo do system_config.json diretamente via API
+        this.loadRefreshIntervalFromConfig();
+    }
+
+    /**
+     * Carrega o intervalo de atualização diretamente do system_config.json
+     */
+    async loadRefreshIntervalFromConfig() {
+        try {
+            const response = await fetch('/api/config');
+            if (response.ok) {
+                const data = await response.json();
+                if (data.success && data.data && data.data.refreshInterval) {
+                    this.timerManager.refreshInterval = parseInt(data.data.refreshInterval) * 1000;
+                    console.log(`⏰ Timer Manager inicializado com intervalo: ${data.data.refreshInterval}s`);
+                } else {
+                    this.timerManager.refreshInterval = 30000; // 30 segundos padrão
+                    console.log(`⏰ Timer Manager usando intervalo padrão: 30s`);
+                }
+            } else {
+                this.timerManager.refreshInterval = 30000; // 30 segundos padrão
+                console.log(`⏰ Timer Manager usando intervalo padrão: 30s`);
+            }
+        } catch (error) {
+            this.timerManager.refreshInterval = 30000; // 30 segundos padrão
+            console.log(`⏰ Timer Manager usando intervalo padrão: 30s`);
+        }
+    }
+
+    /**
+     * Inicia todos os timers consolidados
+     */
+    startConsolidatedTimers() {
+        if (this.timerManager.isRunning) {
+            console.log('⚠️ Timers já estão rodando');
+            return;
+        }
+
+        console.log(`🚀 Iniciando timers consolidados com intervalo: ${this.timerManager.refreshInterval / 1000}s`);
+        
+        // Timer principal que executa todas as atualizações
+        const mainInterval = setInterval(() => {
+            this.executeConsolidatedRefresh();
+        }, this.timerManager.refreshInterval);
+
+        this.timerManager.intervals.set('main', mainInterval);
+        this.timerManager.isRunning = true;
+
+        // Timer de countdown (1 segundo para contagem regressiva)
+        const countdownInterval = setInterval(() => {
+            if (this.currentRoute === 'atendimentos') {
+                this.refreshCountdowns();
+            }
+        }, 1000);
+
+        this.timerManager.intervals.set('countdown', countdownInterval);
+        
+        console.log('✅ Timers consolidados iniciados');
+    }
+
+    /**
+     * Para todos os timers
+     */
+    stopAllTimers() {
+        console.log('⏹️ Parando todos os timers...');
+        
+        this.timerManager.intervals.forEach((interval, name) => {
+            clearInterval(interval);
+            console.log(`   - Timer ${name} parado`);
+        });
+        
+        this.timerManager.intervals.clear();
+        this.timerManager.isRunning = false;
+        
+        console.log('✅ Todos os timers parados');
+    }
+
+    /**
+     * Executa todas as atualizações consolidadas
+     */
+    async executeConsolidatedRefresh() {
+        try {
+            console.log('🔄 Executando refresh consolidado...');
+            
+            // Atualizar dados baseado na rota atual
+            switch (this.currentRoute) {
+                case 'dashboard':
+                    await this.loadStatus();
+                    break;
+                case 'atendimentos':
+                    await this.loadPatients();
+                    await this.checkFlowState();
+                    break;
+                case 'configuracoes':
+                    // Não atualizar automaticamente configurações
+                    break;
+                case 'metricas':
+                    await this.loadMetrics();
+                    await this.checkFlowState();
+                    break;
+                case 'logs':
+                    await this.loadUserLogs();
+                    await this.checkFlowState();
+                    break;
+            }
+            
+            console.log('✅ Refresh consolidado concluído');
+        } catch (error) {
+            console.error('❌ Erro no refresh consolidado:', error);
+        }
+    }
+
+    /**
+     * Método removido - intervalo de atualização agora é controlado apenas via system_config.json
+     */
 
     async initializeApp() {
         try {
@@ -58,10 +189,12 @@ class AutomationInterface {
             this.startRealtimeTimer(); // Iniciar timer em tempo real
             // Carregar configurações do sistema ANTES de outras operações
             await this.loadSystemConfig();
+            // Inicializar gerenciador de timers com configuração
+            this.initializeTimerManager();
             // Carregar action cards para nomes corretos
             await this.loadActionCards();
-            // Iniciar timer para atualizar countdowns
-            this.startCountdownTimer();
+            // Iniciar timers consolidados
+            this.startConsolidatedTimers();
             
             // Fallback: ensure button is enabled after a delay
             setTimeout(() => {
@@ -408,15 +541,6 @@ class AutomationInterface {
             console.error('❌ Select sector-filter não encontrado!');
         }
 
-        // Refresh status button
-        const refreshStatusBtn = document.getElementById('refresh-status-btn');
-        if (refreshStatusBtn) {
-            refreshStatusBtn.addEventListener('click', () => {
-                this.loadStatus();
-            });
-        } else {
-            console.error('❌ Botão refresh-status-btn não encontrado!');
-        }
 
 
         // Logs buttons
@@ -867,23 +991,8 @@ class AutomationInterface {
     }
 
     /**
-     * Inicia timer para atualizar countdowns a cada 30 segundos
+     * Função removida - substituída por gerenciador consolidado de timers
      */
-    startCountdownTimer() {
-        console.log('🕐 Iniciando timer de countdown...');
-        
-        // Atualizar countdowns a cada segundo para contagem regressiva dinâmica
-        setInterval(() => {
-            this.updateCountdowns();
-        }, 1000); // 1 segundo
-        
-        // Recarregar dados completos a cada 30 segundos
-        setInterval(() => {
-            if (this.currentRoute === 'atendimentos') {
-                this.refreshCountdowns();
-            }
-        }, 30000); // 30 segundos
-    }
 
     /**
      * Atualiza todos os countdowns na página
@@ -2526,7 +2635,7 @@ class AutomationInterface {
         this.patients = [];
         this.processedPatients = new Set(); // Para rastrear pacientes que receberam mensagens
         this.loadPatients();
-        this.startPatientDataRefresh(); // Iniciar atualização automática
+        // Atualização automática agora é feita pelo gerenciador consolidado de timers
     }
 
 
@@ -2712,14 +2821,8 @@ class AutomationInterface {
     }
 
     /**
-     * Atualiza dados dos pacientes periodicamente
+     * Função removida - substituída por gerenciador consolidado de timers
      */
-    startPatientDataRefresh() {
-        // Atualizar dados a cada 30 segundos
-        setInterval(() => {
-            this.loadPatients();
-        }, 30000);
-    }
 
     /**
      * Função removida - substituída por startCountdownTimer()
@@ -3160,10 +3263,7 @@ class AutomationInterface {
         // Carregar métricas iniciais
         this.loadMetrics();
         
-        // Auto-refresh a cada 30 segundos
-        this.metricsInterval = setInterval(() => {
-            this.loadMetrics();
-        }, 30000);
+        // Auto-refresh agora é feito pelo gerenciador consolidado de timers
     }
 
     setupMetricsEventListeners() {
@@ -3189,26 +3289,17 @@ class AutomationInterface {
 
     async loadMessageMetrics() {
         try {
-            // Tentar carregar dados reais de mensagens
-            const response = await fetch('/api/messages/history');
+            // Carregar métricas persistentes do backend
+            const response = await fetch('/api/status');
             
             if (response.ok) {
                 const data = await response.json();
                 
-                // Processar dados de mensagens
-                let sent = 0, failed = 0, thirtyMin = 0, endDay = 0;
-                
-                if (data.success && Array.isArray(data.data)) {
-                    const today = new Date().toDateString();
-                    const todayMessages = data.data.filter(msg => 
-                        new Date(msg.sentAt).toDateString() === today
-                    );
-                    
-                    sent = todayMessages.filter(msg => msg.success).length;
-                    failed = todayMessages.filter(msg => !msg.success).length;
-                    thirtyMin = todayMessages.filter(msg => msg.messageType === '30min').length;
-                    endDay = todayMessages.filter(msg => msg.messageType === 'end_of_day').length;
-                }
+                // Usar métricas persistentes do backend
+                const sent = data.messageMetrics?.totalSent || 0;
+                const failed = data.messageMetrics?.totalFailed || 0;
+                const thirtyMin = data.messageMetrics?.messages30Min || 0;
+                const endDay = data.messageMetrics?.messagesEndDay || 0;
                 
                 this.updateMessageMetrics(sent, failed, thirtyMin, endDay);
             } else {

@@ -4,6 +4,8 @@ const { JsonPatientManager } = require('../services/JsonPatientManager');
 const { ProductionScheduler } = require('../services/ProductionScheduler');
 const { MessageHistoryManager } = require('../services/MessageHistoryManager');
 const { UserActionLogger } = require('../services/UserActionLogger');
+const { MessageMetricsManager } = require('../services/MessageMetricsManager');
+const { SystemMetricsManager } = require('../services/SystemMetricsManager');
 const { TimeUtils } = require('../utils/TimeUtils');
 
 /**
@@ -29,6 +31,10 @@ class MainController {
     // Inicializar UserActionLogger
     this.userActionLogger = new UserActionLogger(this.errorHandler);
     
+    // Inicializar gerenciadores de métricas
+    this.messageMetricsManager = new MessageMetricsManager(this.errorHandler);
+    this.systemMetricsManager = new SystemMetricsManager();
+    
     // Inicializar ProductionScheduler
     this.productionScheduler = new ProductionScheduler(this.errorHandler, this.configManager);
     
@@ -51,6 +57,10 @@ class MainController {
       // Inicializar ConfigManager
       await this.configManager.initialize();
       console.log('✅ ConfigManager inicializado');
+
+      // Inicializar MessageMetricsManager
+      await this.messageMetricsManager.initialize();
+      console.log('✅ MessageMetricsManager inicializado');
 
       // Inicializar JsonPatientManager com configurações de backup
       const backupConfig = {
@@ -197,6 +207,12 @@ class MainController {
       const messages30Min = messagesSent.filter(msg => msg.messageType === '30min').length;
       const messagesEndOfDay = messagesSent.filter(msg => msg.messageType === 'end_of_day').length;
       
+      // Obter métricas do sistema (baseadas no uptime)
+      const systemMetrics = this.systemMetricsManager.getMetrics();
+      
+      // Obter métricas de mensagens (persistentes em JSON)
+      const messageMetrics = this.messageMetricsManager.getMetrics();
+
       const result = {
         isRunning: this.isRunning,
         isInitialized: this.initialized,
@@ -210,6 +226,22 @@ class MainController {
         version: '1.0.0-js',
         environment: process.env.NODE_ENV || 'development',
         productionScheduler: this.productionScheduler ? this.productionScheduler.getStatus() : null,
+        
+        // Métricas do Sistema (baseadas no uptime - zeram ao reiniciar)
+        totalRequests: systemMetrics.totalRequests,
+        apiSuccess: systemMetrics.apiSuccess,
+        apiFailures: systemMetrics.apiFailures,
+        averageResponseTime: systemMetrics.averageResponseTime,
+        successRate: systemMetrics.successRate,
+        
+        // Métricas de Mensagens (persistentes em JSON)
+        messageMetrics: {
+          totalSent: messageMetrics.totalSent,
+          totalFailed: messageMetrics.totalFailed,
+          messages30Min: messageMetrics.messages30Min,
+          messagesEndDay: messageMetrics.messagesEndDay
+        },
+        
         monitoringStats: {
           totalPatients: activePatients.length,
           patientsOver30Min: messages30Min,
@@ -238,21 +270,30 @@ class MainController {
       // Buscar mensagens enviadas hoje
       const messagesSent = await this.messageHistoryManager.getTodaysMessages();
       
+      // Obter métricas reais
+      const systemMetrics = this.systemMetricsManager.getMetrics();
+      const messageMetrics = this.messageMetricsManager.getMetrics();
+      
       const result = {
         system: {
-          uptime: process.uptime(),
+          uptime: systemMetrics.uptime,
+          uptimeFormatted: systemMetrics.uptimeFormatted,
           memory: process.memoryUsage(),
           version: '1.0.0-js',
-          apiCallsSuccessful: 0, // TODO: Implementar contador
-          apiCallsFailed: 0, // TODO: Implementar contador
-          averageApiResponseTime: 0 // TODO: Implementar contador
+          totalRequests: systemMetrics.totalRequests,
+          apiCallsSuccessful: systemMetrics.apiSuccess,
+          apiCallsFailed: systemMetrics.apiFailures,
+          averageApiResponseTime: systemMetrics.averageResponseTime,
+          successRate: systemMetrics.successRate
         },
         messages: {
-          totalSent: messagesSent.length,
-          sent: messagesSent.length,
-          failed: 0, // TODO: Implementar contador
-          pending: 0,
-          averageResponseTime: 0 // TODO: Implementar contador
+          totalSent: messageMetrics.totalSent,
+          sent: messageMetrics.totalSent,
+          failed: messageMetrics.totalFailed,
+          messages30Min: messageMetrics.messages30Min,
+          messagesEndDay: messageMetrics.messagesEndDay,
+          pending: activePatients.length,
+          averageResponseTime: systemMetrics.averageResponseTime
         },
         patients: {
           active: activePatients.length,
@@ -709,6 +750,42 @@ class MainController {
       this.errorHandler.logError(error, 'MainController.getUserLogStats');
       throw error;
     }
+  }
+
+  /**
+   * Incrementa métricas de mensagem enviada
+   */
+  async incrementMessageSent(messageType = null) {
+    try {
+      await this.messageMetricsManager.incrementSent(messageType);
+    } catch (error) {
+      this.errorHandler.logError(error, 'MainController.incrementMessageSent');
+    }
+  }
+
+  /**
+   * Incrementa métricas de mensagem falhada
+   */
+  async incrementMessageFailed() {
+    try {
+      await this.messageMetricsManager.incrementFailed();
+    } catch (error) {
+      this.errorHandler.logError(error, 'MainController.incrementMessageFailed');
+    }
+  }
+
+  /**
+   * Obtém métricas de mensagens
+   */
+  getMessageMetrics() {
+    return this.messageMetricsManager.getMetrics();
+  }
+
+  /**
+   * Obtém métricas do sistema
+   */
+  getSystemMetrics() {
+    return this.systemMetricsManager.getMetrics();
   }
 }
 
