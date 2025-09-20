@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste - Listas de Exceção</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .test-section {
+            margin-bottom: 30px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .test-section h3 {
+            margin-top: 0;
+            color: #333;
+        }
+        .result {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        .success {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .error {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        .info {
+            background-color: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .exclusion-list {
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            min-height: 100px;
+        }
+        .excluded-item {
+            background-color: #f8f9fa;
+            padding: 8px;
+            margin: 5px 0;
+            border-radius: 4px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .remove-btn {
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        .remove-btn:hover {
+            background-color: #c82333;
+        }
+        select {
+            width: 100%;
+            padding: 8px;
+            margin: 5px 0;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Teste - Listas de Exceção</h1>
+        <p>Este teste verifica se as funcionalidades de LISTAS DE EXCEÇÃO estão funcionando corretamente.</p>
+        
+        <div class="test-section">
+            <h3>1. Teste de Conectividade</h3>
+            <button onclick="testConnection()">Testar Conexão</button>
+            <div id="connection-result"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>2. Teste de Setores</h3>
+            <button onclick="testSectors()">Carregar Setores</button>
+            <div id="sectors-result"></div>
+            <div id="sectors-list"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>3. Teste de Canais</h3>
+            <button onclick="testChannels()">Carregar Canais</button>
+            <div id="channels-result"></div>
+            <div id="channels-list"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>4. Teste de Listas de Exceção</h3>
+            <div style="display: flex; gap: 20px;">
+                <div style="flex: 1;">
+                    <h4>Setores Excluídos</h4>
+                    <select id="sector-select">
+                        <option value="">Selecione um setor...</option>
+                    </select>
+                    <button onclick="addSectorToExclusion()">Adicionar à Lista</button>
+                    <div id="excluded-sectors-list" class="exclusion-list">
+                        <p style="color: #666; text-align: center; margin: 20px;">Nenhum setor excluído</p>
+                    </div>
+                </div>
+                <div style="flex: 1;">
+                    <h4>Canais Excluídos</h4>
+                    <select id="channel-select">
+                        <option value="">Selecione um canal...</option>
+                    </select>
+                    <button onclick="addChannelToExclusion()">Adicionar à Lista</button>
+                    <div id="excluded-channels-list" class="exclusion-list">
+                        <p style="color: #666; text-align: center; margin: 20px;">Nenhum canal excluído</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>5. Teste Completo</h3>
+            <button onclick="runCompleteTest()">Executar Teste Completo</button>
+            <div id="complete-test-result"></div>
+        </div>
+    </div>
+
+    <script>
+        let availableSectors = [];
+        let availableChannels = [];
+        let excludedSectors = [];
+        let excludedChannels = [];
+
+        async function testConnection() {
+            const resultDiv = document.getElementById('connection-result');
+            resultDiv.innerHTML = '<div class="info">Testando conexão...</div>';
+            
+            try {
+                const response = await fetch('/api/status');
+                const result = await response.json();
+                
+                if (response.ok) {
+                    resultDiv.innerHTML = '<div class="success">✅ Conexão estabelecida com sucesso!</div>';
+                } else {
+                    resultDiv.innerHTML = '<div class="error">❌ Erro na conexão: ' + (result.error || 'Erro desconhecido') + '</div>';
+                }
+            } catch (error) {
+                resultDiv.innerHTML = '<div class="error">❌ Erro na conexão: ' + error.message + '</div>';
+            }
+        }
+
+        async function testSectors() {
+            const resultDiv = document.getElementById('sectors-result');
+            const listDiv = document.getElementById('sectors-list');
+            
+            resultDiv.innerHTML = '<div class="info">Carregando setores...</div>';
+            
+            try {
+                const response = await fetch('/api/sectors');
+                const result = await response.json();
+                
+                if (response.ok && result.success) {
+                    availableSectors = result.data;
+                    resultDiv.innerHTML = `<div class="success">✅ ${result.data.length} setores carregados com sucesso!</div>`;
+                    
+                    // Atualizar select
+                    const select = document.getElementById('sector-select');
+                    select.innerHTML = '<option value="">Selecione um setor...</option>';
+                    result.data.forEach(sector => {
+                        const option = document.createElement('option');
+                        option.value = sector.id;
+                        option.textContent = sector.name;
+                        select.appendChild(option);
+                    });
+                    
+                    // Mostrar lista
+                    listDiv.innerHTML = '<h4>Setores Disponíveis:</h4>';
+                    result.data.forEach((sector, index) => {
+                        listDiv.innerHTML += `<div>${index + 1}. ${sector.name} (ID: ${sector.id})</div>`;
+                    });
+                } else {
+                    resultDiv.innerHTML = '<div class="error">❌ Erro ao carregar setores: ' + (result.error || 'Erro desconhecido') + '</div>';
+                }
+            } catch (error) {
+                resultDiv.innerHTML = '<div class="error">❌ Erro ao carregar setores: ' + error.message + '</div>';
+            }
+        }
+
+        async function testChannels() {
+            const resultDiv = document.getElementById('channels-result');
+            const listDiv = document.getElementById('channels-list');
+            
+            resultDiv.innerHTML = '<div class="info">Carregando canais...</div>';
+            
+            try {
+                const response = await fetch('/api/channels');
+                const result = await response.json();
+                
+                if (response.ok && result.success) {
+                    availableChannels = result.data;
+                    resultDiv.innerHTML = `<div class="success">✅ ${result.data.length} canais carregados com sucesso!</div>`;
+                    
+                    // Atualizar select
+                    const select = document.getElementById('channel-select');
+                    select.innerHTML = '<option value="">Selecione um canal...</option>';
+                    result.data.forEach(channel => {
+                        const option = document.createElement('option');
+                        option.value = channel.id;
+                        const displayName = channel.description || channel.identifier || `Canal ${channel.id}`;
+                        option.textContent = displayName;
+                        select.appendChild(option);
+                    });
+                    
+                    // Mostrar lista
+                    listDiv.innerHTML = '<h4>Canais Disponíveis:</h4>';
+                    result.data.forEach((channel, index) => {
+                        const displayName = channel.description || channel.identifier || `Canal ${channel.id}`;
+                        listDiv.innerHTML += `<div>${index + 1}. ${displayName} (ID: ${channel.id})</div>`;
+                    });
+                } else {
+                    resultDiv.innerHTML = '<div class="error">❌ Erro ao carregar canais: ' + (result.error || 'Erro desconhecido') + '</div>';
+                }
+            } catch (error) {
+                resultDiv.innerHTML = '<div class="error">❌ Erro ao carregar canais: ' + error.message + '</div>';
+            }
+        }
+
+        function addSectorToExclusion() {
+            const select = document.getElementById('sector-select');
+            const selectedId = select.value;
+            
+            if (!selectedId) {
+                alert('Selecione um setor primeiro!');
+                return;
+            }
+            
+            // Verificar se já está na lista
+            if (excludedSectors.some(sector => sector.id === selectedId)) {
+                alert('Este setor já está na lista de exclusão!');
+                return;
+            }
+            
+            // Encontrar o setor
+            const sector = availableSectors.find(s => s.id === selectedId);
+            if (sector) {
+                excludedSectors.push(sector);
+                updateExcludedSectorsDisplay();
+                select.value = '';
+            }
+        }
+
+        function addChannelToExclusion() {
+            const select = document.getElementById('channel-select');
+            const selectedId = select.value;
+            
+            if (!selectedId) {
+                alert('Selecione um canal primeiro!');
+                return;
+            }
+            
+            // Verificar se já está na lista
+            if (excludedChannels.some(channel => channel.id === selectedId)) {
+                alert('Este canal já está na lista de exclusão!');
+                return;
+            }
+            
+            // Encontrar o canal
+            const channel = availableChannels.find(c => c.id === selectedId);
+            if (channel) {
+                excludedChannels.push(channel);
+                updateExcludedChannelsDisplay();
+                select.value = '';
+            }
+        }
+
+        function updateExcludedSectorsDisplay() {
+            const container = document.getElementById('excluded-sectors-list');
+            
+            if (excludedSectors.length === 0) {
+                container.innerHTML = '<p style="color: #666; text-align: center; margin: 20px;">Nenhum setor excluído</p>';
+                return;
+            }
+            
+            container.innerHTML = '';
+            excludedSectors.forEach(sector => {
+                const div = document.createElement('div');
+                div.className = 'excluded-item';
+                div.innerHTML = `
+                    <span>${sector.name}</span>
+                    <button class="remove-btn" onclick="removeSectorFromExclusion('${sector.id}')">Remover</button>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function updateExcludedChannelsDisplay() {
+            const container = document.getElementById('excluded-channels-list');
+            
+            if (excludedChannels.length === 0) {
+                container.innerHTML = '<p style="color: #666; text-align: center; margin: 20px;">Nenhum canal excluído</p>';
+                return;
+            }
+            
+            container.innerHTML = '';
+            excludedChannels.forEach(channel => {
+                const div = document.createElement('div');
+                div.className = 'excluded-item';
+                const displayName = channel.description || channel.identifier || `Canal ${channel.id}`;
+                div.innerHTML = `
+                    <span>${displayName}</span>
+                    <button class="remove-btn" onclick="removeChannelFromExclusion('${channel.id}')">Remover</button>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function removeSectorFromExclusion(sectorId) {
+            excludedSectors = excludedSectors.filter(sector => sector.id !== sectorId);
+            updateExcludedSectorsDisplay();
+        }
+
+        function removeChannelFromExclusion(channelId) {
+            excludedChannels = excludedChannels.filter(channel => channel.id !== channelId);
+            updateExcludedChannelsDisplay();
+        }
+
+        async function runCompleteTest() {
+            const resultDiv = document.getElementById('complete-test-result');
+            resultDiv.innerHTML = '<div class="info">Executando teste completo...</div>';
+            
+            let results = [];
+            
+            // Teste 1: Conexão
+            try {
+                const response = await fetch('/api/status');
+                if (response.ok) {
+                    results.push('✅ Conexão: OK');
+                } else {
+                    results.push('❌ Conexão: FALHOU');
+                }
+            } catch (error) {
+                results.push('❌ Conexão: FALHOU - ' + error.message);
+            }
+            
+            // Teste 2: Setores
+            try {
+                const response = await fetch('/api/sectors');
+                const result = await response.json();
+                if (response.ok && result.success && result.data.length > 0) {
+                    results.push(`✅ Setores: OK (${result.data.length} encontrados)`);
+                } else {
+                    results.push('❌ Setores: FALHOU');
+                }
+            } catch (error) {
+                results.push('❌ Setores: FALHOU - ' + error.message);
+            }
+            
+            // Teste 3: Canais
+            try {
+                const response = await fetch('/api/channels');
+                const result = await response.json();
+                if (response.ok && result.success && result.data.length > 0) {
+                    results.push(`✅ Canais: OK (${result.data.length} encontrados)`);
+                } else {
+                    results.push('❌ Canais: FALHOU');
+                }
+            } catch (error) {
+                results.push('❌ Canais: FALHOU - ' + error.message);
+            }
+            
+            // Resultado final
+            const allPassed = results.every(result => result.startsWith('✅'));
+            const statusClass = allPassed ? 'success' : 'error';
+            const statusText = allPassed ? 'TODOS OS TESTES PASSARAM!' : 'ALGUNS TESTES FALHARAM!';
+            
+            resultDiv.innerHTML = `
+                <div class="${statusClass}">
+                    <h4>${statusText}</h4>
+                    ${results.map(result => `<div>${result}</div>`).join('')}
+                </div>
+            `;
+        }
+
+        // Executar testes automaticamente ao carregar a página
+        window.onload = function() {
+            console.log('🧪 Página de teste carregada');
+            runCompleteTest();
+        };
+    </script>
+</body>
+</html>

@@ -322,6 +322,8 @@ class AutomationInterface {
 
     navigateToRoute(route) {
         try {
+            console.log(`🚀 navigateToRoute chamada com rota: ${route}`);
+            
             // Hide all route contents
             document.querySelectorAll('.route-content').forEach(content => {
                 content.classList.remove('active');
@@ -380,6 +382,7 @@ class AutomationInterface {
             }
 
             // Load data for specific routes
+            console.log(`📋 Chamando loadRouteData para rota: ${route}`);
             this.loadRouteData(route);
 
         } catch (error) {
@@ -507,35 +510,48 @@ class AutomationInterface {
     }
 
     loadRouteData(route) {
+        console.log(`📋 loadRouteData chamada para rota: ${route}`);
+        
         switch (route) {
             case 'dashboard':
+                console.log('📊 Carregando dados do dashboard...');
                 this.loadStatus();
                 break;
             case 'atendimentos':
+                console.log('👥 Carregando dados dos atendimentos...');
                 this.loadPatients();
                 // Always sync system status when loading patients
                 this.checkFlowState();
                 break;
             case 'configuracoes':
+                console.log('⚙️ Carregando dados das configurações...');
+                console.log('🃏 Chamando loadActionCards...');
                 this.loadActionCards();
+                console.log('🏥 Chamando loadSectors...');
                 this.loadSectors();
+                console.log('📱 Chamando loadChannels...');
                 this.loadChannels();
+                console.log('💬 Chamando loadMessageConfig...');
                 this.loadMessageConfig();
                 // Load exclusion lists after sectors/channels are loaded
+                console.log('📋 Chamando loadExclusionLists...');
                 this.loadExclusionLists();
                 // Always sync system status when loading config
                 this.checkFlowState();
                 break;
             case 'metricas':
+                console.log('📈 Carregando métricas...');
                 // Always sync system status when loading metrics
                 this.checkFlowState();
                 break;
             case 'logs':
+                console.log('📝 Carregando logs...');
                 this.loadLogs();
                 // Always sync system status when loading logs
                 this.checkFlowState();
                 break;
             case 'sistema':
+                console.log('🔧 Carregando informações do sistema...');
                 // Always sync system status when loading system info
                 this.checkFlowState();
                 break;
@@ -1202,9 +1218,12 @@ class AutomationInterface {
     }
 
     displaySectors(sectors) {
+        console.log('📋 displaySectors chamada com:', sectors?.length || 0, 'setores');
+        
         // Update sector filter in atendimentos page
         const sectorFilter = document.getElementById('sector-filter');
         if (sectorFilter) {
+            console.log('✅ sector-filter encontrado, populando...');
             sectorFilter.innerHTML = '<option value="">Todos os Setores</option>';
             
             if (sectors && sectors.length > 0) {
@@ -1214,12 +1233,16 @@ class AutomationInterface {
                     option.textContent = sector.name;
                     sectorFilter.appendChild(option);
                 });
+                console.log(`✅ ${sectors.length} setores adicionados ao sector-filter`);
             }
+        } else {
+            console.log('❌ sector-filter não encontrado');
         }
 
         // Update sector select in configuracoes page (Listas de Exceção)
         const sectorSelect = document.getElementById('sector-select');
         if (sectorSelect) {
+            console.log('✅ sector-select encontrado, populando...');
             sectorSelect.innerHTML = '<option value="">Selecione um setor...</option>';
             
             if (sectors && sectors.length > 0) {
@@ -1229,11 +1252,15 @@ class AutomationInterface {
                     option.textContent = sector.name;
                     sectorSelect.appendChild(option);
                 });
+                console.log(`✅ ${sectors.length} setores adicionados ao sector-select`);
             }
+        } else {
+            console.log('❌ sector-select não encontrado');
         }
 
         // Store sectors for later use
         this.availableSectors = sectors || [];
+        console.log('✅ availableSectors atualizado com', this.availableSectors.length, 'setores');
     }
 
     async loadChannels() {
@@ -1260,9 +1287,12 @@ class AutomationInterface {
     }
 
     displayChannels(channels) {
+        console.log('📱 displayChannels chamada com:', channels?.length || 0, 'canais');
+        
         // Update channel select in configuracoes page (Listas de Exceção)
         const channelSelect = document.getElementById('channel-select');
         if (channelSelect) {
+            console.log('✅ channel-select encontrado, populando...');
             channelSelect.innerHTML = '<option value="">Selecione um canal...</option>';
             
             if (channels && channels.length > 0) {
@@ -1288,11 +1318,15 @@ class AutomationInterface {
                     
                     channelSelect.appendChild(option);
                 });
+                console.log(`✅ ${channels.length} canais adicionados ao channel-select`);
             }
+        } else {
+            console.log('❌ channel-select não encontrado');
         }
 
         // Store channels for later use
         this.availableChannels = channels || [];
+        console.log('✅ availableChannels atualizado com', this.availableChannels.length, 'canais');
     }
 
     // Métodos para gerenciar listas de exclusão
@@ -1831,11 +1865,8 @@ class AutomationInterface {
     }
 
     async loadExclusionLists() {
-        // Carregar setores e canais disponíveis primeiro
-        await this.loadSectors();
-        await this.loadChannels();
-        
-        // Depois carregar as exclusões (que dependem das listas disponíveis)
+        // Não carregar setores e canais novamente, pois já foram carregados
+        // Apenas carregar as exclusões (que dependem das listas já carregadas)
         await this.loadExcludedSectors();
         await this.loadExcludedChannels();
         
@@ -2163,72 +2194,6 @@ class AutomationInterface {
         }
     }
 
-    navigateToRoute(route) {
-        try {
-            // Hide all route contents
-            document.querySelectorAll('.route-content').forEach(content => {
-                content.classList.remove('active');
-            });
-
-            // Remove active class from all nav links
-            document.querySelectorAll('.nav-link').forEach(link => {
-                link.classList.remove('active');
-            });
-
-            // Show selected route content
-            const routeContent = document.getElementById(`${route}-route`);
-            if (routeContent) {
-                routeContent.classList.add('active');
-            } else {
-                console.error(`Conteúdo da rota não encontrado: ${route}-route`);
-                return;
-            }
-
-            // Add active class to nav link
-            const navLink = document.querySelector(`[data-route="${route}"]`);
-            if (navLink) {
-                navLink.classList.add('active');
-            }
-
-            // Update page title
-            const titles = {
-                'dashboard': 'Dashboard',
-                'atendimentos': 'Atendimentos',
-                'controle': 'Controle do Fluxo',
-                'configuracoes': 'Configurações',
-                'logs': 'Logs do Sistema',
-                'metricas': 'Métricas',
-                'sistema': 'Sistema'
-            };
-
-            const pageTitle = document.getElementById('page-title');
-            if (pageTitle && titles[route]) {
-                pageTitle.textContent = titles[route];
-            }
-
-            // Update URL hash
-            window.location.hash = route;
-
-            // Update current route
-            this.currentRoute = route;
-
-            // Show/hide real-time timer based on route
-            const realtimeTimer = document.getElementById('realtime-timer');
-            if (realtimeTimer) {
-                if (route === 'dashboard') {
-                    realtimeTimer.style.display = 'flex';
-                } else {
-                    realtimeTimer.style.display = 'none';
-                }
-            }
-
-            // Carregar dados específicos da rota
-            this.handleRouteSpecificActions(route);
-
-        } catch (error) {
-            console.error('Erro na navegação:', error);
-        }
-    }
 
     handleRouteSpecificActions(route) {
         switch (route) {

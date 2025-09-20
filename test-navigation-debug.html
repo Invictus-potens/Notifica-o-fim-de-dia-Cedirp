@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste de Navegação - Debug</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .log {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Teste de Navegação - Debug</h1>
+        <p>Este teste verifica se a navegação está funcionando corretamente.</p>
+        
+        <h3>Testes de Navegação:</h3>
+        <button onclick="testNavigateToConfiguracoes()">Navegar para Configurações</button>
+        <button onclick="testLoadSectors()">Testar loadSectors()</button>
+        <button onclick="testLoadChannels()">Testar loadChannels()</button>
+        <button onclick="clearLogs()">Limpar Logs</button>
+        
+        <h3>Logs:</h3>
+        <div id="log-container" class="log"></div>
+    </div>
+
+    <script>
+        let logContainer = document.getElementById('log-container');
+        
+        function log(message) {
+            const timestamp = new Date().toLocaleTimeString();
+            logContainer.innerHTML += `[${timestamp}] ${message}\n`;
+            logContainer.scrollTop = logContainer.scrollHeight;
+            console.log(message);
+        }
+        
+        function clearLogs() {
+            logContainer.innerHTML = '';
+        }
+        
+        function testNavigateToConfiguracoes() {
+            log('🚀 Testando navegação para configurações...');
+            
+            // Simular clique no link de configurações
+            const configLink = document.querySelector('[data-route="configuracoes"]');
+            if (configLink) {
+                log('✅ Link de configurações encontrado');
+                log('🖱️ Simulando clique...');
+                configLink.click();
+            } else {
+                log('❌ Link de configurações NÃO encontrado');
+            }
+        }
+        
+        async function testLoadSectors() {
+            log('🏥 Testando loadSectors()...');
+            
+            try {
+                const response = await fetch('/api/sectors');
+                const result = await response.json();
+                
+                if (response.ok && result.success) {
+                    log(`✅ API setores funcionando: ${result.data.length} setores`);
+                    log('📋 Primeiros 3 setores:');
+                    result.data.slice(0, 3).forEach((sector, index) => {
+                        log(`   ${index + 1}. ${sector.name} (ID: ${sector.id})`);
+                    });
+                } else {
+                    log(`❌ API setores retornou erro: ${result.error || 'Erro desconhecido'}`);
+                }
+            } catch (error) {
+                log(`❌ Erro na API setores: ${error.message}`);
+            }
+        }
+        
+        async function testLoadChannels() {
+            log('📱 Testando loadChannels()...');
+            
+            try {
+                const response = await fetch('/api/channels');
+                const result = await response.json();
+                
+                if (response.ok && result.success) {
+                    log(`✅ API canais funcionando: ${result.data.length} canais`);
+                    log('📋 Primeiros 3 canais:');
+                    result.data.slice(0, 3).forEach((channel, index) => {
+                        const displayName = channel.description || channel.identifier || `Canal ${channel.id}`;
+                        log(`   ${index + 1}. ${displayName} (ID: ${channel.id})`);
+                    });
+                } else {
+                    log(`❌ API canais retornou erro: ${result.error || 'Erro desconhecido'}`);
+                }
+            } catch (error) {
+                log(`❌ Erro na API canais: ${error.message}`);
+            }
+        }
+        
+        // Log inicial
+        log('🧪 Teste de navegação iniciado');
+        log('💡 Clique nos botões acima para testar');
+        
+        // Verificar se estamos na página principal
+        if (window.location.hostname === 'localhost' && window.location.port === '3000') {
+            log('✅ Conectado ao servidor local na porta 3000');
+        } else {
+            log('⚠️ Não conectado ao servidor local (localhost:3000)');
+            log('💡 Certifique-se de que o servidor está rodando');
+        }
+    </script>
+</body>
+</html>
