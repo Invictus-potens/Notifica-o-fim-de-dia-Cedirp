@@ -1,1 +1,32 @@
-[]
+[
+  {
+    "id": "68cdf84af42aa528cdb2440e",
+    "contactId": "6863f9b7762b73008f223c5e",
+    "name": "Felipe Prado",
+    "phone": "5516981892476",
+    "sectorId": "6401f4f49b1ff8512b525e9c",
+    "sectorName": "Suporte Telefonia",
+    "channelId": "63e68f168a48875131856df8",
+    "channelType": "WhatsApp Business (Principal)",
+    "waitStartTime": "2025-09-20T00:41:46.599Z",
+    "waitTimeMinutes": 145,
+    "status": "waiting",
+    "enteredAt": "2025-09-20T02:59:01.449Z",
+    "processedAt": "2025-09-20T12:14:01.269Z"
+  },
+  {
+    "id": "68ce96f97e3c95ca3ba1262c",
+    "contactId": "6669d4676374fb7c73fb9c0a",
+    "name": "Show Dos Colchões",
+    "phone": "5516993889134",
+    "sectorId": "6400efb5343817d4ddbb2a4c",
+    "sectorName": "Suporte CAM",
+    "channelId": "63e68f168a48875131856df8",
+    "channelType": "WhatsApp Business (Principal)",
+    "waitStartTime": "2025-09-20T11:58:49.860Z",
+    "waitTimeMinutes": 1,
+    "status": "waiting",
+    "enteredAt": "2025-09-20T12:20:00.749Z",
+    "processedAt": "2025-09-20T12:22:00.900Z"
+  }
+]

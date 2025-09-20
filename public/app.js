@@ -50,7 +50,7 @@ class AutomationInterface {
             this.setupRouter();
             this.initializeExclusionLists();
             this.initializeFlowControl();
-            this.initializePatientSelection();
+            // initializePatientSelection removido - sistema agora é apenas automático
             this.initializePatientData();
             this.initializeSystemTab(); // Inicializar configurações do sistema (agora na aba Configurações)
             this.initializeMetricsTab(); // Inicializar aba Métricas
@@ -1980,18 +1980,9 @@ class AutomationInterface {
             if (response.ok && result.success) {
                 const config = result.data;
                 
-                // Update action card selects
-                const actionCardSelect = document.getElementById('action-card-select');
+                // Update action card selects (apenas para automação)
                 const actionCard30MinSelect = document.getElementById('action-card-30min-select');
                 const actionCardEndDaySelect = document.getElementById('action-card-endday-select');
-                
-                if (actionCardSelect) {
-                    if (config.selectedActionCard) {
-                        actionCardSelect.value = config.selectedActionCard;
-                    } else {
-                    }
-                } else {
-                }
 
                 if (actionCard30MinSelect) {
                     if (config.selectedActionCard30Min) {
@@ -2030,25 +2021,19 @@ class AutomationInterface {
             const currentConfigResult = await currentConfigResponse.json();
             const currentConfig = currentConfigResult.data || {};
             
-            // Get selected values from form
-            const actionCardSelect = document.getElementById('action-card-select');
+            // Get selected values from form (apenas para automação)
             const actionCard30MinSelect = document.getElementById('action-card-30min-select');
             const actionCardEndDaySelect = document.getElementById('action-card-endday-select');
             
-            const selectedActionCard = actionCardSelect ? actionCardSelect.value : '';
             const selectedActionCard30Min = actionCard30MinSelect ? actionCard30MinSelect.value : '';
             const selectedActionCardEndDay = actionCardEndDaySelect ? actionCardEndDaySelect.value : '';
             
-            
-            
             // 2. Aplicar lógica: se não selecionou novo, manter o antigo
-            const finalActionCard = selectedActionCard || currentConfig.selectedActionCard;
             const finalActionCard30Min = selectedActionCard30Min || currentConfig.selectedActionCard30Min;
             const finalActionCardEndDay = selectedActionCardEndDay || currentConfig.selectedActionCardEndDay;
             
-            
             // 3. Validar que pelo menos um está definido
-            if (!finalActionCard && !finalActionCard30Min && !finalActionCardEndDay) {
+            if (!finalActionCard30Min && !finalActionCardEndDay) {
                 this.showError('Erro: Nenhum cartão de ação está configurado. Selecione pelo menos um.');
                 return;
             }
@@ -2057,9 +2042,6 @@ class AutomationInterface {
             const configData = {};
             
             // Só incluir no payload se há mudança ou se é um novo valor
-            if (selectedActionCard || !currentConfig.selectedActionCard) {
-                configData.selectedActionCard = finalActionCard;
-            }
             if (selectedActionCard30Min || !currentConfig.selectedActionCard30Min) {
                 configData.selectedActionCard30Min = finalActionCard30Min;
             }
@@ -2074,13 +2056,12 @@ class AutomationInterface {
             console.log('📤 Dados que serão enviados para API:', configData);
             
             // 5. Usar rota específica para Action Cards se há mudanças nos cards
-            const hasActionCardChanges = configData.selectedActionCard || configData.selectedActionCard30Min || configData.selectedActionCardEndDay;
+            const hasActionCardChanges = configData.selectedActionCard30Min || configData.selectedActionCardEndDay;
             
             let response;
             if (hasActionCardChanges) {
-                // Usar rota específica para Action Cards
+                // Usar rota específica para Action Cards (apenas para automação)
                 const actionCardData = {
-                    default: finalActionCard,
                     thirtyMin: finalActionCard30Min,
                     endOfDay: finalActionCardEndDay
                 };
@@ -2319,304 +2300,20 @@ class AutomationInterface {
     }
 
     // Métodos para gerenciar seleção de pacientes
-    initializePatientSelection() {
-        this.selectedPatients = [];
-        this.setupPatientSelectionButtons();
-    }
+    // Função initializePatientSelection removida - sistema agora é apenas automático
 
-    setupPatientSelectionButtons() {
-        // Botão "Selecionar Todos"
-        const selectAllCheckbox = document.getElementById('select-all-patients');
-        if (selectAllCheckbox) {
-            selectAllCheckbox.addEventListener('change', (e) => {
-                this.toggleAllPatients(e.target.checked);
-            });
-        }
-
-        // Botões de ação
-        const sendMessageBtn = document.getElementById('send-message-btn');
-        const clearSelectionBtn = document.getElementById('clear-selection-btn');
-
-        if (sendMessageBtn) {
-            sendMessageBtn.addEventListener('click', () => this.openSendMessageModal());
-        }
-
-        if (clearSelectionBtn) {
-            clearSelectionBtn.addEventListener('click', () => this.clearSelection());
-        }
-
-        // Event listeners para o modal de envio de mensagem
-        this.setupModalEventListeners();
-    }
+    // Função setupPatientSelectionButtons removida - sistema agora é apenas automático
 
 
-    toggleAllPatients(checked) {
-        const checkboxes = document.querySelectorAll('.patient-checkbox');
-        checkboxes.forEach(checkbox => {
-            checkbox.checked = checked;
-        });
-        this.updatePatientSelection();
-    }
+    // Funções de seleção de pacientes removidas - sistema agora é apenas automático
 
-    updatePatientSelection() {
-        const checkboxes = document.querySelectorAll('.patient-checkbox:checked');
-        this.selectedPatients = Array.from(checkboxes).map(checkbox => ({
-            id: checkbox.dataset.patientId,
-            contactId: checkbox.dataset.contactId || checkbox.dataset.patientId,
-            name: checkbox.dataset.patientName,
-            phone: checkbox.dataset.patientPhone || '', // Garantir que sempre tenha um valor
-            number: checkbox.dataset.patientPhone || '' // Para compatibilidade
-        }));
+    // Função clearSelection removida - sistema agora é apenas automático
 
-        const actionsContainer = document.getElementById('selected-patients-actions');
-        const selectedCount = document.getElementById('selected-count');
-        const selectAllCheckbox = document.getElementById('select-all-patients');
+    // Função setupModalEventListeners removida - sistema agora é apenas automático
 
-        if (actionsContainer && selectedCount) {
-            if (this.selectedPatients.length > 0) {
-                actionsContainer.classList.remove('d-none');
-                selectedCount.textContent = this.selectedPatients.length;
-            } else {
-                actionsContainer.classList.add('d-none');
-            }
-        }
+    // Função openSendMessageModal removida - sistema agora é apenas automático
 
-        // Atualizar checkbox "Selecionar Todos"
-        if (selectAllCheckbox) {
-            const totalCheckboxes = document.querySelectorAll('.patient-checkbox').length;
-            const checkedCheckboxes = document.querySelectorAll('.patient-checkbox:checked').length;
-            selectAllCheckbox.checked = checkedCheckboxes === totalCheckboxes && totalCheckboxes > 0;
-            selectAllCheckbox.indeterminate = checkedCheckboxes > 0 && checkedCheckboxes < totalCheckboxes;
-        }
-    }
-
-    clearSelection() {
-        const checkboxes = document.querySelectorAll('.patient-checkbox');
-        checkboxes.forEach(checkbox => {
-            checkbox.checked = false;
-        });
-        
-        const selectAllCheckbox = document.getElementById('select-all-patients');
-        if (selectAllCheckbox) {
-            selectAllCheckbox.checked = false;
-            selectAllCheckbox.indeterminate = false;
-        }
-
-        this.updatePatientSelection();
-    }
-
-    setupModalEventListeners() {
-        // Botão de fechar modal
-        const closeModalBtn = document.getElementById('close-send-message-modal');
-        if (closeModalBtn) {
-            closeModalBtn.addEventListener('click', () => this.hideModal('sendMessageModal'));
-        }
-
-        // Botão de cancelar
-        const cancelBtn = document.getElementById('cancel-send-message-btn');
-        if (cancelBtn) {
-            cancelBtn.addEventListener('click', () => this.hideModal('sendMessageModal'));
-        }
-
-        // Botão de confirmar envio
-        const confirmBtn = document.getElementById('confirm-send-message-btn');
-        if (confirmBtn) {
-            confirmBtn.addEventListener('click', () => this.sendMessageToSelectedPatients());
-        }
-    }
-
-    async openSendMessageModal() {
-        if (this.selectedPatients.length === 0) {
-            this.showError('Selecione pelo menos um atendimento');
-            return;
-        }
-
-        // Carregar configurações de mensagem antes de determinar o tipo
-        await this.loadMessageConfig();
-        
-        // Determinar tipo de mensagem baseado na configuração
-        this.determineMessageType();
-        
-        // Atualizar lista de pacientes selecionados
-        this.updateSelectedPatientsList('selected-patients-list');
-
-        // Mostrar modal
-        const modal = document.getElementById('sendMessageModal');
-        if (modal) {
-            modal.style.display = 'block';
-            modal.classList.add('show');
-            document.body.classList.add('modal-open');
-        }
-    }
-
-    determineMessageType() {
-        const messageTypeInfo = document.getElementById('message-type-info');
-        if (!messageTypeInfo) return;
-
-        // Verificar qual tipo está selecionado nas configurações
-        const actionCardSelect = document.getElementById('action-card-select');
-        
-        console.log('🔍 Verificando tipo de mensagem...');
-        
-        if (actionCardSelect && actionCardSelect.value) {
-            const selectedOption = actionCardSelect.options[actionCardSelect.selectedIndex];
-            messageTypeInfo.innerHTML = `Enviando <strong>Cartão de Ação</strong>: ${selectedOption.textContent}`;
-            this.currentMessageType = 'action_card';
-            this.currentMessageId = actionCardSelect.value;
-        } else {
-            messageTypeInfo.innerHTML = '<span class="text-warning">⚠️ Nenhum cartão de ação selecionado nas configurações</span>';
-            this.currentMessageType = null;
-            this.currentMessageId = null;
-            console.log('❌ Nenhum tipo de mensagem selecionado');
-        }
-    }
-
-    loadActionCardsForModal(selectId) {
-        const selectElement = document.getElementById(selectId);
-        if (!selectElement) return;
-
-        selectElement.innerHTML = '<option value="">Carregando cartões...</option>';
-
-        // Usar os cartões já carregados ou carregar novamente
-        if (this.availableActionCards && this.availableActionCards.length > 0) {
-            this.populateActionCardSelect(selectElement, this.availableActionCards);
-        } else {
-            this.loadActionCards().then(() => {
-                this.populateActionCardSelect(selectElement, this.availableActionCards || []);
-            });
-        }
-    }
-
-
-    populateActionCardSelect(selectElement, actionCards) {
-        selectElement.innerHTML = '<option value="">Selecione um cartão de ação...</option>';
-        
-        if (actionCards && actionCards.length > 0) {
-            actionCards.forEach(card => {
-                const option = document.createElement('option');
-                option.value = card.id;
-                const displayName = card.description || card.name || card.title || `Cartão ${card.id}`;
-                option.textContent = displayName;
-                selectElement.appendChild(option);
-            });
-        }
-    }
-
-
-    updateSelectedPatientsList(containerId) {
-        const container = document.getElementById(containerId);
-        if (!container) return;
-
-        if (this.selectedPatients.length === 0) {
-            container.innerHTML = '<div class="text-muted">Nenhum atendimento selecionado</div>';
-            return;
-        }
-
-        container.innerHTML = this.selectedPatients.map(patient => `
-            <div class="d-flex justify-content-between align-items-center mb-2 p-2 bg-light rounded">
-                <div>
-                    <strong>${this.escapeHtml(patient.name)}</strong>
-                    <br>
-                    <small class="text-muted">Telefone: ${this.escapeHtml(patient.phone || 'Não informado')}</small>
-                    <br>
-                    <small class="text-muted">ID: ${patient.contactId || patient.id}</small>
-                </div>
-            </div>
-        `).join('');
-    }
-
-    async sendMessageToSelectedPatients() {
-        if (!this.currentMessageType || !this.currentMessageId) {
-            this.showError('Configure um cartão de ação nas configurações primeiro');
-            return;
-        }
-
-        const patients = this.selectedPatients.map(p => ({
-            number: p.phone, // Número de telefone do paciente
-            contactId: p.contactId || p.id   // ID do chat/atendimento
-        }));
-
-        // Validar se todos os pacientes têm número de telefone
-        const patientsWithoutPhone = patients.filter(p => !p.number || p.number.trim() === '');
-        if (patientsWithoutPhone.length > 0) {
-            this.showError('Alguns pacientes selecionados não possuem número de telefone válido');
-            return;
-        }
-
-        // Log para debug
-        console.log('📤 Enviando mensagem para pacientes:', patients);
-        console.log('📤 Dados detalhados dos pacientes selecionados:', this.selectedPatients);
-        
-        try {
-            let endpoint, payload;
-            
-            if (this.currentMessageType === 'action_card') {
-                endpoint = '/api/messages/send-action-card';
-                payload = {
-                    patients,
-                    action_card_id: this.currentMessageId
-                };
-                console.log('🔍 Payload completo:', payload);
-            }
-
-            const response = await fetch(endpoint, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(payload)
-            });
-
-            const result = await response.json();
-
-            if (response.ok && result.success) {
-                const messageType = 'Cartão de Ação';
-                this.showSuccess(`${messageType} enviado: ${result.data.success} sucessos, ${result.data.failed} falhas`);
-                
-                // Log de sucesso para o usuário
-                await this.addUserActionLog('info', 
-                    'Envio Manual de Mensagem', 
-                    `Usuário enviou mensagem para ${patients.length} pacientes (${result.data.success} sucessos, ${result.data.failed} falhas)`,
-                    { 
-                        messageType: this.currentMessageType,
-                        actionCard: this.currentMessageId,
-                        totalPatients: patients.length,
-                        successCount: result.data.success,
-                        failedCount: result.data.failed 
-                    }
-                );
-                
-                this.clearSelection();
-                this.hideModal('sendMessageModal');
-            } else {
-                this.showError(result.message || `Erro ao enviar ${this.currentMessageType}`);
-                
-                // Log de erro para o usuário
-                this.addUserActionLog('error', 
-                    `Falha ao enviar mensagem manual: ${result.message || 'Erro desconhecido'}`, 
-                    'Envio Manual',
-                    { 
-                        messageType: this.currentMessageType,
-                        messageId: this.currentMessageId,
-                        totalPatients: patients.length,
-                        error: result.message
-                    }
-                );
-            }
-        } catch (error) {
-            console.error('Erro ao enviar mensagem:', error);
-            this.showError('Erro ao enviar mensagem: ' + error.message);
-        }
-    }
-
-    hideModal(modalId) {
-        const modal = document.getElementById(modalId);
-        if (modal) {
-            modal.style.display = 'none';
-            modal.classList.remove('show');
-            document.body.classList.remove('modal-open');
-        }
-    }
+    // Todas as funções de envio manual removidas - sistema agora é apenas automático
 
     /**
      * Inicia o timer em tempo real

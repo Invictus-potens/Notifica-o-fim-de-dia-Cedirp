@@ -1,7 +1,9 @@
-# 📋 Implementação de Envio de Action Cards - Referência para Monitoramento Automático
+# 📋 Implementação de Envio de Action Cards - Sistema Automático
 
 ## 🎯 **Objetivo**
-Este documento serve como referência para implementar o envio automático de action cards no sistema de monitoramento a cada 60 segundos, usando a mesma lógica do envio individual que foi corrigida.
+Este documento serve como referência para o envio automático de action cards no sistema de monitoramento a cada 60 segundos.
+
+**⚠️ IMPORTANTE: O sistema agora envia mensagens SOMENTE por automação. A funcionalidade de envio manual foi completamente removida.**
 
 ## ✅ **Lógica de Envio Corrigida**
 

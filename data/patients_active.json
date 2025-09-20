@@ -1,16 +1,1 @@
-[
-  {
-    "id": "68cdf84af42aa528cdb2440e",
-    "contactId": "6863f9b7762b73008f223c5e",
-    "name": "Felipe Prado",
-    "phone": "5516981892476",
-    "sectorId": "6401f4f49b1ff8512b525e9c",
-    "sectorName": "Suporte Telefonia",
-    "channelId": "63e68f168a48875131856df8",
-    "channelType": "WhatsApp Business (Principal)",
-    "waitStartTime": "2025-09-20T00:41:46.599Z",
-    "waitTimeMinutes": 144,
-    "status": "waiting",
-    "enteredAt": "2025-09-20T02:59:01.449Z"
-  }
-]
+[]

@@ -4,7 +4,9 @@ Este documento descreve a implementação da funcionalidade de busca e uso de ca
 
 ## Visão Geral
 
-A funcionalidade permite buscar cartões de ação disponíveis na API CAM Krolik e utilizá-los no sistema de automação de mensagens. Os cartões de ação são templates pré-definidos que podem ser enviados para pacientes em diferentes situações.
+A funcionalidade permite buscar cartões de ação disponíveis na API CAM Krolik e utilizá-los no sistema de automação de mensagens. Os cartões de ação são templates pré-definidos que são enviados AUTOMATICAMENTE para pacientes em diferentes situações.
+
+**⚠️ IMPORTANTE: O sistema agora envia mensagens SOMENTE por automação. Não há mais opção de envio manual.**
 
 ## Endpoint da API
 
