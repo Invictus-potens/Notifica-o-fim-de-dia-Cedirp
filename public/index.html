@@ -65,12 +65,6 @@
                             <span class="nav-text">Métricas</span>
                         </a>
                     </li>
-                    <li class="nav-item">
-                        <a href="#sistema" class="nav-link" data-route="sistema">
-                            <i class="bi bi-info-circle"></i>
-                            <span class="nav-text">Sistema</span>
-                        </a>
-                    </li>
                 </ul>
             </div>
             
@@ -352,6 +346,103 @@
                             </div>
                         </div>
                     </div>
+
+                    <!-- Seção de Configurações do Sistema -->
+                    <div class="col-12 mt-4">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="mb-0">
+                                    <i class="bi bi-gear-fill me-2"></i>Configurações do Sistema
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <!-- Configurações de Horário -->
+                                    <div class="col-lg-6 col-md-12 mb-4">
+                                        <div class="card h-100">
+                                            <div class="card-header">
+                                                <h6 class="mb-0">
+                                                    <i class="bi bi-clock me-2"></i>Configurações de Horário
+                                                </h6>
+                                            </div>
+                                            <div class="card-body">
+                                                <div class="mb-3">
+                                                    <label class="form-label fw-bold">
+                                                        <i class="bi bi-sunrise me-2"></i>Início do Dia
+                                                    </label>
+                                                    <input type="time" class="form-control" id="start-of-day-time" value="08:00">
+                                                    <small class="form-text text-muted">Horário de início do expediente</small>
+                                                </div>
+                                                <div class="mb-3">
+                                                    <label class="form-label fw-bold">
+                                                        <i class="bi bi-sunset me-2"></i>Fim do Dia
+                                                    </label>
+                                                    <input type="time" class="form-control" id="end-of-day-time" value="18:00">
+                                                    <small class="form-text text-muted">Horário de fim do expediente</small>
+                                                </div>
+                                                <div class="mb-3">
+                                                    <label class="form-label fw-bold">
+                                                        <i class="bi bi-trash me-2"></i>Limpeza de Logs
+                                                    </label>
+                                                    <input type="time" class="form-control" id="log-cleanup-time" value="23:59">
+                                                    <small class="form-text text-muted">Horário da limpeza automática de logs</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Configurações de Tempo de Espera -->
+                                    <div class="col-lg-6 col-md-12 mb-4">
+                                        <div class="card h-100">
+                                            <div class="card-header">
+                                                <h6 class="mb-0">
+                                                    <i class="bi bi-hourglass me-2"></i>Tempos de Espera
+                                                </h6>
+                                            </div>
+                                            <div class="card-body">
+                                                <div class="mb-3">
+                                                    <label class="form-label fw-bold">
+                                                        <i class="bi bi-hourglass-split me-2"></i>Tempo Mínimo (minutos)
+                                                    </label>
+                                                    <input type="number" class="form-control" id="min-wait-time" min="1" max="120" value="30">
+                                                    <small class="form-text text-muted">Tempo mínimo antes de enviar mensagem</small>
+                                                </div>
+                                                <div class="mb-3">
+                                                    <label class="form-label fw-bold">
+                                                        <i class="bi bi-hourglass-top me-2"></i>Tempo Máximo (minutos)
+                                                    </label>
+                                                    <input type="number" class="form-control" id="max-wait-time" min="1" max="240" value="35">
+                                                    <small class="form-text text-muted">Tempo máximo antes de enviar mensagem</small>
+                                                </div>
+                                                <div class="alert alert-info">
+                                                    <i class="bi bi-info-circle me-2"></i>
+                                                    <small>O tempo máximo deve ser maior que o mínimo</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Botão Salvar e Alerta de Mudanças -->
+                                <div class="row">
+                                    <div class="col-12">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <!-- Alerta de Mudanças -->
+                                            <div class="alert alert-warning d-none mb-0" id="config-warning" style="flex: 1; margin-right: 15px;">
+                                                <i class="bi bi-exclamation-triangle me-2"></i>
+                                                <span id="config-warning-text">Há alterações não salvas.</span>
+                                            </div>
+                                            
+                                            <!-- Botão Salvar -->
+                                            <button id="save-system-config-btn" class="btn btn-primary">
+                                                <i class="bi bi-check-lg me-2"></i>Salvar Configurações do Sistema
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Logs Route -->
@@ -482,89 +573,6 @@
                     </div>
                 </div>
 
-                <!-- Sistema Route -->
-                <div id="sistema-route" class="route-content">
-                    <div class="row">
-                        <!-- Configurações de Horário -->
-                        <div class="col-md-6">
-                            <div class="card mb-4">
-                                <div class="card-header">
-                                    <h6 class="mb-0">
-                                        <i class="bi bi-clock me-2"></i>Configurações de Horário
-                                    </h6>
-                                </div>
-                                <div class="card-body">
-                                    <div class="mb-3">
-                                        <label class="form-label fw-bold">
-                                            <i class="bi bi-sunrise me-2"></i>Início do Dia
-                                        </label>
-                                        <input type="time" class="form-control" id="start-of-day-time" value="08:00">
-                                        <small class="form-text text-muted">Horário de início do expediente</small>
-                                    </div>
-                                    <div class="mb-3">
-                                        <label class="form-label fw-bold">
-                                            <i class="bi bi-sunset me-2"></i>Fim do Dia
-                                        </label>
-                                        <input type="time" class="form-control" id="end-of-day-time" value="18:00">
-                                        <small class="form-text text-muted">Horário de fim do expediente</small>
-                                    </div>
-                                    <div class="mb-3">
-                                        <label class="form-label fw-bold">
-                                            <i class="bi bi-trash me-2"></i>Limpeza de Logs
-                                        </label>
-                                        <input type="time" class="form-control" id="log-cleanup-time" value="23:59">
-                                        <small class="form-text text-muted">Horário da limpeza automática de logs</small>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Configurações de Tempo de Espera -->
-                        <div class="col-md-6">
-                            <div class="card mb-4">
-                                <div class="card-header">
-                                    <h6 class="mb-0">
-                                        <i class="bi bi-hourglass me-2"></i>Tempos de Espera
-                                    </h6>
-                                </div>
-                                <div class="card-body">
-                                    <div class="mb-3">
-                                        <label class="form-label fw-bold">
-                                            <i class="bi bi-hourglass-split me-2"></i>Tempo Mínimo (minutos)
-                                        </label>
-                                        <input type="number" class="form-control" id="min-wait-time" min="1" max="120" value="30">
-                                        <small class="form-text text-muted">Tempo mínimo antes de enviar mensagem</small>
-                                    </div>
-                                    <div class="mb-3">
-                                        <label class="form-label fw-bold">
-                                            <i class="bi bi-hourglass-top me-2"></i>Tempo Máximo (minutos)
-                                        </label>
-                                        <input type="number" class="form-control" id="max-wait-time" min="1" max="240" value="35">
-                                        <small class="form-text text-muted">Tempo máximo antes de enviar mensagem</small>
-                                    </div>
-                                    <div class="alert alert-info">
-                                        <i class="bi bi-info-circle me-2"></i>
-                                        <small>O tempo máximo deve ser maior que o mínimo</small>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                    </div>
-                    
-                    <!-- Botão Salvar Flutuante -->
-                    <div class="floating-save-button">
-                        <button id="save-system-config-btn" class="btn btn-primary shadow">
-                            <i class="bi bi-check-lg me-2"></i>Salvar Configurações
-                        </button>
-                    </div>
-                    
-                    <!-- Alerta de Mudanças (Flutuante) -->
-                    <div class="alert alert-warning floating-warning d-none" id="config-warning">
-                        <i class="bi bi-exclamation-triangle me-2"></i>
-                        <span id="config-warning-text">Há alterações não salvas.</span>
-                    </div>
-                </div>
             </div>
         </main>
 

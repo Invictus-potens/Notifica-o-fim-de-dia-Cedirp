@@ -52,7 +52,7 @@ class AutomationInterface {
             this.initializeFlowControl();
             this.initializePatientSelection();
             this.initializePatientData();
-            this.initializeSystemTab(); // Inicializar aba Sistema
+            this.initializeSystemTab(); // Inicializar configurações do sistema (agora na aba Configurações)
             this.initializeMetricsTab(); // Inicializar aba Métricas
             this.initializeLogsTab(); // Inicializar aba Logs
             this.startRealtimeTimer(); // Iniciar timer em tempo real
@@ -356,8 +356,7 @@ class AutomationInterface {
                 'controle': 'Controle do Fluxo',
                 'configuracoes': 'Configurações',
                 'logs': 'Logs do Sistema',
-                'metricas': 'Métricas',
-                'sistema': 'Informações do Sistema'
+                'metricas': 'Métricas'
             };
 
             const pageTitle = document.getElementById('page-title');
@@ -536,6 +535,9 @@ class AutomationInterface {
                 // Load exclusion lists after sectors/channels are loaded
                 console.log('📋 Chamando loadExclusionLists...');
                 this.loadExclusionLists();
+                // Carregar configurações do sistema (unificado)
+                console.log('🔧 Chamando loadSystemConfig...');
+                this.loadSystemConfig();
                 // Always sync system status when loading config
                 this.checkFlowState();
                 break;
@@ -548,11 +550,6 @@ class AutomationInterface {
                 console.log('📝 Carregando logs...');
                 this.loadLogs();
                 // Always sync system status when loading logs
-                this.checkFlowState();
-                break;
-            case 'sistema':
-                console.log('🔧 Carregando informações do sistema...');
-                // Always sync system status when loading system info
                 this.checkFlowState();
                 break;
         }
@@ -2318,13 +2315,6 @@ class AutomationInterface {
                     this.loadPatients();
                 }
                 break;
-            case 'sistema':
-                // Carregar configurações sempre que a aba for acessada
-                console.log('⚙️ Carregando configurações da aba Sistema...');
-                if (this.loadSystemConfig) {
-                    this.loadSystemConfig();
-                }
-                break;
         }
     }
 
@@ -3206,10 +3196,10 @@ class AutomationInterface {
     }
 
     /**
-     * Sistema Tab - Gerenciamento completo das configurações do sistema
+     * Sistema Tab - Gerenciamento completo das configurações do sistema (agora na aba Configurações)
      */
     initializeSystemTab() {
-        console.log('🔧 Inicializando aba Sistema...');
+        console.log('🔧 Inicializando configurações do sistema na aba Configurações...');
         
         // Elementos da interface
         this.systemElements = {

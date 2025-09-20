@@ -1,5 +1,71 @@
 [
   {
+    "id": "log_1758338255082_xyhax43aa",
+    "timestamp": "2025-09-20T03:17:35.082Z",
+    "level": "info",
+    "action": "Action Cards Configurados",
+    "details": "Usuário atualizou configurações de Action Cards",
+    "metadata": {
+      "actionCardDefault": "631f2b4f307d23f46ac80a10",
+      "actionCard30Min": "68cbfa96b8640e9721e4feab",
+      "actionCardEndDay": "631f2b4f307d23f46ac80a2b",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0",
+      "ip": "::1"
+    },
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0",
+    "ip": "::1"
+  },
+  {
+    "id": "log_1758338252583_kt1n876nx",
+    "timestamp": "2025-09-20T03:17:32.583Z",
+    "level": "info",
+    "action": "Configurações Salvas",
+    "details": "Usuário salvou configurações do sistema",
+    "metadata": {
+      "startOfDayTime": "08:00",
+      "endOfDayTime": "18:00",
+      "minWaitTime": "80",
+      "maxWaitTime": "120",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0",
+      "ip": "::1"
+    },
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0",
+    "ip": "::1"
+  },
+  {
+    "id": "log_1758337786334_k153um00z",
+    "timestamp": "2025-09-20T03:09:46.334Z",
+    "level": "info",
+    "action": "Configurações Salvas",
+    "details": "Usuário salvou configurações do sistema",
+    "metadata": {
+      "startOfDayTime": "08:00",
+      "endOfDayTime": "18:00",
+      "minWaitTime": "80",
+      "maxWaitTime": "120",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0",
+      "ip": "::1"
+    },
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0",
+    "ip": "::1"
+  },
+  {
+    "id": "log_1758337784466_qhazbwrjl",
+    "timestamp": "2025-09-20T03:09:44.466Z",
+    "level": "info",
+    "action": "Action Cards Configurados",
+    "details": "Usuário atualizou configurações de Action Cards",
+    "metadata": {
+      "actionCardDefault": "631f2b4f307d23f46ac80a10",
+      "actionCard30Min": "68cbfa96b8640e9721e4feab",
+      "actionCardEndDay": "631f2b4f307d23f46ac80a2b",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0",
+      "ip": "::1"
+    },
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0",
+    "ip": "::1"
+  },
+  {
     "id": "log_1758288587972_d5gjto6j3",
     "timestamp": "2025-09-19T13:29:47.972Z",
     "level": "error",
