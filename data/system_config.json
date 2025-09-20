@@ -2,17 +2,15 @@
   "excludedSectors": "[]",
   "excludedChannels": "[]",
   "flowPaused": "false",
-  "endOfDayPaused": "false",
+  "endOfDayPaused": "true",
   "ignoreBusinessHours": "true",
-  "minWaitTime": "30",
-  "maxWaitTime": "35",
+  "minWaitTime": "80",
+  "maxWaitTime": "120",
   "selectedActionCard": "631f2b4f307d23f46ac80a10",
-  "selectedActionCardDescription": "Mensagem transferência padrão",
   "selectedActionCard30Min": "68cbfa96b8640e9721e4feab",
-  "selectedActionCard30MinDescription": "Mensagem de 30 Minutos",
   "selectedActionCardEndDay": "631f2b4f307d23f46ac80a2b",
-  "selectedActionCardEndDayDescription": "Fim de Expediente",
+  "selectedTemplate": "",
+  "startOfDayTime": "08:00",
   "endOfDayTime": "18:00",
-  "logCleanupTime": "23:59",
-  "startOfDayTime": "08:00"
+  "logCleanupTime": "23:59"
 }

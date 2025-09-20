@@ -71,9 +71,33 @@
       "sentAtFormatted": "19/09/2025, 12:00:00",
       "success": true,
       "createdAt": "2025-09-19T15:00:00.974Z"
+    },
+    {
+      "id": "msg_1758331443634_q9fd0zca9",
+      "patientId": "68cdf84af42aa528cdb2440e",
+      "patientName": "Felipe Prado",
+      "patientPhone": "5516981892476",
+      "actionCardId": "68cbfa96b8640e9721e4feab",
+      "messageType": "30min",
+      "sentAt": "2025-09-20T01:24:01.065Z",
+      "sentAtFormatted": "19/09/2025, 22:24:01",
+      "success": true,
+      "createdAt": "2025-09-20T01:24:03.634Z"
+    },
+    {
+      "id": "msg_1758333721925_caer41mo0",
+      "patientId": "68cdf84af42aa528cdb2440e",
+      "patientName": "Felipe Prado",
+      "patientPhone": "5516981892476",
+      "actionCardId": "68cbfa96b8640e9721e4feab",
+      "messageType": "30min",
+      "sentAt": "2025-09-20T02:02:01.457Z",
+      "sentAtFormatted": "19/09/2025, 23:02:01",
+      "success": true,
+      "createdAt": "2025-09-20T02:02:01.925Z"
     }
   ],
   "lastCleanup": null,
-  "totalSent": 6,
+  "totalSent": 8,
   "createdAt": "2025-09-19T00:45:57.736Z"
 }

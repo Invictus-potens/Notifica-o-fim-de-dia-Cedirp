@@ -744,13 +744,15 @@ class AutomationInterface {
             
             // Se ainda há tempo até o fim do expediente
             if (timeRemaining > 0) {
-                const minutes = Math.floor(timeRemaining / 60000);
-                const seconds = Math.floor((timeRemaining % 60000) / 1000);
-                const timeString = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                // Criar elemento com ID único para atualização dinâmica
+                const patientId = patient.id || patient.attendanceId || Math.random().toString(36).substr(2, 9);
+                const countdownId = `countdown-endday-${patientId}`;
                 
                 return `
                     <div class="text-primary">
-                        <div class="fw-bold">${timeString}</div>
+                        <div class="fw-bold" id="${countdownId}" data-target-time="${Date.now() + timeRemaining}">
+                            ${this.formatTimeRemaining(timeRemaining)}
+                        </div>
                         <small class="text-muted">${cardEndDayName}</small>
                     </div>
                 `;
@@ -793,13 +795,16 @@ class AutomationInterface {
         if (waitTime < minWaitTime) {
             // Ainda não atingiu o tempo mínimo - calcular tempo restante
             const timeRemaining = (minWaitTime - waitTime) * 60 * 1000;
-            const minutes = Math.floor(timeRemaining / 60000);
-            const seconds = Math.floor((timeRemaining % 60000) / 1000);
-            const timeString = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            
+            // Criar elemento com ID único para atualização dinâmica
+            const patientId = patient.id || patient.attendanceId || Math.random().toString(36).substr(2, 9);
+            const countdownId = `countdown-${patientId}`;
             
             return `
                 <div class="text-primary">
-                    <div class="fw-bold">${timeString}</div>
+                    <div class="fw-bold" id="${countdownId}" data-remaining="${timeRemaining}" data-target-time="${Date.now() + timeRemaining}">
+                        ${this.formatTimeRemaining(timeRemaining)}
+                    </div>
                     <small class="text-muted">${card30MinName}</small>
                 </div>
             `;
@@ -815,7 +820,7 @@ class AutomationInterface {
             // Paciente já passou do tempo máximo
             return `
                 <div class="text-danger">
-                    <div class="fw-bold">00:00</div>
+                    <div class="fw-bold">00:00:00</div>
                     <small class="text-muted">Tempo excedido</small>
                 </div>
             `;
@@ -890,10 +895,17 @@ class AutomationInterface {
     startCountdownTimer() {
         console.log('🕐 Iniciando timer de countdown...');
         
-        // Atualizar countdowns a cada 30 segundos (não a cada segundo!)
+        // Atualizar countdowns a cada segundo para contagem regressiva dinâmica
         setInterval(() => {
-            this.refreshCountdowns();
-        }, 30000);
+            this.updateCountdowns();
+        }, 1000); // 1 segundo
+        
+        // Recarregar dados completos a cada 30 segundos
+        setInterval(() => {
+            if (this.currentRoute === 'atendimentos') {
+                this.refreshCountdowns();
+            }
+        }, 30000); // 30 segundos
     }
 
     /**
@@ -907,6 +919,53 @@ class AutomationInterface {
         }
     }
 
+    /**
+     * Atualiza os countdowns dinâmicos a cada segundo
+     */
+    updateCountdowns() {
+        // Buscar todos os elementos de countdown na página
+        const countdownElements = document.querySelectorAll('[id^="countdown-"]');
+        
+        countdownElements.forEach(element => {
+            const targetTime = parseInt(element.getAttribute('data-target-time'));
+            const now = Date.now();
+            const timeRemaining = targetTime - now;
+            const isEndDayCountdown = element.id.includes('endday');
+            
+            if (timeRemaining <= 0) {
+                // Tempo esgotado
+                if (isEndDayCountdown) {
+                    element.textContent = 'Expediente encerrado';
+                    element.classList.remove('text-primary');
+                    element.classList.add('text-warning');
+                } else {
+                    element.textContent = '00:00:00';
+                    element.classList.remove('text-primary');
+                    element.classList.add('text-success');
+                }
+                
+                // Atualizar dados completos quando countdown chegar a zero
+                setTimeout(() => {
+                    if (this.currentRoute === 'atendimentos') {
+                        this.loadPatients();
+                    }
+                }, 1000);
+            } else {
+                // Atualizar countdown
+                element.textContent = this.formatTimeRemaining(timeRemaining);
+                
+                // Mudar cor quando estiver próximo do fim
+                if (timeRemaining <= 5 * 60 * 1000) {
+                    element.classList.remove('text-primary');
+                    element.classList.add('text-warning');
+                } else {
+                    element.classList.remove('text-warning');
+                    element.classList.add('text-primary');
+                }
+            }
+        });
+    }
+
     formatWaitTime(minutes) {
         if (!minutes || minutes < 0) return '--';
         
@@ -917,6 +976,24 @@ class AutomationInterface {
             const remainingMinutes = minutes % 60;
             return `${hours}h ${remainingMinutes}min`;
         }
+    }
+
+    /**
+     * Formata tempo restante em formato HH:MM:SS
+     * @param {number} timeRemaining - Tempo restante em millisegundos
+     * @returns {string} Tempo formatado como HH:MM:SS
+     */
+    formatTimeRemaining(timeRemaining) {
+        if (timeRemaining <= 0) {
+            return '00:00:00';
+        }
+        
+        const totalSeconds = Math.floor(timeRemaining / 1000);
+        const hours = Math.floor(totalSeconds / 3600);
+        const minutes = Math.floor((totalSeconds % 3600) / 60);
+        const seconds = totalSeconds % 60;
+        
+        return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
     }
 
     async loadStatus() {
@@ -3132,6 +3209,8 @@ class AutomationInterface {
      * Sistema Tab - Gerenciamento completo das configurações do sistema
      */
     initializeSystemTab() {
+        console.log('🔧 Inicializando aba Sistema...');
+        
         // Elementos da interface
         this.systemElements = {
             // Horários
@@ -3150,6 +3229,16 @@ class AutomationInterface {
             configWarning: document.getElementById('config-warning'),
             configWarningText: document.getElementById('config-warning-text')
         };
+
+        // Verificar se elementos foram encontrados
+        console.log('🔍 Verificando elementos encontrados:');
+        Object.entries(this.systemElements).forEach(([key, element]) => {
+            if (element) {
+                console.log(`   ✅ ${key}: encontrado`);
+            } else {
+                console.log(`   ❌ ${key}: NÃO encontrado`);
+            }
+        });
 
         // Configuração original para detectar mudanças
         this.originalSystemConfig = null;
@@ -3226,24 +3315,36 @@ class AutomationInterface {
     }
 
     populateSystemConfig(config) {
+        console.log('🔧 Populando configurações do sistema:', config);
+        
+        // Verificar se config tem estrutura aninhada (config.data) ou direta
+        const configData = config.data || config;
+        
         // Horários
         if (this.systemElements.startOfDayTime) {
-            this.systemElements.startOfDayTime.value = config.startOfDayTime || '08:00';
+            this.systemElements.startOfDayTime.value = configData.startOfDayTime || '08:00';
+            console.log(`📅 startOfDayTime: ${configData.startOfDayTime || '08:00'}`);
         }
         if (this.systemElements.endOfDayTime) {
-            this.systemElements.endOfDayTime.value = config.endOfDayTime || '18:00';
+            this.systemElements.endOfDayTime.value = configData.endOfDayTime || '18:00';
+            console.log(`📅 endOfDayTime: ${configData.endOfDayTime || '18:00'}`);
         }
         if (this.systemElements.logCleanupTime) {
-            this.systemElements.logCleanupTime.value = config.logCleanupTime || '23:59';
+            this.systemElements.logCleanupTime.value = configData.logCleanupTime || '23:59';
+            console.log(`📅 logCleanupTime: ${configData.logCleanupTime || '23:59'}`);
         }
 
         // Tempos de espera
         if (this.systemElements.minWaitTime) {
-            this.systemElements.minWaitTime.value = parseInt(config.minWaitTime) || 30;
+            this.systemElements.minWaitTime.value = parseInt(configData.minWaitTime) || 30;
+            console.log(`⏰ minWaitTime: ${parseInt(configData.minWaitTime) || 30}`);
         }
         if (this.systemElements.maxWaitTime) {
-            this.systemElements.maxWaitTime.value = parseInt(config.maxWaitTime) || 35;
+            this.systemElements.maxWaitTime.value = parseInt(configData.maxWaitTime) || 35;
+            console.log(`⏰ maxWaitTime: ${parseInt(configData.maxWaitTime) || 35}`);
         }
+        
+        console.log('✅ Configurações populadas com sucesso');
     }
 
     async saveSystemConfig() {
