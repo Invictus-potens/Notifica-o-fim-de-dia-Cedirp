@@ -38,10 +38,10 @@ class MonitoringService {
       
       // Inicializar KrolikApiClient
       if (krolikCredentials) {
-        this.krolikApiClient = new KrolikApiClient(
-          krolikCredentials.baseURL,
-          krolikCredentials.token
-        );
+        this.krolikApiClient = new KrolikApiClient({
+          baseURL: krolikCredentials.baseURL,
+          token: krolikCredentials.token
+        });
         
         // Testar conexão
         await this.krolikApiClient.testConnection();

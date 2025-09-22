@@ -250,5 +250,35 @@
     "status": "waiting",
     "enteredAt": "2025-09-22T17:33:01.111Z",
     "processedAt": "2025-09-22T17:52:00.637Z"
+  },
+  {
+    "id": "68d153f72255a59ba82eeca5",
+    "contactId": "672e35640743e0376d8025f2",
+    "name": "William Garcia | Zein Group",
+    "phone": "5548991037824",
+    "sectorId": "6401f4f49b1ff8512b525e9c",
+    "sectorName": "Suporte Telefonia",
+    "channelId": "63e68f168a48875131856df8",
+    "channelType": "WhatsApp Business (Principal)",
+    "waitStartTime": "2025-09-22T13:49:43.303Z",
+    "waitTimeMinutes": 35,
+    "status": "waiting",
+    "enteredAt": "2025-09-22T18:01:00.327Z",
+    "processedAt": "2025-09-22T19:07:00.426Z"
+  },
+  {
+    "id": "68d146164331959be56dce50",
+    "contactId": "67599b5e277827c7191c589d",
+    "name": "Nikolas",
+    "phone": "5511930058665",
+    "sectorId": "6401f4f49b1ff8512b525e9c",
+    "sectorName": "Suporte Telefonia",
+    "channelId": "63e68f168a48875131856df8",
+    "channelType": "WhatsApp Business (Principal)",
+    "waitStartTime": "2025-09-22T12:50:30.496Z",
+    "waitTimeMinutes": 148,
+    "status": "waiting",
+    "enteredAt": "2025-09-22T16:54:00.968Z",
+    "processedAt": "2025-09-22T19:07:00.429Z"
   }
 ]

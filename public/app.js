@@ -3744,12 +3744,6 @@ class AutomationInterface {
                                 <div class="small">${channel.description}</div>
                             </div>
                         ` : ''}
-                        <div class="mb-2">
-                            <small class="text-muted">Token:</small>
-                            <div class="small font-monospace text-truncate" title="${channel.token || 'N/A'}">
-                                ${channel.token ? channel.token.substring(0, 20) + '...' : 'N/A'}
-                            </div>
-                        </div>
                     </div>
                     <div class="card-footer">
                         <div class="row text-center">
@@ -3887,7 +3881,6 @@ class AutomationInterface {
         document.getElementById('channel-id').value = channel.id || '';
         document.getElementById('channel-name').value = channel.name || '';
         document.getElementById('channel-number').value = channel.number || '';
-        document.getElementById('channel-token').value = channel.token || '';
         document.getElementById('channel-department').value = channel.department || 'default';
         document.getElementById('channel-priority').value = channel.priority || 999;
         document.getElementById('channel-active').checked = channel.active !== false;
@@ -3974,7 +3967,6 @@ class AutomationInterface {
                 id: document.getElementById('channel-id').value,
                 name: document.getElementById('channel-name').value,
                 number: document.getElementById('channel-number').value,
-                token: document.getElementById('channel-token').value,
                 department: document.getElementById('channel-department').value,
                 priority: parseInt(document.getElementById('channel-priority').value),
                 active: document.getElementById('channel-active').checked,
@@ -3982,7 +3974,7 @@ class AutomationInterface {
             };
 
             // Validação básica
-            if (!channelData.id || !channelData.name || !channelData.number || !channelData.token) {
+            if (!channelData.id || !channelData.name || !channelData.number) {
                 throw new Error('Preencha todos os campos obrigatórios');
             }
 

@@ -84,9 +84,21 @@ class MainController {
       console.log('✅ JsonPatientManager inicializado');
 
       // Inicializar ProductionScheduler com credenciais da API CAM Krolik
+      // Usar função getValidToken para pegar um token válido dos canais específicos
+      const getValidToken = () => {
+        const tokens = [
+          process.env.TOKEN_ANEXO1_ESTOQUE,
+          process.env.TOKEN_WHATSAPP_OFICIAL,
+          process.env.TOKEN_CONFIRMACAO1,
+          process.env.TOKEN_CONFIRMACAO2_TI,
+          process.env.TOKEN_CONFIRMACAO3_CARLA
+        ].filter(token => token);
+        return tokens[0] || null;
+      };
+      
       const krolikCredentials = {
-        baseURL: process.env.KROLIK_BASE_URL || 'https://api.camkrolik.com.br',
-        token: process.env.KROLIK_TOKEN || '63e68f168a48875131856df8'
+        baseURL: process.env.KROLIK_API_BASE_URL || 'https://api.camkrolik.com.br',
+        token: getValidToken()
       };
       
       await this.productionScheduler.initialize(krolikCredentials);
