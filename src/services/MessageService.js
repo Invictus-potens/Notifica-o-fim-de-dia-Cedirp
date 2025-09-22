@@ -1,17 +1,18 @@
 const { KrolikApiClient } = require('./KrolikApiClient');
 const { ConfigManager } = require('./ConfigManager');
+const { MultiChannelManager } = require('./MultiChannelManager');
 const { MessageHistoryManager } = require('./MessageHistoryManager');
 const { UserActionLogger } = require('./UserActionLogger');
 
 /**
  * Serviço de envio de mensagens
- * Coordena o envio de action cards e templates para pacientes
+ * Coordena o envio de action cards e templates para pacientes usando múltiplos canais
  */
 class MessageService {
   constructor(errorHandler, configManager) {
     this.errorHandler = errorHandler;
     this.configManager = configManager;
-    this.krolikApiClient = null;
+    this.multiChannelManager = new MultiChannelManager(configManager, errorHandler);
     this.messageHistoryManager = new MessageHistoryManager(errorHandler);
     this.userActionLogger = new UserActionLogger(errorHandler);
     
@@ -26,22 +27,25 @@ class MessageService {
   /**
    * Inicializa o serviço de mensagens
    */
-  async initialize(krolikCredentials) {
+  async initialize() {
     try {
-      console.log('🔧 Inicializando MessageService...');
+      console.log('🔧 Inicializando MessageService com múltiplos canais...');
       
-      if (krolikCredentials) {
-        this.krolikApiClient = new KrolikApiClient(
-          krolikCredentials.baseURL,
-          krolikCredentials.token
-        );
-        
-        // Testar conexão
-        await this.krolikApiClient.testConnection();
-        console.log('✅ Conexão com API CAM Krolik estabelecida');
+      // MultiChannelManager já foi inicializado no construtor
+      const activeChannels = this.multiChannelManager.getActiveChannels();
+      console.log(`📱 Canais ativos carregados: ${activeChannels.length}`);
+      
+      // Testar conexão de cada canal ativo
+      for (const channel of activeChannels) {
+        try {
+          await channel.apiClient.testConnection();
+          console.log(`✅ Canal ${channel.name} (${channel.number}) - Conexão OK`);
+        } catch (error) {
+          console.warn(`⚠️ Canal ${channel.name} (${channel.number}) - Falha na conexão: ${error.message}`);
+        }
       }
       
-      console.log('✅ MessageService inicializado');
+      console.log('✅ MessageService inicializado com múltiplos canais');
       
     } catch (error) {
       this.errorHandler.logError(error, 'MessageService.initialize');
@@ -54,23 +58,41 @@ class MessageService {
    */
   async sendActionCard(patient, actionCardId = null, forceSend = true, messageType = 'manual') {
     try {
-      if (!this.krolikApiClient) {
-        throw new Error('KrolikApiClient não inicializado');
+      const phone = patient.phone;
+      console.log(`📤 Preparando envio de mensagem para ${patient.name} (${phone})`);
+      
+      // 1. Verificar se já existe contexto de conversa
+      let channel = this.multiChannelManager.getChannelForConversation(phone);
+      
+      if (!channel) {
+        // 2. Nova conversa - escolher canal apropriado
+        channel = this.multiChannelManager.getBestChannelForPatient(patient);
+        
+        if (!channel) {
+          throw new Error('Nenhum canal ativo disponível');
+        }
+        
+        // 3. Registrar novo contexto de conversa
+        this.multiChannelManager.registerConversation(phone, channel.id);
+        
+        console.log(`🆕 Nova conversa: ${phone} -> ${channel.name} (${channel.number})`);
+      } else {
+        console.log(`🔄 Continuando conversa: ${phone} -> ${channel.name} (${channel.number})`);
       }
 
-      // Usar action card ID fornecido ou o padrão da configuração
+      // 4. Usar action card ID fornecido ou o padrão da configuração
       const cardId = actionCardId || this.configManager.getActionCardId();
       
       if (!cardId) {
         throw new Error('ID do action card não especificado');
       }
 
-      // Validar dados do paciente
+      // 5. Validar dados do paciente
       if (!patient.phone || !patient.contactId) {
         throw new Error('Dados do paciente incompletos (phone ou contactId faltando)');
       }
 
-      // Preparar payload
+      // 6. Preparar payload
       const payload = {
         number: patient.phone,
         contactId: patient.contactId,
@@ -78,30 +100,64 @@ class MessageService {
         forceSend: forceSend
       };
 
-      console.log(`📤 Enviando action card para ${patient.name} (${patient.phone})`);
+      console.log(`📤 Enviando action card via ${channel.name} (${channel.number})`);
       console.log(`📋 Payload:`, payload);
 
-      // Enviar mensagem
-      const result = await this.krolikApiClient.sendActionCard(payload);
+      // 7. Enviar mensagem usando o canal específico com fallback
+      let result;
+      let success = false;
+      let fallbackUsed = false;
       
-      // Atualizar estatísticas
+      try {
+        result = await channel.apiClient.sendActionCard(payload);
+        success = true;
+        console.log(`✅ Mensagem enviada com sucesso via ${channel.name}`);
+      } catch (error) {
+        console.warn(`⚠️ Falha no canal principal ${channel.name}: ${error.message}`);
+        
+        // Tentar fallback para outro canal saudável
+        const fallbackChannel = await this.tryFallbackChannel(phone, patient, channel.id);
+        if (fallbackChannel) {
+          try {
+            result = await fallbackChannel.apiClient.sendActionCard(payload);
+            success = true;
+            fallbackUsed = true;
+            channel = fallbackChannel; // Atualizar referência do canal
+            console.log(`✅ Mensagem enviada via canal de fallback: ${fallbackChannel.name}`);
+          } catch (fallbackError) {
+            console.error(`❌ Falha também no canal de fallback ${fallbackChannel.name}: ${fallbackError.message}`);
+            throw new Error(`Falha em todos os canais disponíveis. Principal: ${error.message}, Fallback: ${fallbackError.message}`);
+          }
+        } else {
+          throw new Error(`Canal principal falhou e nenhum canal de fallback disponível: ${error.message}`);
+        }
+      }
+      
+      // 8. Atualizar contexto da conversa
+      this.multiChannelManager.updateLastMessage(phone);
+      
+      // 9. Atualizar métricas do canal
+      this.multiChannelManager.updateChannelMetrics(channel.id, success);
+      
+      // 10. Atualizar estatísticas gerais
       this.stats.totalSent++;
       this.stats.lastSent = new Date().toISOString();
       
-      // Registrar mensagem no histórico
+      // 11. Registrar mensagem no histórico
       await this.messageHistoryManager.recordMessageSent({
         patientId: patient.id,
         patientName: patient.name,
         patientPhone: patient.phone,
         actionCardId: cardId,
-        messageType: messageType, // Usar tipo fornecido como parâmetro
+        messageType: messageType,
+        channelId: channel.id,
+        channelName: channel.name,
+        channelNumber: channel.number,
         sentAt: new Date(),
         success: true
       });
-      
-      console.log(`✅ Action card enviado com sucesso para ${patient.name}`);
-      
-      // Log automático para ações do usuário (envio automático)
+
+      // 12. Log automático para ações do usuário
       await this.userActionLogger.logAutomaticMessage(
         patient.name,
         cardId,
@@ -109,25 +165,43 @@ class MessageService {
         true,
         {
           patientPhone: patient.phone,
-          contactId: patient.contactId
+          contactId: patient.contactId,
+          channel: channel.name,
+          channelNumber: channel.number,
+          fallbackUsed: fallbackUsed
         }
       );
+
+      console.log(`✅ Action card enviado com sucesso via ${channel.name} (${channel.number})${fallbackUsed ? ' (fallback)' : ''}`);
       
       return {
         success: true,
         patient: patient.name,
         phone: patient.phone,
         actionCardId: cardId,
+        channel: {
+          id: channel.id,
+          name: channel.name,
+          number: channel.number
+        },
         result: result,
+        fallbackUsed: fallbackUsed,
         timestamp: new Date().toISOString()
       };
 
     } catch (error) {
+      // Atualizar métricas de erro do canal
+      if (channel) {
+        this.multiChannelManager.updateChannelMetrics(channel.id, false);
+      }
+      
+      // Atualizar estatísticas de erro
       this.stats.totalFailed++;
       this.stats.errors.push({
         patient: patient.name,
         phone: patient.phone,
         error: error.message,
+        channel: channel ? channel.name : 'unknown',
         timestamp: new Date().toISOString()
       });
       
@@ -137,11 +211,12 @@ class MessageService {
       await this.userActionLogger.logAutomaticMessage(
         patient.name,
         actionCardId || 'N/A',
-        'automática',
+        messageType,
         false,
         {
           patientPhone: patient.phone,
           contactId: patient.contactId,
+          channel: channel ? channel.name : 'unknown',
           error: error.message
         }
       );
@@ -151,6 +226,11 @@ class MessageService {
         patient: patient.name,
         phone: patient.phone,
         error: error.message,
+        channel: channel ? {
+          id: channel.id,
+          name: channel.name,
+          number: channel.number
+        } : null,
         timestamp: new Date().toISOString()
       };
     }
@@ -498,6 +578,66 @@ class MessageService {
       lastSent: this.stats.lastSent,
       recentErrors: this.stats.errors.length
     };
+  }
+
+  /**
+   * Tenta encontrar um canal de fallback saudável
+   * @param {string} phone - Número do telefone
+   * @param {Object} patient - Dados do paciente
+   * @param {string} excludedChannelId - ID do canal que falhou
+   * @returns {Object|null} Canal de fallback ou null
+   */
+  async tryFallbackChannel(phone, patient, excludedChannelId) {
+    try {
+      console.log(`🔄 Tentando encontrar canal de fallback para ${phone}...`);
+      
+      // Verificar se há canais saudáveis disponíveis
+      if (!this.multiChannelManager.hasHealthyChannelsAvailable()) {
+        console.warn('⚠️ Nenhum canal saudável disponível para fallback');
+        return null;
+      }
+
+      // Obter canais ativos e saudáveis (excluindo o que falhou)
+      const activeChannels = this.multiChannelManager.getActiveChannels();
+      const healthyChannels = activeChannels.filter(channel => {
+        if (channel.id === excludedChannelId) return false;
+        
+        const health = this.multiChannelManager.getChannelHealth(channel.id);
+        return health.status === 'healthy' || health.status === 'degraded';
+      });
+
+      if (healthyChannels.length === 0) {
+        console.warn('⚠️ Nenhum canal saudável encontrado para fallback');
+        return null;
+      }
+
+      // Aplicar algoritmo de balanceamento para escolher o melhor canal de fallback
+      const fallbackChannel = this.multiChannelManager.selectChannelByLoad(healthyChannels);
+      
+      if (fallbackChannel) {
+        console.log(`🎯 Canal de fallback selecionado: ${fallbackChannel.name} (${fallbackChannel.number})`);
+        
+        // Testar conectividade do canal de fallback
+        try {
+          await fallbackChannel.apiClient.testConnection();
+          console.log(`✅ Canal de fallback ${fallbackChannel.name} testado com sucesso`);
+          return fallbackChannel;
+        } catch (testError) {
+          console.warn(`⚠️ Canal de fallback ${fallbackChannel.name} falhou no teste de conectividade: ${testError.message}`);
+          
+          // Se o teste falhar, tentar o próximo canal saudável
+          const remainingChannels = healthyChannels.filter(c => c.id !== fallbackChannel.id);
+          if (remainingChannels.length > 0) {
+            return this.tryFallbackChannel(phone, patient, excludedChannelId);
+          }
+        }
+      }
+
+      return null;
+    } catch (error) {
+      this.errorHandler.logError(error, 'MessageService.tryFallbackChannel');
+      return null;
+    }
   }
 }
 

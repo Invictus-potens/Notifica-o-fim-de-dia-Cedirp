@@ -50,7 +50,9 @@ class ConfigManager {
       startOfDayTime: '08:00',
       endOfDayTime: '18:00',
       logCleanupTime: '02:00',
-      refreshInterval: 30
+      refreshInterval: 30,
+      channels: [],
+      channelMetrics: {}
     };
   }
 
@@ -63,6 +65,41 @@ class ConfigManager {
       console.log('⚙️ ConfigManager inicializado com sucesso');
     } catch (error) {
       this.errorHandler.logError(error, 'ConfigManager.initialize');
+    }
+  }
+
+  /**
+   * Carrega tokens do arquivo .env
+   * @returns {Object} Mapa de tokens por canal
+   */
+  loadTokensFromEnv() {
+    const tokens = {};
+    
+    try {
+      // Mapeamento de tokens do .env para IDs dos canais
+      const tokenMapping = {
+        'TOKEN_ANEXO1_ESTOQUE': 'anexo1-estoque',
+        'TOKEN_WHATSAPP_OFICIAL': 'whatsapp-oficial', 
+        'TOKEN_CONFIRMACAO1': 'confirmacao1',
+        'TOKEN_CONFIRMACAO2_TI': 'confirmacao2-ti',
+        'TOKEN_CONFIRMACAO3_CARLA': 'confirmacao3-carla'
+      };
+
+      // Carregar tokens do .env
+      Object.entries(tokenMapping).forEach(([envVar, channelId]) => {
+        const token = process.env[envVar];
+        if (token) {
+          tokens[channelId] = token;
+          console.log(`🔑 Token carregado para ${channelId}: ${token.substring(0, 8)}...`);
+        } else {
+          console.warn(`⚠️ Token não encontrado no .env: ${envVar}`);
+        }
+      });
+
+      return tokens;
+    } catch (error) {
+      console.error('❌ Erro ao carregar tokens do .env:', error);
+      return {};
     }
   }
 
@@ -80,6 +117,18 @@ class ConfigManager {
         const configData = await fs.readFile(configPath, 'utf8');
         const parsedConfig = JSON.parse(configData);
         
+        // Carregar tokens do .env
+        const envTokens = this.loadTokensFromEnv();
+        
+        // Atualizar tokens dos canais com valores do .env
+        const channels = (parsedConfig.channels || []).map(channel => {
+          const envToken = envTokens[channel.id];
+          if (envToken) {
+            return { ...channel, token: envToken };
+          }
+          return channel;
+        });
+
         this.systemConfig = {
           flowPaused: parsedConfig.flowPaused === 'true' || parsedConfig.flowPaused === true,
           endOfDayPaused: parsedConfig.endOfDayPaused === 'true' || parsedConfig.endOfDayPaused === true,
@@ -98,7 +147,9 @@ class ConfigManager {
           startOfDayTime: parsedConfig.startOfDayTime || '08:00',
           endOfDayTime: parsedConfig.endOfDayTime || '18:00',
           logCleanupTime: parsedConfig.logCleanupTime || '02:00',
-          refreshInterval: parseInt(parsedConfig.refreshInterval) || 30
+          refreshInterval: parseInt(parsedConfig.refreshInterval) || 30,
+          channels: channels,
+          channelMetrics: parsedConfig.channelMetrics || {}
         };
         
         console.log('✅ Configuração carregada do arquivo system_config.json');
@@ -108,6 +159,12 @@ class ConfigManager {
           'fim_dia': this.systemConfig.selectedActionCardEndDay
         });
         console.log(`⏰ Refresh Interval: ${this.systemConfig.refreshInterval}s`);
+        console.log(`📱 Canais configurados: ${this.systemConfig.channels.length}`);
+        if (this.systemConfig.channels.length > 0) {
+          this.systemConfig.channels.forEach((channel, index) => {
+            console.log(`   ${index + 1}. ${channel.name} (${channel.number}) - ${channel.active ? 'Ativo' : 'Inativo'}`);
+          });
+        }
         
       } catch (fileError) {
         console.log('⚠️ Arquivo de configuração não encontrado, usando valores padrão');
@@ -493,6 +550,248 @@ class ConfigManager {
     } catch (error) {
       this.errorHandler.logError(error, 'ConfigManager.cleanupDailyData');
     }
+  }
+
+  /**
+   * ========================================
+   * MÉTODOS DE GERENCIAMENTO DE CANAIS
+   * ========================================
+   */
+
+  /**
+   * Obtém todos os canais configurados
+   * @returns {Array} Lista de canais
+   */
+  getChannels() {
+    return this.systemConfig.channels || [];
+  }
+
+  /**
+   * Obtém canais ativos
+   * @returns {Array} Lista de canais ativos
+   */
+  getActiveChannels() {
+    return this.getChannels().filter(channel => channel.active === true);
+  }
+
+  /**
+   * Obtém canal por ID
+   * @param {string} channelId - ID do canal
+   * @returns {Object|null} Canal encontrado ou null
+   */
+  getChannelById(channelId) {
+    return this.getChannels().find(channel => channel.id === channelId) || null;
+  }
+
+  /**
+   * Obtém canal por número
+   * @param {string} number - Número do canal
+   * @returns {Object|null} Canal encontrado ou null
+   */
+  getChannelByNumber(number) {
+    return this.getChannels().find(channel => channel.number === number) || null;
+  }
+
+  /**
+   * Obtém canais por departamento
+   * @param {string} department - Departamento
+   * @returns {Array} Lista de canais do departamento
+   */
+  getChannelsByDepartment(department) {
+    return this.getChannels().filter(channel => channel.department === department);
+  }
+
+  /**
+   * Adiciona novo canal
+   * @param {Object} channelData - Dados do canal
+   * @returns {boolean} Sucesso da operação
+   */
+  addChannel(channelData) {
+    try {
+      if (!channelData.id || !channelData.name || !channelData.number || !channelData.token) {
+        throw new Error('Dados obrigatórios do canal não fornecidos');
+      }
+
+      // Verificar se já existe canal com mesmo ID ou número
+      if (this.getChannelById(channelData.id)) {
+        throw new Error(`Canal com ID '${channelData.id}' já existe`);
+      }
+
+      if (this.getChannelByNumber(channelData.number)) {
+        throw new Error(`Canal com número '${channelData.number}' já existe`);
+      }
+
+      // Adicionar canal
+      this.systemConfig.channels.push({
+        id: channelData.id,
+        name: channelData.name,
+        number: channelData.number,
+        token: channelData.token,
+        active: channelData.active !== undefined ? channelData.active : true,
+        priority: channelData.priority || 999,
+        department: channelData.department || 'default',
+        description: channelData.description || ''
+      });
+
+      // Inicializar métricas do canal
+      this.systemConfig.channelMetrics[channelData.id] = {
+        messagesSent: 0,
+        messagesFailed: 0,
+        activeConversations: 0,
+        lastActivity: null
+      };
+
+      console.log(`✅ Canal adicionado: ${channelData.name} (${channelData.number})`);
+      return true;
+    } catch (error) {
+      this.errorHandler.logError(error, 'ConfigManager.addChannel');
+      return false;
+    }
+  }
+
+  /**
+   * Atualiza canal existente
+   * @param {string} channelId - ID do canal
+   * @param {Object} updateData - Dados para atualizar
+   * @returns {boolean} Sucesso da operação
+   */
+  updateChannel(channelId, updateData) {
+    try {
+      const channelIndex = this.systemConfig.channels.findIndex(channel => channel.id === channelId);
+      
+      if (channelIndex === -1) {
+        throw new Error(`Canal '${channelId}' não encontrado`);
+      }
+
+      // Atualizar dados do canal
+      this.systemConfig.channels[channelIndex] = {
+        ...this.systemConfig.channels[channelIndex],
+        ...updateData
+      };
+
+      console.log(`✅ Canal atualizado: ${channelId}`);
+      return true;
+    } catch (error) {
+      this.errorHandler.logError(error, 'ConfigManager.updateChannel');
+      return false;
+    }
+  }
+
+  /**
+   * Remove canal
+   * @param {string} channelId - ID do canal
+   * @returns {boolean} Sucesso da operação
+   */
+  removeChannel(channelId) {
+    try {
+      const channelIndex = this.systemConfig.channels.findIndex(channel => channel.id === channelId);
+      
+      if (channelIndex === -1) {
+        throw new Error(`Canal '${channelId}' não encontrado`);
+      }
+
+      // Remover canal
+      this.systemConfig.channels.splice(channelIndex, 1);
+
+      // Remover métricas do canal
+      delete this.systemConfig.channelMetrics[channelId];
+
+      console.log(`✅ Canal removido: ${channelId}`);
+      return true;
+    } catch (error) {
+      this.errorHandler.logError(error, 'ConfigManager.removeChannel');
+      return false;
+    }
+  }
+
+  /**
+   * Ativa/desativa canal
+   * @param {string} channelId - ID do canal
+   * @param {boolean} active - Status ativo
+   * @returns {boolean} Sucesso da operação
+   */
+  toggleChannel(channelId, active) {
+    return this.updateChannel(channelId, { active });
+  }
+
+  /**
+   * Obtém métricas de um canal
+   * @param {string} channelId - ID do canal
+   * @returns {Object} Métricas do canal
+   */
+  getChannelMetrics(channelId) {
+    return this.systemConfig.channelMetrics[channelId] || {
+      messagesSent: 0,
+      messagesFailed: 0,
+      activeConversations: 0,
+      lastActivity: null
+    };
+  }
+
+  /**
+   * Atualiza métricas de um canal
+   * @param {string} channelId - ID do canal
+   * @param {Object} metrics - Métricas para atualizar
+   * @returns {boolean} Sucesso da operação
+   */
+  updateChannelMetrics(channelId, metrics) {
+    try {
+      if (!this.systemConfig.channelMetrics[channelId]) {
+        this.systemConfig.channelMetrics[channelId] = {
+          messagesSent: 0,
+          messagesFailed: 0,
+          activeConversations: 0,
+          lastActivity: null
+        };
+      }
+
+      this.systemConfig.channelMetrics[channelId] = {
+        ...this.systemConfig.channelMetrics[channelId],
+        ...metrics,
+        lastActivity: new Date().toISOString()
+      };
+
+      return true;
+    } catch (error) {
+      this.errorHandler.logError(error, 'ConfigManager.updateChannelMetrics');
+      return false;
+    }
+  }
+
+  /**
+   * Incrementa contador de mensagens enviadas
+   * @param {string} channelId - ID do canal
+   * @returns {boolean} Sucesso da operação
+   */
+  incrementChannelMessagesSent(channelId) {
+    const metrics = this.getChannelMetrics(channelId);
+    return this.updateChannelMetrics(channelId, {
+      messagesSent: metrics.messagesSent + 1
+    });
+  }
+
+  /**
+   * Incrementa contador de mensagens falhadas
+   * @param {string} channelId - ID do canal
+   * @returns {boolean} Sucesso da operação
+   */
+  incrementChannelMessagesFailed(channelId) {
+    const metrics = this.getChannelMetrics(channelId);
+    return this.updateChannelMetrics(channelId, {
+      messagesFailed: metrics.messagesFailed + 1
+    });
+  }
+
+  /**
+   * Atualiza contador de conversas ativas
+   * @param {string} channelId - ID do canal
+   * @param {number} count - Número de conversas ativas
+   * @returns {boolean} Sucesso da operação
+   */
+  updateChannelActiveConversations(channelId, count) {
+    return this.updateChannelMetrics(channelId, {
+      activeConversations: count
+    });
   }
 }
 

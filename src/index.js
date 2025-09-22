@@ -50,10 +50,32 @@ const { KrolikApiClient } = require('./services/KrolikApiClient');
 // Inicializar MainController
 const mainController = new MainController();
 
+// Função para obter um token válido para operações gerais
+function getValidToken() {
+  // Tentar usar tokens específicos do .env
+  const tokens = [
+    process.env.TOKEN_ANEXO1_ESTOQUE,
+    process.env.TOKEN_WHATSAPP_OFICIAL,
+    process.env.TOKEN_CONFIRMACAO1,
+    process.env.TOKEN_CONFIRMACAO2_TI,
+    process.env.TOKEN_CONFIRMACAO3_CARLA,
+    process.env.KROLIK_API_TOKEN // Fallback para token geral
+  ].filter(token => token); // Remove valores undefined/null
+
+  return tokens[0] || null;
+}
+
 // Inicializar KrolikApiClient
+const validToken = getValidToken();
+if (validToken) {
+  console.log(`🔑 Token configurado para KrolikApiClient: ${validToken.substring(0, 8)}...`);
+} else {
+  console.warn('⚠️ Nenhum token válido encontrado para KrolikApiClient');
+}
+
 const krolikApiClient = new KrolikApiClient({
   baseURL: process.env.KROLIK_API_BASE_URL || 'https://api.camkrolik.com.br',
-  token: process.env.KROLIK_API_TOKEN,
+  token: validToken,
   timeout: 10000
 });
 
@@ -554,53 +576,369 @@ app.get('/api/logs/user/stats', async (req, res) => {
   }
 });
 
-// Lista todos os Action Cards disponíveis na API CAM Krolik
-app.get('/api/action-cards/available', async (req, res) => {
+
+// ========================================
+// ROTAS DE GERENCIAMENTO DE CANAIS
+// ========================================
+
+// Obter todos os canais
+app.get('/api/channels', async (req, res) => {
   try {
-    console.log('📋 API: Buscando action cards disponíveis na API CAM Krolik...');
-    
-    // Buscar action cards reais da API CAM Krolik
-    const actionCards = await krolikApiClient.listActionCards();
-    
-    console.log(`📋 API: Retornando ${actionCards.length} action cards disponíveis`);
+    console.log('📱 API: Listando canais...');
+    const channels = mainController.getChannels();
     res.json({
       success: true,
-      data: actionCards,
-      total: actionCards.length,
-      message: 'Action Cards disponíveis obtidos com sucesso',
+      data: channels,
+      count: channels.length,
       timestamp: new Date().toISOString()
     });
   } catch (error) {
-    console.error('Erro ao buscar action cards disponíveis:', error);
+    console.error('Erro ao listar canais:', error);
     res.status(500).json({ 
       success: false,
-      error: 'Erro ao buscar action cards da API CAM Krolik',
+      error: 'Erro ao listar canais',
       message: error.message,
       timestamp: new Date().toISOString()
     });
   }
 });
 
-// Canais disponíveis
-app.get('/api/channels', async (req, res) => {
+// Obter canais ativos
+app.get('/api/channels/active', async (req, res) => {
   try {
-    console.log('📋 API: Buscando canais na API CAM Krolik...');
-    
-    // Buscar canais reais da API CAM Krolik
-    const channels = await krolikApiClient.listChannels();
-    
-    console.log(`📋 API: Retornando ${channels.length} canais`);
+    console.log('📱 API: Listando canais ativos...');
+    const activeChannels = mainController.getActiveChannels();
     res.json({
       success: true,
-      data: channels,
-      total: channels.length,
+      data: activeChannels,
+      count: activeChannels.length,
       timestamp: new Date().toISOString()
     });
   } catch (error) {
-    console.error('Erro ao buscar canais:', error);
+    console.error('Erro ao listar canais ativos:', error);
     res.status(500).json({ 
       success: false,
-      error: 'Erro ao buscar canais da API CAM Krolik',
+      error: 'Erro ao listar canais ativos',
+      message: error.message,
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
+// Obter canal por ID
+app.get('/api/channels/:channelId', async (req, res) => {
+  try {
+    const { channelId } = req.params;
+    console.log(`📱 API: Buscando canal ${channelId}...`);
+    
+    const channel = mainController.getChannelById(channelId);
+    if (!channel) {
+      return res.status(404).json({
+        success: false,
+        error: 'Canal não encontrado',
+        message: `Canal com ID '${channelId}' não foi encontrado`,
+        timestamp: new Date().toISOString()
+      });
+    }
+
+    res.json({
+      success: true,
+      data: channel,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('Erro ao buscar canal:', error);
+    res.status(500).json({ 
+      success: false,
+      error: 'Erro ao buscar canal',
+      message: error.message,
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
+// Obter estatísticas de carga dos canais
+app.get('/api/channels/stats/load', async (req, res) => {
+  try {
+    console.log('📊 API: Obtendo estatísticas de carga dos canais...');
+    const loadStats = mainController.getChannelLoadStats();
+    res.json({
+      success: true,
+      data: loadStats,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('Erro ao obter estatísticas de carga:', error);
+    res.status(500).json({ 
+      success: false,
+      error: 'Erro ao obter estatísticas de carga',
+      message: error.message,
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
+// Obter estatísticas de conversas
+app.get('/api/channels/stats/conversations', async (req, res) => {
+  try {
+    console.log('💬 API: Obtendo estatísticas de conversas...');
+    const conversationStats = mainController.getConversationStats();
+    res.json({
+      success: true,
+      data: conversationStats,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('Erro ao obter estatísticas de conversas:', error);
+    res.status(500).json({ 
+      success: false,
+      error: 'Erro ao obter estatísticas de conversas',
+      message: error.message,
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
+// Adicionar novo canal
+app.post('/api/channels', async (req, res) => {
+  try {
+    const channelData = req.body;
+    console.log('📱 API: Adicionando novo canal...', channelData);
+    
+    const success = mainController.addChannel(channelData);
+    if (success) {
+      res.json({
+        success: true,
+        message: 'Canal adicionado com sucesso',
+        data: channelData,
+        timestamp: new Date().toISOString()
+      });
+    } else {
+      res.status(400).json({
+        success: false,
+        error: 'Falha ao adicionar canal',
+        message: 'Verifique os dados fornecidos',
+        timestamp: new Date().toISOString()
+      });
+    }
+  } catch (error) {
+    console.error('Erro ao adicionar canal:', error);
+    res.status(500).json({ 
+      success: false,
+      error: 'Erro ao adicionar canal',
+      message: error.message,
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
+// Atualizar canal existente
+app.put('/api/channels/:channelId', async (req, res) => {
+  try {
+    const { channelId } = req.params;
+    const updateData = req.body;
+    console.log(`📱 API: Atualizando canal ${channelId}...`, updateData);
+    
+    const success = mainController.updateChannel(channelId, updateData);
+    if (success) {
+      res.json({
+        success: true,
+        message: 'Canal atualizado com sucesso',
+        data: { channelId, ...updateData },
+        timestamp: new Date().toISOString()
+      });
+    } else {
+      res.status(400).json({
+        success: false,
+        error: 'Falha ao atualizar canal',
+        message: 'Canal não encontrado ou dados inválidos',
+        timestamp: new Date().toISOString()
+      });
+    }
+  } catch (error) {
+    console.error('Erro ao atualizar canal:', error);
+    res.status(500).json({ 
+      success: false,
+      error: 'Erro ao atualizar canal',
+      message: error.message,
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
+// Ativar/desativar canal
+app.patch('/api/channels/:channelId/toggle', async (req, res) => {
+  try {
+    const { channelId } = req.params;
+    const { active } = req.body;
+    console.log(`📱 API: ${active ? 'Ativando' : 'Desativando'} canal ${channelId}...`);
+    
+    const success = mainController.toggleChannel(channelId, active);
+    if (success) {
+      res.json({
+        success: true,
+        message: `Canal ${active ? 'ativado' : 'desativado'} com sucesso`,
+        data: { channelId, active },
+        timestamp: new Date().toISOString()
+      });
+    } else {
+      res.status(400).json({
+        success: false,
+        error: 'Falha ao alterar status do canal',
+        message: 'Canal não encontrado',
+        timestamp: new Date().toISOString()
+      });
+    }
+  } catch (error) {
+    console.error('Erro ao alterar status do canal:', error);
+    res.status(500).json({ 
+      success: false,
+      error: 'Erro ao alterar status do canal',
+      message: error.message,
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
+// Remover canal
+app.delete('/api/channels/:channelId', async (req, res) => {
+  try {
+    const { channelId } = req.params;
+    console.log(`📱 API: Removendo canal ${channelId}...`);
+    
+    const success = mainController.removeChannel(channelId);
+    if (success) {
+      res.json({
+        success: true,
+        message: 'Canal removido com sucesso',
+        data: { channelId },
+        timestamp: new Date().toISOString()
+      });
+    } else {
+      res.status(400).json({
+        success: false,
+        error: 'Falha ao remover canal',
+        message: 'Canal não encontrado',
+        timestamp: new Date().toISOString()
+      });
+    }
+  } catch (error) {
+    console.error('Erro ao remover canal:', error);
+    res.status(500).json({ 
+      success: false,
+      error: 'Erro ao remover canal',
+      message: error.message,
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
+// Limpar conversas inativas
+app.post('/api/channels/cleanup', async (req, res) => {
+  try {
+    console.log('🧹 API: Limpando conversas inativas...');
+    mainController.cleanupInactiveConversations();
+    
+    res.json({
+      success: true,
+      message: 'Limpeza de conversas inativas executada',
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('Erro ao limpar conversas inativas:', error);
+    res.status(500).json({ 
+      success: false,
+      error: 'Erro ao limpar conversas inativas',
+      message: error.message,
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
+// Obter saúde de um canal específico
+app.get('/api/channels/:channelId/health', async (req, res) => {
+  try {
+    const { channelId } = req.params;
+    console.log(`🏥 API: Verificando saúde do canal ${channelId}...`);
+    
+    const channel = mainController.getChannelById(channelId);
+    if (!channel) {
+      return res.status(404).json({
+        success: false,
+        error: 'Canal não encontrado',
+        message: `Canal com ID '${channelId}' não foi encontrado`,
+        timestamp: new Date().toISOString()
+      });
+    }
+
+    const health = mainController.multiChannelManager.getChannelHealth(channelId);
+    
+    res.json({
+      success: true,
+      data: {
+        channelId: channelId,
+        channelName: channel.name,
+        health: health
+      },
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('Erro ao verificar saúde do canal:', error);
+    res.status(500).json({ 
+      success: false,
+      error: 'Erro ao verificar saúde do canal',
+      message: error.message,
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
+// Obter canais com problemas de saúde
+app.get('/api/channels/health/unhealthy', async (req, res) => {
+  try {
+    console.log('🏥 API: Verificando canais com problemas de saúde...');
+    const unhealthyChannels = mainController.multiChannelManager.getUnhealthyChannels();
+    
+    res.json({
+      success: true,
+      data: unhealthyChannels,
+      count: unhealthyChannels.length,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('Erro ao verificar canais com problemas:', error);
+    res.status(500).json({ 
+      success: false,
+      error: 'Erro ao verificar canais com problemas',
+      message: error.message,
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
+// Verificar disponibilidade de canais saudáveis
+app.get('/api/channels/health/availability', async (req, res) => {
+  try {
+    console.log('🔍 API: Verificando disponibilidade de canais saudáveis...');
+    const hasHealthyChannels = mainController.multiChannelManager.hasHealthyChannelsAvailable();
+    const activeChannels = mainController.getActiveChannels();
+    const unhealthyChannels = mainController.multiChannelManager.getUnhealthyChannels();
+    
+    res.json({
+      success: true,
+      data: {
+        hasHealthyChannels: hasHealthyChannels,
+        totalActiveChannels: activeChannels.length,
+        unhealthyChannelsCount: unhealthyChannels.length,
+        healthyChannelsCount: activeChannels.length - unhealthyChannels.length
+      },
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('Erro ao verificar disponibilidade de canais:', error);
+    res.status(500).json({ 
+      success: false,
+      error: 'Erro ao verificar disponibilidade de canais',
       message: error.message,
       timestamp: new Date().toISOString()
     });

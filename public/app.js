@@ -155,6 +155,10 @@ class AutomationInterface {
                     // Atualizar countdowns junto com os dados principais
                     this.updateCountdowns();
                     break;
+                case 'canais':
+                    console.log(`📱 [${timestamp}] Carregando canais...`);
+                    await this.loadChannels();
+                    break;
                 case 'configuracoes':
                     // Não atualizar automaticamente configurações
                     break;
@@ -616,6 +620,73 @@ class AutomationInterface {
         }
 
         // Action card selection - geral removido - sistema agora é apenas automático
+
+        // Channel management buttons
+        this.setupChannelEventListeners();
+    }
+
+    setupChannelEventListeners() {
+        // Add channel button
+        const addChannelBtn = document.getElementById('add-channel-btn');
+        if (addChannelBtn) {
+            addChannelBtn.addEventListener('click', () => {
+                this.openChannelModal();
+            });
+        }
+
+        // Refresh channels button
+        const refreshChannelsBtn = document.getElementById('refresh-channels-btn');
+        if (refreshChannelsBtn) {
+            refreshChannelsBtn.addEventListener('click', () => {
+                this.loadChannels();
+            });
+        }
+
+        // Save channel button
+        const saveChannelBtn = document.getElementById('save-channel-btn');
+        if (saveChannelBtn) {
+            saveChannelBtn.addEventListener('click', () => {
+                this.saveChannel();
+            });
+        }
+
+        // Channel filters
+        const channelFilter = document.getElementById('channel-filter');
+        if (channelFilter) {
+            channelFilter.addEventListener('change', () => {
+                this.applyChannelFilters();
+            });
+        }
+
+        const departmentFilter = document.getElementById('department-filter');
+        if (departmentFilter) {
+            departmentFilter.addEventListener('change', () => {
+                this.applyChannelFilters();
+            });
+        }
+
+        const channelSearch = document.getElementById('channel-search');
+        if (channelSearch) {
+            channelSearch.addEventListener('input', () => {
+                this.applyChannelFilters();
+            });
+        }
+
+        // Channel filter for patients
+        const channelFilterPatients = document.getElementById('channel-filter-patients');
+        if (channelFilterPatients) {
+            channelFilterPatients.addEventListener('change', () => {
+                this.filterPatientsByChannel();
+            });
+        }
+
+        // Channel metrics button
+        const refreshChannelMetricsBtn = document.getElementById('refresh-channel-metrics-btn');
+        if (refreshChannelMetricsBtn) {
+            refreshChannelMetricsBtn.addEventListener('click', () => {
+                this.loadChannelMetrics();
+            });
+        }
     }
 
     loadRouteData(route) {
@@ -629,8 +700,13 @@ class AutomationInterface {
             case 'atendimentos':
                 console.log('👥 Carregando dados dos atendimentos...');
                 this.loadPatients();
+                this.loadChannels(); // Carregar canais para filtro
                 // Always sync system status when loading patients
                 this.checkFlowState();
+                break;
+            case 'canais':
+                console.log('📱 Carregando dados dos canais...');
+                this.loadChannels();
                 break;
             case 'configuracoes':
                 console.log('⚙️ Carregando dados das configurações...');
@@ -653,6 +729,8 @@ class AutomationInterface {
                 break;
             case 'metricas':
                 console.log('📈 Carregando métricas...');
+                this.loadMetrics();
+                this.loadChannelMetrics(); // Carregar métricas por canal
                 // Always sync system status when loading metrics
                 this.checkFlowState();
                 break;
@@ -752,18 +830,15 @@ class AutomationInterface {
             }
 
             tbody.innerHTML = patients.map(patient => {
+                // Determinar canal do paciente
+                const channelInfo = this.getPatientChannelInfo(patient);
+                
                 return `
             <tr>
-                <td>
-                    <input type="checkbox" class="form-check-input patient-checkbox" 
-                           data-patient-id="${patient.id}" 
-                           data-patient-name="${this.escapeHtml(patient.name || 'Nome não informado')}"
-                           data-patient-phone="${this.escapeHtml(patient.phone || patient.number || '')}"
-                           data-contact-id="${patient.contactId || patient.id}">
-                </td>
                 <td>${this.escapeHtml(patient.name || 'Nome não informado')}</td>
                 <td>${this.escapeHtml(patient.phone || patient.number || '')}</td>
                 <td>${this.escapeHtml(patient.sectorName || patient.sector_name || 'Setor não informado')}</td>
+                <td>${channelInfo}</td>
                 <td>${this.formatWaitTime(patient.waitTimeMinutes || 0)}</td>
                 <td>
                     ${this.generateNextMessageInfo(patient)}
@@ -774,9 +849,6 @@ class AutomationInterface {
             </tr>
         `;
         }).join('');
-
-            // Adicionar event listeners para os checkboxes
-            this.setupPatientSelection();
         } catch (error) {
             console.error('Erro em displayPatients:', error);
         }
@@ -2375,6 +2447,13 @@ class AutomationInterface {
                     this.loadPatients();
                 }
                 break;
+            case 'canais':
+                // Carregar canais sempre que a aba for acessada
+                console.log('📱 Carregando canais da aba Canais...');
+                if (this.loadChannels) {
+                    this.loadChannels();
+                }
+                break;
         }
     }
 
@@ -2727,73 +2806,6 @@ class AutomationInterface {
 
 
 
-    /**
-     * Configura seleção de pacientes
-     */
-    setupPatientSelection() {
-        const checkboxes = document.querySelectorAll('.patient-checkbox');
-        const selectAllCheckbox = document.getElementById('select-all-patients');
-        
-        // Event listener para seleção individual
-        checkboxes.forEach(checkbox => {
-            checkbox.addEventListener('change', () => {
-                this.updateSelectedPatientsList();
-                this.updateSelectAllCheckbox();
-            });
-        });
-        
-        // Event listener para selecionar todos
-        if (selectAllCheckbox) {
-            selectAllCheckbox.addEventListener('change', (e) => {
-                checkboxes.forEach(checkbox => {
-                    checkbox.checked = e.target.checked;
-                });
-                this.updateSelectedPatientsList();
-            });
-        }
-    }
-
-    /**
-     * Atualiza lista de pacientes selecionados
-     */
-    updateSelectedPatientsList() {
-        const selectedCheckboxes = document.querySelectorAll('.patient-checkbox:checked');
-        const selectedCount = selectedCheckboxes.length;
-        
-        // Atualizar contador se existir
-        const counterElement = document.getElementById('selected-patients-count');
-        if (counterElement) {
-            counterElement.textContent = selectedCount;
-        }
-        
-        // Habilitar/desabilitar botão de envio
-        const sendButton = document.getElementById('send-messages-btn');
-        if (sendButton) {
-            sendButton.disabled = selectedCount === 0;
-        }
-    }
-
-    /**
-     * Atualiza checkbox "Selecionar Todos"
-     */
-    updateSelectAllCheckbox() {
-        const checkboxes = document.querySelectorAll('.patient-checkbox');
-        const selectAllCheckbox = document.getElementById('select-all-patients');
-        
-        if (selectAllCheckbox && checkboxes.length > 0) {
-            const checkedCount = document.querySelectorAll('.patient-checkbox:checked').length;
-            
-            if (checkedCount === 0) {
-                selectAllCheckbox.indeterminate = false;
-                selectAllCheckbox.checked = false;
-            } else if (checkedCount === checkboxes.length) {
-                selectAllCheckbox.indeterminate = false;
-                selectAllCheckbox.checked = true;
-            } else {
-                selectAllCheckbox.indeterminate = true;
-            }
-        }
-    }
 
     /**
      * Atualiza horário da última verificação
@@ -3599,6 +3611,739 @@ class AutomationInterface {
         } catch (error) {
             console.error('Erro ao adicionar log de ação do usuário:', error);
         }
+    }
+
+    /**
+     * ========================================
+     * MÉTODOS DE GERENCIAMENTO DE CANAIS
+     * ========================================
+     */
+
+    /**
+     * Carrega lista de canais da API
+     */
+    async loadChannels() {
+        try {
+            console.log('📱 Carregando canais da API...');
+            const response = await fetch('/api/channels');
+            
+            if (!response.ok) {
+                throw new Error(`Erro HTTP: ${response.status}`);
+            }
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                this.channels = data.data || [];
+                this.renderChannels();
+                this.updateChannelsStats();
+                this.populateChannelFilter(); // Popular filtro de canais para pacientes
+                console.log(`✅ ${this.channels.length} canais carregados`);
+            } else {
+                throw new Error(data.error || 'Erro ao carregar canais');
+            }
+        } catch (error) {
+            console.error('❌ Erro ao carregar canais:', error);
+            this.showNotification('Erro ao carregar canais: ' + error.message, 'error');
+        }
+    }
+
+    /**
+     * Renderiza lista de canais na interface
+     */
+    renderChannels() {
+        const channelsList = document.getElementById('channels-list');
+        if (!channelsList) return;
+
+        if (this.channels.length === 0) {
+            channelsList.innerHTML = `
+                <div class="col-12">
+                    <div class="text-center py-5">
+                        <i class="bi bi-telephone display-1 text-muted"></i>
+                        <h5 class="mt-3 text-muted">Nenhum canal configurado</h5>
+                        <p class="text-muted">Adicione um canal para começar a usar o sistema</p>
+                        <button class="btn btn-primary" onclick="app.openChannelModal()">
+                            <i class="bi bi-plus-circle me-1"></i>
+                            Adicionar Primeiro Canal
+                        </button>
+                    </div>
+                </div>
+            `;
+            return;
+        }
+
+        const channelsHtml = this.channels.map(channel => this.createChannelCard(channel)).join('');
+        channelsList.innerHTML = channelsHtml;
+    }
+
+    /**
+     * Cria card HTML para um canal
+     */
+    createChannelCard(channel) {
+        // Verificações de segurança para evitar erros
+        if (!channel) {
+            console.warn('Canal inválido fornecido para createChannelCard');
+            return '';
+        }
+
+        const statusClass = (channel.active !== false) ? 'success' : 'secondary';
+        const statusIcon = (channel.active !== false) ? 'bi-check-circle-fill' : 'bi-pause-circle-fill';
+        const statusText = (channel.active !== false) ? 'Ativo' : 'Inativo';
+        
+        const departmentBadge = this.getDepartmentBadge(channel.department || 'default');
+        
+        return `
+            <div class="col-md-6 col-lg-4 mb-3">
+                <div class="card h-100 channel-card" data-channel-id="${channel.id}">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-telephone me-2"></i>
+                            <h6 class="mb-0">${channel.name}</h6>
+                        </div>
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="badge bg-${statusClass}">
+                                <i class="bi ${statusIcon} me-1"></i>
+                                ${statusText}
+                            </span>
+                            <div class="dropdown">
+                                <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="dropdown">
+                                    <i class="bi bi-three-dots-vertical"></i>
+                                </button>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" href="#" onclick="app.editChannel('${channel.id}')">
+                                        <i class="bi bi-pencil me-2"></i>Editar
+                                    </a></li>
+                                    <li><a class="dropdown-item" href="#" onclick="app.toggleChannel('${channel.id}', ${!channel.active})">
+                                        <i class="bi bi-${channel.active ? 'pause' : 'play'} me-2"></i>
+                                        ${channel.active ? 'Desativar' : 'Ativar'}
+                                    </a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item text-danger" href="#" onclick="app.deleteChannel('${channel.id}')">
+                                        <i class="bi bi-trash me-2"></i>Excluir
+                                    </a></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-2">
+                            <small class="text-muted">Número:</small>
+                            <div class="fw-bold">${this.formatPhoneNumber(channel.number || '')}</div>
+                        </div>
+                        <div class="mb-2">
+                            <small class="text-muted">Departamento:</small>
+                            <div>${departmentBadge}</div>
+                        </div>
+                        <div class="mb-2">
+                            <small class="text-muted">Prioridade:</small>
+                            <div class="fw-bold">${channel.priority || 'N/A'}</div>
+                        </div>
+                        ${channel.description ? `
+                            <div class="mb-2">
+                                <small class="text-muted">Descrição:</small>
+                                <div class="small">${channel.description}</div>
+                            </div>
+                        ` : ''}
+                        <div class="mb-2">
+                            <small class="text-muted">Token:</small>
+                            <div class="small font-monospace text-truncate" title="${channel.token || 'N/A'}">
+                                ${channel.token ? channel.token.substring(0, 20) + '...' : 'N/A'}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                        <div class="row text-center">
+                            <div class="col-4">
+                                <div class="small text-muted">Conversas</div>
+                                <div class="fw-bold" id="conversations-${channel.id}">0</div>
+                            </div>
+                            <div class="col-4">
+                                <div class="small text-muted">Enviadas</div>
+                                <div class="fw-bold" id="sent-${channel.id}">0</div>
+                            </div>
+                            <div class="col-4">
+                                <div class="small text-muted">Taxa</div>
+                                <div class="fw-bold" id="rate-${channel.id}">100%</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    /**
+     * Retorna badge HTML para departamento
+     */
+    getDepartmentBadge(department) {
+        const departmentMap = {
+            'estoque': { class: 'bg-primary', text: 'Estoque' },
+            'oficial': { class: 'bg-success', text: 'Oficial' },
+            'confirmacao': { class: 'bg-info', text: 'Confirmação' },
+            'ti': { class: 'bg-warning', text: 'TI' },
+            'carla': { class: 'bg-secondary', text: 'Carla' },
+            'default': { class: 'bg-light text-dark', text: 'Padrão' }
+        };
+        
+        const dept = departmentMap[department] || departmentMap['default'];
+        return `<span class="badge ${dept.class}">${dept.text}</span>`;
+    }
+
+    /**
+     * Formata número de telefone para exibição
+     */
+    formatPhoneNumber(number) {
+        if (!number) return '';
+        const cleaned = number.replace(/\D/g, '');
+        if (cleaned.length === 13) {
+            return `+${cleaned.substring(0, 2)} (${cleaned.substring(2, 4)}) ${cleaned.substring(4, 9)}-${cleaned.substring(9)}`;
+        }
+        return number;
+    }
+
+    /**
+     * Atualiza estatísticas dos canais
+     */
+    async updateChannelsStats() {
+        try {
+            // Carregar estatísticas de carga
+            const loadResponse = await fetch('/api/channels/stats/load');
+            if (loadResponse.ok) {
+                const loadData = await loadResponse.json();
+                if (loadData.success) {
+                    this.updateChannelStatsCards(loadData.data);
+                }
+            }
+
+            // Carregar estatísticas de conversas
+            const convResponse = await fetch('/api/channels/stats/conversations');
+            if (convResponse.ok) {
+                const convData = await convResponse.json();
+                if (convData.success) {
+                    this.updateConversationStats(convData.data);
+                }
+            }
+        } catch (error) {
+            console.error('Erro ao carregar estatísticas dos canais:', error);
+        }
+    }
+
+    /**
+     * Atualiza cards de estatísticas dos canais
+     */
+    updateChannelStatsCards(stats) {
+        Object.keys(stats).forEach(channelId => {
+            const stat = stats[channelId];
+            const conversationsEl = document.getElementById(`conversations-${channelId}`);
+            const sentEl = document.getElementById(`sent-${channelId}`);
+            const rateEl = document.getElementById(`rate-${channelId}`);
+
+            if (conversationsEl) conversationsEl.textContent = stat.activeConversations || 0;
+            if (sentEl) sentEl.textContent = stat.totalMessages || 0;
+            if (rateEl) rateEl.textContent = `${stat.successRate || 100}%`;
+        });
+    }
+
+    /**
+     * Atualiza estatísticas de conversas
+     */
+    updateConversationStats(stats) {
+        const activeConversationsEl = document.getElementById('active-conversations');
+        if (activeConversationsEl) {
+            activeConversationsEl.textContent = stats.total || 0;
+        }
+    }
+
+    /**
+     * Abre modal para adicionar/editar canal
+     */
+    openChannelModal(channelId = null) {
+        const modal = new bootstrap.Modal(document.getElementById('channel-modal'));
+        const title = document.getElementById('channel-modal-title');
+        const form = document.getElementById('channel-form');
+        
+        if (channelId) {
+            // Modo edição
+            const channel = this.channels.find(c => c.id === channelId);
+            if (channel) {
+                title.textContent = 'Editar Canal';
+                this.populateChannelForm(channel);
+            }
+        } else {
+            // Modo adição
+            title.textContent = 'Adicionar Canal';
+            form.reset();
+            document.getElementById('channel-active').checked = true;
+            document.getElementById('channel-priority').value = 999;
+        }
+        
+        modal.show();
+    }
+
+    /**
+     * Preenche formulário com dados do canal
+     */
+    populateChannelForm(channel) {
+        document.getElementById('channel-id').value = channel.id || '';
+        document.getElementById('channel-name').value = channel.name || '';
+        document.getElementById('channel-number').value = channel.number || '';
+        document.getElementById('channel-token').value = channel.token || '';
+        document.getElementById('channel-department').value = channel.department || 'default';
+        document.getElementById('channel-priority').value = channel.priority || 999;
+        document.getElementById('channel-active').checked = channel.active !== false;
+        document.getElementById('channel-description').value = channel.description || '';
+    }
+
+    /**
+     * Edita canal existente
+     */
+    editChannel(channelId) {
+        this.openChannelModal(channelId);
+    }
+
+    /**
+     * Ativa/desativa canal
+     */
+    async toggleChannel(channelId, active) {
+        try {
+            const response = await fetch(`/api/channels/${channelId}/toggle`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ active })
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                if (data.success) {
+                    this.showNotification(`Canal ${active ? 'ativado' : 'desativado'} com sucesso`, 'success');
+                    await this.loadChannels();
+                } else {
+                    throw new Error(data.message || 'Erro ao alterar status do canal');
+                }
+            } else {
+                throw new Error(`Erro HTTP: ${response.status}`);
+            }
+        } catch (error) {
+            console.error('Erro ao alterar status do canal:', error);
+            this.showNotification('Erro ao alterar status do canal: ' + error.message, 'error');
+        }
+    }
+
+    /**
+     * Exclui canal
+     */
+    async deleteChannel(channelId) {
+        const channel = this.channels.find(c => c.id === channelId);
+        if (!channel) return;
+
+        if (confirm(`Tem certeza que deseja excluir o canal "${channel.name}"?`)) {
+            try {
+                const response = await fetch(`/api/channels/${channelId}`, {
+                    method: 'DELETE'
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.success) {
+                        this.showNotification('Canal excluído com sucesso', 'success');
+                        await this.loadChannels();
+                    } else {
+                        throw new Error(data.message || 'Erro ao excluir canal');
+                    }
+                } else {
+                    throw new Error(`Erro HTTP: ${response.status}`);
+                }
+            } catch (error) {
+                console.error('Erro ao excluir canal:', error);
+                this.showNotification('Erro ao excluir canal: ' + error.message, 'error');
+            }
+        }
+    }
+
+    /**
+     * Salva canal (adicionar ou editar)
+     */
+    async saveChannel() {
+        try {
+            const form = document.getElementById('channel-form');
+            const formData = new FormData(form);
+            
+            const channelData = {
+                id: document.getElementById('channel-id').value,
+                name: document.getElementById('channel-name').value,
+                number: document.getElementById('channel-number').value,
+                token: document.getElementById('channel-token').value,
+                department: document.getElementById('channel-department').value,
+                priority: parseInt(document.getElementById('channel-priority').value),
+                active: document.getElementById('channel-active').checked,
+                description: document.getElementById('channel-description').value
+            };
+
+            // Validação básica
+            if (!channelData.id || !channelData.name || !channelData.number || !channelData.token) {
+                throw new Error('Preencha todos os campos obrigatórios');
+            }
+
+            const isEdit = this.channels.some(c => c.id === channelData.id);
+            const url = isEdit ? `/api/channels/${channelData.id}` : '/api/channels';
+            const method = isEdit ? 'PUT' : 'POST';
+
+            const response = await fetch(url, {
+                method: method,
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(channelData)
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                if (data.success) {
+                    this.showNotification(`Canal ${isEdit ? 'atualizado' : 'adicionado'} com sucesso`, 'success');
+                    bootstrap.Modal.getInstance(document.getElementById('channel-modal')).hide();
+                    await this.loadChannels();
+                } else {
+                    throw new Error(data.message || 'Erro ao salvar canal');
+                }
+            } else {
+                throw new Error(`Erro HTTP: ${response.status}`);
+            }
+        } catch (error) {
+            console.error('Erro ao salvar canal:', error);
+            this.showNotification('Erro ao salvar canal: ' + error.message, 'error');
+        }
+    }
+
+    /**
+     * Obtém informações de canal para um paciente
+     */
+    getPatientChannelInfo(patient) {
+        try {
+            // Verificar se há contexto de conversa para este paciente
+            const phone = patient.phone || patient.number;
+            if (!phone) return '<span class="text-muted">-</span>';
+
+            // Simular busca por canal baseado no número
+            // Em uma implementação real, isso viria da API
+            const channel = this.findChannelForPatient(patient);
+            
+            if (channel) {
+                const statusClass = channel.active ? 'success' : 'secondary';
+                const statusIcon = channel.active ? 'bi-check-circle-fill' : 'bi-pause-circle-fill';
+                
+                return `
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-telephone me-1 text-muted"></i>
+                        <div>
+                            <div class="fw-bold small">${channel.name}</div>
+                            <div class="small text-muted">${this.formatPhoneNumber(channel.number)}</div>
+                        </div>
+                        <span class="badge bg-${statusClass} ms-2" title="${channel.active ? 'Ativo' : 'Inativo'}">
+                            <i class="bi ${statusIcon}"></i>
+                        </span>
+                    </div>
+                `;
+            } else {
+                return '<span class="text-muted">Não atribuído</span>';
+            }
+        } catch (error) {
+            console.error('Erro ao obter informações de canal:', error);
+            return '<span class="text-muted">-</span>';
+        }
+    }
+
+    /**
+     * Encontra canal apropriado para um paciente
+     */
+    findChannelForPatient(patient) {
+        if (!this.channels || this.channels.length === 0) return null;
+
+        // Mapear setor do paciente para departamento
+        const sector = patient.sectorName || patient.sector_name || '';
+        const department = this.mapSectorToDepartment(sector);
+
+        // Buscar canal por departamento
+        let channel = this.channels.find(c => 
+            c.active && c.department === department
+        );
+
+        // Se não encontrar por departamento, usar canal com menor prioridade ativo
+        if (!channel) {
+            channel = this.channels
+                .filter(c => c.active)
+                .sort((a, b) => a.priority - b.priority)[0];
+        }
+
+        return channel;
+    }
+
+    /**
+     * Mapeia setor do paciente para departamento
+     */
+    mapSectorToDepartment(sector) {
+        const sectorMap = {
+            'estoque': 'estoque',
+            'ti': 'ti',
+            'oficial': 'oficial',
+            'confirmacao': 'confirmacao',
+            'carla': 'carla'
+        };
+        
+        return sectorMap[sector.toLowerCase()] || 'oficial';
+    }
+
+    /**
+     * Filtra pacientes por canal
+     */
+    filterPatientsByChannel() {
+        const channelFilter = document.getElementById('channel-filter-patients');
+        if (!channelFilter) return;
+
+        const selectedChannelId = channelFilter.value;
+        const patientRows = document.querySelectorAll('#patients-tbody tr');
+
+        patientRows.forEach(row => {
+            if (selectedChannelId === '') {
+                // Mostrar todos os pacientes
+                row.style.display = '';
+            } else {
+                // Verificar se o paciente está associado ao canal selecionado
+                const patientData = this.getPatientDataFromRow(row);
+                const channel = this.findChannelForPatient(patientData);
+                
+                if (channel && channel.id === selectedChannelId) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            }
+        });
+    }
+
+    /**
+     * Obtém dados do paciente a partir de uma linha da tabela
+     */
+    getPatientDataFromRow(row) {
+        const cells = row.querySelectorAll('td');
+        if (cells.length < 4) return {};
+
+        return {
+            name: cells[1]?.textContent?.trim() || '',
+            phone: cells[2]?.textContent?.trim() || '',
+            sectorName: cells[3]?.textContent?.trim() || ''
+        };
+    }
+
+    /**
+     * Popula filtro de canais para pacientes
+     */
+    populateChannelFilter() {
+        const channelFilter = document.getElementById('channel-filter-patients');
+        if (!channelFilter || !this.channels) return;
+
+        // Limpar opções existentes (exceto a primeira)
+        channelFilter.innerHTML = '<option value="">Todos os Canais</option>';
+
+        // Adicionar canais ativos
+        this.channels
+            .filter(channel => channel.active)
+            .sort((a, b) => a.priority - b.priority)
+            .forEach(channel => {
+                const option = document.createElement('option');
+                option.value = channel.id;
+                option.textContent = `${channel.name} (${this.formatPhoneNumber(channel.number)})`;
+                channelFilter.appendChild(option);
+            });
+    }
+
+    /**
+     * Aplica filtros na lista de canais
+     */
+    applyChannelFilters() {
+        const statusFilter = document.getElementById('channel-filter').value;
+        const departmentFilter = document.getElementById('department-filter').value;
+        const searchTerm = document.getElementById('channel-search').value.toLowerCase();
+
+        const channelCards = document.querySelectorAll('.channel-card');
+        
+        channelCards.forEach(card => {
+            const channelId = card.dataset.channelId;
+            const channel = this.channels.find(c => c.id === channelId);
+            
+            if (!channel) return;
+
+            let show = true;
+
+            // Filtro de status
+            if (statusFilter === 'active' && !channel.active) show = false;
+            if (statusFilter === 'inactive' && channel.active) show = false;
+
+            // Filtro de departamento
+            if (departmentFilter !== 'all' && channel.department !== departmentFilter) show = false;
+
+            // Filtro de busca
+            if (searchTerm && !channel.name.toLowerCase().includes(searchTerm) && 
+                !channel.number.includes(searchTerm)) show = false;
+
+            card.closest('.col-md-6').style.display = show ? 'block' : 'none';
+        });
+    }
+
+    /**
+     * Carrega métricas por canal
+     */
+    async loadChannelMetrics() {
+        try {
+            console.log('📊 Carregando métricas por canal...');
+            
+            const loadingElement = document.getElementById('channel-metrics-loading');
+            const containerElement = document.getElementById('channel-metrics-container');
+            
+            if (loadingElement) loadingElement.classList.remove('d-none');
+            if (containerElement) containerElement.classList.add('d-none');
+
+            // Carregar estatísticas de carga dos canais
+            const loadResponse = await fetch('/api/channels/stats/load');
+            const loadData = await loadResponse.json();
+
+            // Carregar estatísticas de conversas
+            const convResponse = await fetch('/api/channels/stats/conversations');
+            const convData = await convResponse.json();
+
+            if (loadData.success && convData.success) {
+                this.renderChannelMetrics(loadData.data, convData.data);
+                console.log('✅ Métricas por canal carregadas');
+            } else {
+                throw new Error('Erro ao carregar métricas dos canais');
+            }
+        } catch (error) {
+            console.error('❌ Erro ao carregar métricas por canal:', error);
+            this.showNotification('Erro ao carregar métricas por canal: ' + error.message, 'error');
+        } finally {
+            const loadingElement = document.getElementById('channel-metrics-loading');
+            const containerElement = document.getElementById('channel-metrics-container');
+            
+            if (loadingElement) loadingElement.classList.add('d-none');
+            if (containerElement) containerElement.classList.remove('d-none');
+        }
+    }
+
+    /**
+     * Renderiza métricas por canal
+     */
+    renderChannelMetrics(loadStats, conversationStats) {
+        const container = document.getElementById('channel-metrics-container');
+        if (!container) return;
+
+        if (!this.channels || this.channels.length === 0) {
+            container.innerHTML = `
+                <div class="text-center py-4">
+                    <i class="bi bi-telephone display-1 text-muted"></i>
+                    <h5 class="mt-3 text-muted">Nenhum canal configurado</h5>
+                    <p class="text-muted">Configure canais para ver métricas detalhadas</p>
+                </div>
+            `;
+            return;
+        }
+
+        const channelsHtml = this.channels.map(channel => {
+            const stats = loadStats[channel.id] || {
+                activeConversations: 0,
+                totalMessages: 0,
+                failedMessages: 0,
+                successRate: 100
+            };
+
+            const conversations = conversationStats.byChannel[channel.id] || 0;
+            const statusClass = channel.active ? 'success' : 'secondary';
+            const statusIcon = channel.active ? 'bi-check-circle-fill' : 'bi-pause-circle-fill';
+
+            return `
+                <div class="col-md-6 col-lg-4 mb-3">
+                    <div class="card h-100">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <div class="d-flex align-items-center">
+                                <i class="bi bi-telephone me-2"></i>
+                                <h6 class="mb-0">${channel.name}</h6>
+                            </div>
+                            <span class="badge bg-${statusClass}">
+                                <i class="bi ${statusIcon} me-1"></i>
+                                ${channel.active ? 'Ativo' : 'Inativo'}
+                            </span>
+                        </div>
+                        <div class="card-body">
+                            <div class="row text-center mb-3">
+                                <div class="col-6">
+                                    <div class="metric-item">
+                                        <div class="h4 text-primary mb-1">${stats.activeConversations || 0}</div>
+                                        <small class="text-muted">Conversas Ativas</small>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="metric-item">
+                                        <div class="h4 text-success mb-1">${stats.totalMessages || 0}</div>
+                                        <small class="text-muted">Mensagens Enviadas</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <hr class="my-3">
+                            <div class="row text-center">
+                                <div class="col-6">
+                                    <div class="metric-item">
+                                        <div class="h5 text-danger mb-1">${stats.failedMessages || 0}</div>
+                                        <small class="text-muted">Falharam</small>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="metric-item">
+                                        <div class="h5 text-info mb-1">${stats.successRate || 100}%</div>
+                                        <small class="text-muted">Taxa de Sucesso</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mt-3">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <small class="text-muted">Número:</small>
+                                    <small class="fw-bold">${this.formatPhoneNumber(channel.number)}</small>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <small class="text-muted">Departamento:</small>
+                                    <span class="badge bg-light text-dark">${this.getDepartmentName(channel.department)}</span>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <small class="text-muted">Prioridade:</small>
+                                    <small class="fw-bold">${channel.priority}</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+        container.innerHTML = `
+            <div class="row">
+                ${channelsHtml}
+            </div>
+        `;
+    }
+
+    /**
+     * Retorna nome do departamento
+     */
+    getDepartmentName(department) {
+        const departmentMap = {
+            'estoque': 'Estoque',
+            'oficial': 'Oficial',
+            'confirmacao': 'Confirmação',
+            'ti': 'TI',
+            'carla': 'Carla',
+            'default': 'Padrão'
+        };
+        
+        return departmentMap[department] || department;
     }
 
 }

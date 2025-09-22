@@ -1,5 +1,6 @@
 const { ErrorHandler } = require('../services/ErrorHandler');
 const { ConfigManager } = require('../services/ConfigManager');
+const { MultiChannelManager } = require('../services/MultiChannelManager');
 const { JsonPatientManager } = require('../services/JsonPatientManager');
 const { ProductionScheduler } = require('../services/ProductionScheduler');
 const { MessageHistoryManager } = require('../services/MessageHistoryManager');
@@ -18,6 +19,8 @@ class MainController {
     
     // Inicializar ConfigManager
     this.configManager = new ConfigManager(this.errorHandler);
+    
+    // MultiChannelManager será inicializado após ConfigManager carregar os canais
     
     // Configurar TimeUtils com ConfigManager para horários dinâmicos
     TimeUtils.setConfigManager(this.configManager);
@@ -57,6 +60,10 @@ class MainController {
       // Inicializar ConfigManager
       await this.configManager.initialize();
       console.log('✅ ConfigManager inicializado');
+
+      // Inicializar MultiChannelManager após ConfigManager carregar os canais
+      this.multiChannelManager = new MultiChannelManager(this.configManager, this.errorHandler);
+      console.log('✅ MultiChannelManager inicializado');
 
       // Inicializar MessageMetricsManager
       await this.messageMetricsManager.initialize();
@@ -786,6 +793,123 @@ class MainController {
    */
   getSystemMetrics() {
     return this.systemMetricsManager.getMetrics();
+  }
+
+  /**
+   * ========================================
+   * MÉTODOS DE GERENCIAMENTO DE CANAIS
+   * ========================================
+   */
+
+  /**
+   * Obtém todos os canais
+   */
+  getChannels() {
+    return this.multiChannelManager.getAllChannels();
+  }
+
+  /**
+   * Obtém canais ativos
+   */
+  getActiveChannels() {
+    return this.multiChannelManager.getActiveChannels();
+  }
+
+  /**
+   * Obtém canal por ID
+   */
+  getChannelById(channelId) {
+    return this.multiChannelManager.getChannelById(channelId);
+  }
+
+  /**
+   * Obtém canal por número
+   */
+  getChannelByNumber(number) {
+    return this.multiChannelManager.getChannelByNumber(number);
+  }
+
+  /**
+   * Obtém estatísticas de carga dos canais
+   */
+  getChannelLoadStats() {
+    return this.multiChannelManager.getChannelLoadStats();
+  }
+
+  /**
+   * Obtém estatísticas de conversas ativas
+   */
+  getConversationStats() {
+    return this.multiChannelManager.getConversationStats();
+  }
+
+  /**
+   * Obtém informações completas de um canal
+   */
+  getChannelInfo(channelId) {
+    return this.multiChannelManager.getChannelInfo(channelId);
+  }
+
+  /**
+   * Adiciona novo canal
+   */
+  addChannel(channelData) {
+    const success = this.configManager.addChannel(channelData);
+    if (success) {
+      // Recarregar canais no MultiChannelManager
+      this.multiChannelManager.reloadChannels();
+    }
+    return success;
+  }
+
+  /**
+   * Atualiza canal existente
+   */
+  updateChannel(channelId, updateData) {
+    const success = this.configManager.updateChannel(channelId, updateData);
+    if (success) {
+      // Recarregar canais no MultiChannelManager
+      this.multiChannelManager.reloadChannels();
+    }
+    return success;
+  }
+
+  /**
+   * Remove canal
+   */
+  removeChannel(channelId) {
+    const success = this.configManager.removeChannel(channelId);
+    if (success) {
+      // Recarregar canais no MultiChannelManager
+      this.multiChannelManager.reloadChannels();
+    }
+    return success;
+  }
+
+  /**
+   * Ativa/desativa canal
+   */
+  toggleChannel(channelId, active) {
+    const success = this.configManager.toggleChannel(channelId, active);
+    if (success) {
+      // Recarregar canais no MultiChannelManager
+      this.multiChannelManager.reloadChannels();
+    }
+    return success;
+  }
+
+  /**
+   * Obtém métricas de um canal
+   */
+  getChannelMetrics(channelId) {
+    return this.configManager.getChannelMetrics(channelId);
+  }
+
+  /**
+   * Limpa conversas inativas
+   */
+  cleanupInactiveConversations() {
+    this.multiChannelManager.cleanupInactiveConversations();
   }
 }
 
