@@ -84,16 +84,15 @@ class MainController {
       console.log('✅ JsonPatientManager inicializado');
 
       // Inicializar ProductionScheduler com credenciais da API CAM Krolik
-      // Usar função getValidToken para pegar um token válido dos canais específicos
+      // Usar TOKEN_WHATSAPP_OFICIAL que tem acesso aos dados dos pacientes
       const getValidToken = () => {
-        const tokens = [
-          process.env.TOKEN_ANEXO1_ESTOQUE,
-          process.env.TOKEN_WHATSAPP_OFICIAL,
-          process.env.TOKEN_CONFIRMACAO1,
-          process.env.TOKEN_CONFIRMACAO2_TI,
-          process.env.TOKEN_CONFIRMACAO3_CARLA
-        ].filter(token => token);
-        return tokens[0] || null;
+        // Priorizar TOKEN_WHATSAPP_OFICIAL que tem acesso aos dados dos pacientes
+        return process.env.TOKEN_WHATSAPP_OFICIAL || 
+               process.env.TOKEN_ANEXO1_ESTOQUE ||
+               process.env.TOKEN_CONFIRMACAO1 ||
+               process.env.TOKEN_CONFIRMACAO2_TI ||
+               process.env.TOKEN_CONFIRMACAO3_CARLA ||
+               null;
       };
       
       const krolikCredentials = {
@@ -922,6 +921,51 @@ class MainController {
    */
   cleanupInactiveConversations() {
     this.multiChannelManager.cleanupInactiveConversations();
+  }
+
+  /**
+   * Obtém atendimentos aguardando de todos os canais
+   * @returns {Object} Atendimentos agrupados por canal
+   */
+  async getAllWaitingAttendances() {
+    try {
+      const channels = this.multiChannelManager.getAllChannels();
+      const attendancesByChannel = {};
+
+      for (const channel of channels) {
+        try {
+          const attendances = await channel.apiClient.listWaitingAttendances();
+          attendancesByChannel[channel.id] = {
+            channel: {
+              id: channel.id,
+              name: channel.name,
+              number: channel.number,
+              active: channel.active
+            },
+            attendances: attendances,
+            count: attendances.length
+          };
+        } catch (error) {
+          console.error(`Erro ao buscar atendimentos do canal ${channel.name}:`, error.message);
+          attendancesByChannel[channel.id] = {
+            channel: {
+              id: channel.id,
+              name: channel.name,
+              number: channel.number,
+              active: channel.active
+            },
+            attendances: [],
+            count: 0,
+            error: error.message
+          };
+        }
+      }
+
+      return attendancesByChannel;
+    } catch (error) {
+      this.errorHandler.logError(error, 'MainController.getAllWaitingAttendances');
+      throw error;
+    }
   }
 }
 

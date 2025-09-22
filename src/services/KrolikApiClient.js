@@ -118,6 +118,36 @@ class KrolikApiClient {
   }
 
   /**
+   * Lista atendimentos aguardando de um canal específico
+   * Rota correta: POST /core/v2/api/chats/list-lite
+   */
+  async listWaitingAttendancesByChannel(channelId) {
+    try {
+      const payload = {
+        typeChat: 2,
+        status: 1,
+        channelId: channelId
+      };
+
+      const response = await this.axiosInstance.post('/core/v2/api/chats/list-lite', payload, {
+        headers: {
+          'accept': 'application/json',
+          'access-token': this.token,
+          'Content-Type': 'application/json-patch+json'
+        }
+      });
+
+      // Converter dados da API para o modelo interno
+      const patients = response.data.chats?.map(chat => this.convertChatToWaitingPatient(chat)) || [];
+      console.log(`👥 Canal ${channelId}: ${patients.length} pacientes aguardando`);
+      return patients;
+    } catch (error) {
+      console.error(`Erro ao listar atendimentos do canal ${channelId}:`, error.message);
+      throw error;
+    }
+  }
+
+  /**
    * Lista setores disponíveis
    * Rota correta: GET /core/v2/api/sectors
    */

@@ -1,5 +1,47 @@
 [
   {
+    "id": "log_1758569453923_ndihyhd9s",
+    "timestamp": "2025-09-22T19:30:53.923Z",
+    "level": "warning",
+    "action": "Controle de Fluxo",
+    "details": "Usuário pausou o fluxo de mensagens automáticas",
+    "metadata": {
+      "action": "pause",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0",
+      "ip": "::ffff:127.0.0.1"
+    },
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0",
+    "ip": "::ffff:127.0.0.1"
+  },
+  {
+    "id": "log_1758569451912_uw1v19z3u",
+    "timestamp": "2025-09-22T19:30:51.913Z",
+    "level": "info",
+    "action": "Controle de Fluxo",
+    "details": "Usuário retomou o fluxo de mensagens automáticas",
+    "metadata": {
+      "action": "resume",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0",
+      "ip": "::ffff:127.0.0.1"
+    },
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0",
+    "ip": "::ffff:127.0.0.1"
+  },
+  {
+    "id": "log_1758568891783_rm1s4ou28",
+    "timestamp": "2025-09-22T19:21:31.784Z",
+    "level": "warning",
+    "action": "Controle de Fluxo",
+    "details": "Usuário pausou o fluxo de mensagens automáticas",
+    "metadata": {
+      "action": "pause",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0",
+      "ip": "::ffff:127.0.0.1"
+    },
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0",
+    "ip": "::ffff:127.0.0.1"
+  },
+  {
     "id": "log_1758552841716_ltmkyuqjs",
     "timestamp": "2025-09-22T14:54:01.717Z",
     "level": "info",

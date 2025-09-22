@@ -1,99 +1,17 @@
 {
   "excludedSectors": "[]",
   "excludedChannels": "[]",
-  "flowPaused": "false",
+  "flowPaused": "true",
   "endOfDayPaused": "true",
   "ignoreBusinessHours": "true",
   "minWaitTime": "80",
   "maxWaitTime": "120",
+  "selectedActionCard": "631f2b4f307d23f46ac80a10",
   "selectedActionCard30Min": "68cbfa96b8640e9721e4feab",
   "selectedActionCardEndDay": "631f2b4f307d23f46ac80a2b",
+  "selectedTemplate": "",
   "startOfDayTime": "08:00",
   "endOfDayTime": "18:00",
   "logCleanupTime": "23:59",
-  "refreshInterval": "60",
-  "channels": [
-    {
-      "id": "anexo1-estoque",
-      "name": "ANEXO1-CLAROpré cel Estoque",
-      "number": "5516991003715",
-      "token": "66180b4e5852dcf886a0ffd0",
-      "active": true,
-      "priority": 1,
-      "department": "estoque",
-      "description": "Canal principal para setor de estoque"
-    },
-    {
-      "id": "whatsapp-oficial",
-      "name": "Canal WhatsApp 16 3977-5100",
-      "number": "551639775100",
-      "token": "65f06d5b867543e1d094fa0f",
-      "active": true,
-      "priority": 2,
-      "department": "oficial",
-      "description": "Canal oficial da empresa"
-    },
-    {
-      "id": "confirmacao1",
-      "name": "Confirmação1- 99964-3827",
-      "number": "5516999643827",
-      "token": "6848611846467bfb329de619",
-      "active": true,
-      "priority": 3,
-      "department": "confirmacao",
-      "description": "Canal de confirmação 1"
-    },
-    {
-      "id": "confirmacao2-ti",
-      "name": "Confirmação2- CLAROpré cel TI",
-      "number": "5516991703483",
-      "token": "68486231df08d48001f8951d",
-      "active": true,
-      "priority": 4,
-      "department": "ti",
-      "description": "Canal de TI e suporte técnico"
-    },
-    {
-      "id": "confirmacao3-carla",
-      "name": "Confirmação3- CLAROpré cel Carla",
-      "number": "5516991604344",
-      "token": "6878f61667716e87a4ca2fbd",
-      "active": true,
-      "priority": 5,
-      "department": "carla",
-      "description": "Canal da equipe Carla"
-    }
-  ],
-  "channelMetrics": {
-    "anexo1-estoque": {
-      "messagesSent": 0,
-      "messagesFailed": 0,
-      "activeConversations": 0,
-      "lastActivity": null
-    },
-    "whatsapp-oficial": {
-      "messagesSent": 0,
-      "messagesFailed": 0,
-      "activeConversations": 0,
-      "lastActivity": null
-    },
-    "confirmacao1": {
-      "messagesSent": 0,
-      "messagesFailed": 0,
-      "activeConversations": 0,
-      "lastActivity": null
-    },
-    "confirmacao2-ti": {
-      "messagesSent": 0,
-      "messagesFailed": 0,
-      "activeConversations": 0,
-      "lastActivity": null
-    },
-    "confirmacao3-carla": {
-      "messagesSent": 0,
-      "messagesFailed": 0,
-      "activeConversations": 0,
-      "lastActivity": null
-    }
-  }
+  "refreshInterval": "60"
 }

@@ -746,7 +746,7 @@ class AutomationInterface {
     async loadPatients() {
         try {
             const timestamp = new Date().toLocaleTimeString();
-            console.log(`📋 [${timestamp}] Carregando pacientes da API CAM Krolik...`);
+            console.log(`📋 [${timestamp}] Carregando atendimentos de todos os canais...`);
             
             // Show loading state
             const loadingElement = document.getElementById('loading-patients');
@@ -757,25 +757,26 @@ class AutomationInterface {
 
             // PRIMEIRO: Carregar Action Cards para ter os nomes corretos
             if (!this.actionCards || this.actionCards.length === 0) {
-                console.log('🃏 Carregando Action Cards antes dos pacientes...');
+                console.log('🃏 Carregando Action Cards antes dos atendimentos...');
                 await this.loadActionCards();
             }
 
-            // SEGUNDO: Carregar histórico de mensagens para verificar status dos pacientes
+            // SEGUNDO: Carregar histórico de mensagens para verificar status dos atendimentos
             await this.loadMessageHistory();
 
-            // TERCEIRO: Carregar pacientes
-            const response = await fetch('/api/patients');
+            // TERCEIRO: Carregar atendimentos de todos os canais
+            const response = await fetch('/api/attendances/waiting');
             const data = await response.json();
 
-            console.log('📥 Resposta da API /api/patients:', data);
+            console.log('📥 Resposta da API /api/attendances/waiting:', data);
 
             if (!response.ok) {
-                throw new Error(data.error || 'Erro ao carregar pacientes');
+                throw new Error(data.error || 'Erro ao carregar atendimentos');
             }
 
-            const patients = data.data || [];
-            console.log(`📊 Exibindo ${patients.length} pacientes na interface`);
+            const attendancesByChannel = data.data || {};
+            const totalAttendances = data.totalAttendances || 0;
+            console.log(`📊 Exibindo ${totalAttendances} atendimentos de ${data.channelsCount} canais na interface`);
             
             // GARANTIR que Action Cards estão carregados antes de exibir
             if (!this.actionCards || this.actionCards.length === 0) {
@@ -783,12 +784,12 @@ class AutomationInterface {
                 await this.loadActionCards();
             }
             
-            this.displayPatients(patients);
+            this.displayAttendancesByChannel(attendancesByChannel);
             
             // Update total waiting count in dashboard
             const totalWaitingElement = document.getElementById('total-waiting');
             if (totalWaitingElement) {
-                totalWaitingElement.textContent = data.total || patients.length;
+                totalWaitingElement.textContent = totalAttendances;
             }
 
             // Update last check time
@@ -851,6 +852,114 @@ class AutomationInterface {
         }).join('');
         } catch (error) {
             console.error('Erro em displayPatients:', error);
+        }
+    }
+
+    displayAttendancesByChannel(attendancesByChannel) {
+        try {
+            const tbody = document.getElementById('patients-tbody');
+            if (!tbody) {
+                return;
+            }
+
+            // Calcular total de atendimentos
+            const totalAttendances = Object.values(attendancesByChannel).reduce((total, channelData) => {
+                return total + channelData.count;
+            }, 0);
+
+            if (totalAttendances === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" class="text-center text-muted py-4">
+                            Nenhum atendimento em espera
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            let html = '';
+            
+            // Iterar por cada canal
+            Object.values(attendancesByChannel).forEach(channelData => {
+                const { channel, attendances, count, error } = channelData;
+                
+                if (error) {
+                    // Mostrar erro do canal
+                    html += `
+                        <tr class="table-warning">
+                            <td colspan="7" class="text-center py-3">
+                                <div class="d-flex align-items-center justify-content-center">
+                                    <i class="bi bi-exclamation-triangle me-2"></i>
+                                    <strong>${this.escapeHtml(channel.name)}</strong>
+                                    <span class="ms-2 text-muted">- Erro: ${this.escapeHtml(error)}</span>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                    return;
+                }
+
+                if (count === 0) {
+                    // Canal sem atendimentos
+                    html += `
+                        <tr class="table-light">
+                            <td colspan="7" class="text-center py-2">
+                                <div class="d-flex align-items-center justify-content-center">
+                                    <i class="bi bi-check-circle me-2 text-success"></i>
+                                    <strong>${this.escapeHtml(channel.name)}</strong>
+                                    <span class="ms-2 text-muted">- Nenhum atendimento em espera</span>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                    return;
+                }
+
+                // Cabeçalho do canal
+                html += `
+                    <tr class="table-primary">
+                        <td colspan="7" class="fw-bold py-2">
+                            <div class="d-flex align-items-center justify-content-between">
+                                <div>
+                                    <i class="bi bi-telephone me-2"></i>
+                                    <strong>${this.escapeHtml(channel.name)}</strong>
+                                    <span class="ms-2 text-muted">(${this.escapeHtml(channel.number)})</span>
+                                </div>
+                                <div>
+                                    <span class="badge bg-primary">${count} atendimento${count > 1 ? 's' : ''}</span>
+                                    ${!channel.active ? '<span class="badge bg-secondary ms-1">Inativo</span>' : ''}
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+
+                // Atendimentos do canal
+                attendances.forEach(attendance => {
+                    const channelInfo = this.getPatientChannelInfo(attendance);
+                    
+                    html += `
+                        <tr class="table-light">
+                            <td>${this.escapeHtml(attendance.name || 'Nome não informado')}</td>
+                            <td>${this.escapeHtml(attendance.phone || attendance.number || '')}</td>
+                            <td>${this.escapeHtml(attendance.sectorName || attendance.sector_name || 'Setor não informado')}</td>
+                            <td>${channelInfo}</td>
+                            <td>${this.formatWaitTime(attendance.waitTimeMinutes || 0)}</td>
+                            <td>
+                                ${this.generateNextMessageInfo(attendance)}
+                            </td>
+                            <td>
+                                <span class="badge bg-warning">Aguardando</span>
+                            </td>
+                        </tr>
+                    `;
+                });
+            });
+
+            tbody.innerHTML = html;
+        } catch (error) {
+            console.error('Erro em displayAttendancesByChannel:', error);
         }
     }
 

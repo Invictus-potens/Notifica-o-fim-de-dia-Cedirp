@@ -52,17 +52,14 @@ const mainController = new MainController();
 
 // Função para obter um token válido para operações gerais
 function getValidToken() {
-  // Tentar usar tokens específicos do .env
-  const tokens = [
-    process.env.TOKEN_ANEXO1_ESTOQUE,
-    process.env.TOKEN_WHATSAPP_OFICIAL,
-    process.env.TOKEN_CONFIRMACAO1,
-    process.env.TOKEN_CONFIRMACAO2_TI,
-    process.env.TOKEN_CONFIRMACAO3_CARLA,
-    process.env.KROLIK_API_TOKEN // Fallback para token geral
-  ].filter(token => token); // Remove valores undefined/null
-
-  return tokens[0] || null;
+  // Priorizar TOKEN_WHATSAPP_OFICIAL que tem acesso aos dados dos pacientes
+  return process.env.TOKEN_WHATSAPP_OFICIAL || 
+         process.env.TOKEN_ANEXO1_ESTOQUE ||
+         process.env.TOKEN_CONFIRMACAO1 ||
+         process.env.TOKEN_CONFIRMACAO2_TI ||
+         process.env.TOKEN_CONFIRMACAO3_CARLA ||
+         process.env.KROLIK_API_TOKEN || // Fallback para token geral
+         null;
 }
 
 // Inicializar KrolikApiClient
@@ -576,6 +573,38 @@ app.get('/api/logs/user/stats', async (req, res) => {
   }
 });
 
+
+// ========================================
+// ROTAS DE ATENDIMENTOS EM ESPERA
+// ========================================
+
+// Obter atendimentos aguardando de todos os canais
+app.get('/api/attendances/waiting', async (req, res) => {
+  try {
+    console.log('⏳ API: Listando atendimentos aguardando de todos os canais...');
+    const attendancesByChannel = await mainController.getAllWaitingAttendances();
+    
+    // Calcular total geral
+    const totalAttendances = Object.values(attendancesByChannel).reduce((total, channelData) => {
+      return total + channelData.count;
+    }, 0);
+    
+    res.json({
+      success: true,
+      data: attendancesByChannel,
+      totalAttendances: totalAttendances,
+      channelsCount: Object.keys(attendancesByChannel).length,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('Erro ao listar atendimentos aguardando:', error);
+    res.status(500).json({ 
+      success: false,
+      error: 'Erro ao listar atendimentos aguardando',
+      message: error.message
+    });
+  }
+});
 
 // ========================================
 // ROTAS DE GERENCIAMENTO DE CANAIS
