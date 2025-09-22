@@ -43,5 +43,20 @@
     "status": "waiting",
     "enteredAt": "2025-09-20T13:43:34.423Z",
     "processedAt": "2025-09-20T13:45:01.272Z"
+  },
+  {
+    "id": "68d15d1eed4a5c98ffa19fc8",
+    "contactId": "68c971bb957f21bf128e0afb",
+    "name": "Elisângela 👑❤️",
+    "phone": "5516988019448",
+    "sectorId": "674f0858a37c238610154000",
+    "sectorName": "Setor 674f0858a37c238610154000",
+    "channelId": "63e68f168a48875131856df8",
+    "channelType": "WhatsApp Business (Principal)",
+    "waitStartTime": "2025-09-22T14:28:46.124Z",
+    "waitTimeMinutes": 0,
+    "status": "waiting",
+    "enteredAt": "2025-09-22T14:38:59.470Z",
+    "processedAt": "2025-09-22T14:43:20.928Z"
   }
 ]

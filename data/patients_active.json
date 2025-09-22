@@ -1,1 +1,30 @@
-[]
+[
+  {
+    "id": "68d16103605a81f22cbc5bb0",
+    "contactId": "67f6cab28c791203436eb856",
+    "name": "Pós Venda | Casa Grande",
+    "phone": "5581997197033",
+    "sectorId": "6400efb5343817d4ddbb2a4c",
+    "sectorName": "Suporte CAM",
+    "channelId": "63e68f168a48875131856df8",
+    "channelType": "WhatsApp Business (Principal)",
+    "waitStartTime": "2025-09-22T14:45:23.751Z",
+    "waitTimeMinutes": 0,
+    "status": "waiting",
+    "enteredAt": "2025-09-22T14:47:16.522Z"
+  },
+  {
+    "id": "68d15f937e2edbdcfa4ccd7a",
+    "contactId": "66accabc445d448c95affd80",
+    "name": "Rahel Fappi",
+    "phone": "5517991561169",
+    "sectorId": "631f2b4f307d23f46ac80a1c",
+    "sectorName": "Setor 631f2b4f307d23f46ac80a1c",
+    "channelId": "63e68f168a48875131856df8",
+    "channelType": "WhatsApp Business (Principal)",
+    "waitStartTime": "2025-09-22T14:39:15.680Z",
+    "waitTimeMinutes": 4,
+    "status": "waiting",
+    "enteredAt": "2025-09-22T14:43:20.928Z"
+  }
+]

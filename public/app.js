@@ -57,9 +57,9 @@ class AutomationInterface {
     /**
      * Inicializa o gerenciador de timers com o intervalo do system_config.json
      */
-    initializeTimerManager() {
+    async initializeTimerManager() {
         // Carregar intervalo do system_config.json diretamente via API
-        this.loadRefreshIntervalFromConfig();
+        await this.loadRefreshIntervalFromConfig();
     }
 
     /**
@@ -67,23 +67,25 @@ class AutomationInterface {
      */
     async loadRefreshIntervalFromConfig() {
         try {
+            console.log('🔧 Carregando refreshInterval do system_config.json...');
             const response = await fetch('/api/config');
             if (response.ok) {
                 const data = await response.json();
+                console.log('📋 Dados recebidos da API:', data);
                 if (data.success && data.data && data.data.refreshInterval) {
                     this.timerManager.refreshInterval = parseInt(data.data.refreshInterval) * 1000;
-                    console.log(`⏰ Timer Manager inicializado com intervalo: ${data.data.refreshInterval}s`);
+                    console.log(`✅ Timer Manager inicializado com intervalo: ${data.data.refreshInterval}s (${this.timerManager.refreshInterval}ms)`);
                 } else {
                     this.timerManager.refreshInterval = 30000; // 30 segundos padrão
-                    console.log(`⏰ Timer Manager usando intervalo padrão: 30s`);
+                    console.log(`⚠️ Timer Manager usando intervalo padrão: 30s (dados inválidos)`);
                 }
             } else {
                 this.timerManager.refreshInterval = 30000; // 30 segundos padrão
-                console.log(`⏰ Timer Manager usando intervalo padrão: 30s`);
+                console.log(`⚠️ Timer Manager usando intervalo padrão: 30s (erro na API)`);
             }
         } catch (error) {
             this.timerManager.refreshInterval = 30000; // 30 segundos padrão
-            console.log(`⏰ Timer Manager usando intervalo padrão: 30s`);
+            console.log(`❌ Timer Manager usando intervalo padrão: 30s (erro: ${error.message})`);
         }
     }
 
@@ -97,25 +99,22 @@ class AutomationInterface {
         }
 
         console.log(`🚀 Iniciando timers consolidados com intervalo: ${this.timerManager.refreshInterval / 1000}s`);
+        console.log(`📊 Intervalo em milissegundos: ${this.timerManager.refreshInterval}ms`);
         
         // Timer principal que executa todas as atualizações
         const mainInterval = setInterval(() => {
+            console.log(`⏰ Executando refresh consolidado - próximo em ${this.timerManager.refreshInterval / 1000}s`);
             this.executeConsolidatedRefresh();
         }, this.timerManager.refreshInterval);
 
         this.timerManager.intervals.set('main', mainInterval);
         this.timerManager.isRunning = true;
 
-        // Timer de countdown (1 segundo para contagem regressiva)
-        const countdownInterval = setInterval(() => {
-            if (this.currentRoute === 'atendimentos') {
-                this.refreshCountdowns();
-            }
-        }, 1000);
-
-        this.timerManager.intervals.set('countdown', countdownInterval);
+        // Timer de countdown removido - agora usa apenas o refreshInterval configurado
+        // Os countdowns serão atualizados junto com os dados principais
         
         console.log('✅ Timers consolidados iniciados');
+        console.log(`🔄 Próxima atualização em: ${this.timerManager.refreshInterval / 1000} segundos`);
     }
 
     /**
@@ -140,31 +139,38 @@ class AutomationInterface {
      */
     async executeConsolidatedRefresh() {
         try {
-            console.log('🔄 Executando refresh consolidado...');
+            const timestamp = new Date().toLocaleTimeString();
+            console.log(`🔄 [${timestamp}] Executando refresh consolidado...`);
             
             // Atualizar dados baseado na rota atual
             switch (this.currentRoute) {
                 case 'dashboard':
+                    console.log(`📊 [${timestamp}] Carregando status do dashboard...`);
                     await this.loadStatus();
                     break;
                 case 'atendimentos':
+                    console.log(`👥 [${timestamp}] Carregando pacientes...`);
                     await this.loadPatients();
                     await this.checkFlowState();
+                    // Atualizar countdowns junto com os dados principais
+                    this.updateCountdowns();
                     break;
                 case 'configuracoes':
                     // Não atualizar automaticamente configurações
                     break;
                 case 'metricas':
+                    console.log(`📈 [${timestamp}] Carregando métricas...`);
                     await this.loadMetrics();
                     await this.checkFlowState();
                     break;
                 case 'logs':
+                    console.log(`📋 [${timestamp}] Carregando logs...`);
                     await this.loadUserLogs();
                     await this.checkFlowState();
                     break;
             }
             
-            console.log('✅ Refresh consolidado concluído');
+            console.log(`✅ [${timestamp}] Refresh consolidado concluído`);
         } catch (error) {
             console.error('❌ Erro no refresh consolidado:', error);
         }
@@ -190,7 +196,7 @@ class AutomationInterface {
             // Carregar configurações do sistema ANTES de outras operações
             await this.loadSystemConfig();
             // Inicializar gerenciador de timers com configuração
-            this.initializeTimerManager();
+            await this.initializeTimerManager();
             // Carregar action cards para nomes corretos
             await this.loadActionCards();
             // Iniciar timers consolidados
@@ -661,7 +667,8 @@ class AutomationInterface {
 
     async loadPatients() {
         try {
-            console.log('📋 Carregando pacientes da API CAM Krolik...');
+            const timestamp = new Date().toLocaleTimeString();
+            console.log(`📋 [${timestamp}] Carregando pacientes da API CAM Krolik...`);
             
             // Show loading state
             const loadingElement = document.getElementById('loading-patients');
@@ -995,18 +1002,12 @@ class AutomationInterface {
      */
 
     /**
-     * Atualiza todos os countdowns na página
+     * Função removida - countdowns agora são atualizados junto com os dados principais
+     * através do executeConsolidatedRefresh() que usa o refreshInterval configurado
      */
-    async refreshCountdowns() {
-        // Só atualizar se estivermos na página de atendimentos
-        if (this.currentRoute === 'atendimentos') {
-            // Recarregar apenas dados dos pacientes (configurações não mudam frequentemente)
-            this.loadPatients();
-        }
-    }
 
     /**
-     * Atualiza os countdowns dinâmicos a cada segundo
+     * Atualiza os countdowns dinâmicos baseado no refreshInterval configurado
      */
     updateCountdowns() {
         // Buscar todos os elementos de countdown na página
@@ -1030,12 +1031,8 @@ class AutomationInterface {
                     element.classList.add('text-success');
                 }
                 
-                // Atualizar dados completos quando countdown chegar a zero
-                setTimeout(() => {
-                    if (this.currentRoute === 'atendimentos') {
-                        this.loadPatients();
-                    }
-                }, 1000);
+                // Dados serão atualizados automaticamente pelo timer principal
+                // Não é necessário chamar loadPatients() aqui
             } else {
                 // Atualizar countdown
                 element.textContent = this.formatTimeRemaining(timeRemaining);
@@ -1084,6 +1081,8 @@ class AutomationInterface {
 
     async loadStatus() {
         try {
+            const timestamp = new Date().toLocaleTimeString();
+            console.log(`📊 [${timestamp}] Carregando status da API...`);
             const response = await fetch('/api/status');
             const data = await response.json();
 
