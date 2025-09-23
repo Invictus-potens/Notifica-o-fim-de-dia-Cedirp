@@ -718,47 +718,6 @@ app.get('/api/channels/:channelId', async (req, res) => {
   }
 });
 
-// Obter estatísticas de carga dos canais
-app.get('/api/channels/stats/load', async (req, res) => {
-  try {
-    console.log('📊 API: Obtendo estatísticas de carga dos canais...');
-    const loadStats = mainController.getChannelLoadStats();
-    res.json({
-      success: true,
-      data: loadStats,
-      timestamp: new Date().toISOString()
-    });
-  } catch (error) {
-    console.error('Erro ao obter estatísticas de carga:', error);
-    res.status(500).json({ 
-      success: false,
-      error: 'Erro ao obter estatísticas de carga',
-      message: error.message,
-      timestamp: new Date().toISOString()
-    });
-  }
-});
-
-// Obter estatísticas de conversas
-app.get('/api/channels/stats/conversations', async (req, res) => {
-  try {
-    console.log('💬 API: Obtendo estatísticas de conversas...');
-    const conversationStats = mainController.getConversationStats();
-    res.json({
-      success: true,
-      data: conversationStats,
-      timestamp: new Date().toISOString()
-    });
-  } catch (error) {
-    console.error('Erro ao obter estatísticas de conversas:', error);
-    res.status(500).json({ 
-      success: false,
-      error: 'Erro ao obter estatísticas de conversas',
-      message: error.message,
-      timestamp: new Date().toISOString()
-    });
-  }
-});
 
 // Adicionar novo canal
 app.post('/api/channels', async (req, res) => {

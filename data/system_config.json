@@ -1,7 +1,7 @@
 {
   "excludedSectors": "[\"65eb5a3c01515baa7fa25c4a\"]",
   "excludedChannels": "[]",
-  "flowPaused": "true",
+  "flowPaused": "false",
   "endOfDayPaused": "true",
   "ignoreBusinessHours": "true",
   "minWaitTime": "30",
@@ -10,7 +10,7 @@
   "selectedActionCard30Min": "65eb53aa0e74e281e12bb8d7",
   "selectedActionCardEndDay": "65eb53aa0e74e281e12bb8d7",
   "selectedTemplate": "",
-  "startOfDayTime": "08:01",
+  "startOfDayTime": "08:00",
   "endOfDayTime": "18:00",
   "logCleanupTime": "23:59",
   "refreshInterval": "60"

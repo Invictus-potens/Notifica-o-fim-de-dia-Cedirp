@@ -191,7 +191,6 @@
                                                 <th>Setor</th>
                                                 <th>Canal</th>
                                                 <th>Tempo de Espera</th>
-                                                <th>Tempo Excedido</th>
                                                 <th>Próxima Mensagem</th>
                                                 <th>Status</th>
                                             </tr>
@@ -608,9 +607,6 @@
                                 <button id="refresh-metrics-btn" class="btn btn-outline-primary btn-sm">
                                     <i class="bi bi-arrow-clockwise"></i> Atualizar
                                 </button>
-                                <button id="refresh-channel-metrics-btn" class="btn btn-outline-secondary btn-sm">
-                                    <i class="bi bi-telephone"></i> Métricas por Canal
-                                </button>
                             </div>
                         </div>
                         <div class="card-body">
@@ -697,29 +693,6 @@
                         </div>
                     </div>
 
-                    <!-- Métricas por Canal -->
-                    <div class="row mt-4">
-                        <div class="col-12">
-                            <div class="card">
-                                <div class="card-header">
-                                    <h6 class="mb-0">
-                                        <i class="bi bi-telephone me-2"></i>Métricas por Canal
-                                    </h6>
-                                </div>
-                                <div class="card-body">
-                                    <div id="channel-metrics-loading" class="text-center py-4 d-none">
-                                        <div class="spinner-border text-primary" role="status">
-                                            <span class="visually-hidden">Carregando...</span>
-                                        </div>
-                                        <div class="mt-2">Carregando métricas dos canais...</div>
-                                    </div>
-                                    <div id="channel-metrics-container">
-                                        <!-- Métricas dos canais serão carregadas aqui -->
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
                 </div>
 
             </div>

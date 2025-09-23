@@ -39,6 +39,7 @@ class MainController {
     this.messageMetricsManager = new MessageMetricsManager(this.errorHandler);
     this.systemMetricsManager = new SystemMetricsManager();
     
+    
     // Inicializar ProductionScheduler
     this.productionScheduler = new ProductionScheduler(this.errorHandler, this.configManager);
     
@@ -930,7 +931,7 @@ class MainController {
    * Limpa conversas inativas
    */
   cleanupInactiveConversations() {
-    this.multiChannelManager.cleanupInactiveConversations();
+    // Método removido - funcionalidade de métricas por canal não é mais necessária
   }
 
   /**
@@ -993,6 +994,7 @@ class MainController {
       throw error;
     }
   }
+
 }
 
 module.exports = { MainController };

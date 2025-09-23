@@ -28,6 +28,7 @@ class AutomationInterface {
         this.systemConfig = {}; // Armazenar configurações do sistema
         this.actionCards = []; // Armazenar action cards da API
         this.messageHistory = null; // Histórico de mensagens enviadas
+        this.channels = []; // Armazenar canais carregados
         
         // Gerenciador centralizado de timers
         this.timerManager = {
@@ -98,12 +99,9 @@ class AutomationInterface {
             return;
         }
 
-        console.log(`🚀 Iniciando timers consolidados com intervalo: ${this.timerManager.refreshInterval / 1000}s`);
-        console.log(`📊 Intervalo em milissegundos: ${this.timerManager.refreshInterval}ms`);
         
         // Timer principal que executa todas as atualizações
         const mainInterval = setInterval(() => {
-            console.log(`⏰ Executando refresh consolidado - próximo em ${this.timerManager.refreshInterval / 1000}s`);
             this.executeConsolidatedRefresh();
         }, this.timerManager.refreshInterval);
 
@@ -113,8 +111,6 @@ class AutomationInterface {
         // Timer de countdown removido - agora usa apenas o refreshInterval configurado
         // Os countdowns serão atualizados junto com os dados principais
         
-        console.log('✅ Timers consolidados iniciados');
-        console.log(`🔄 Próxima atualização em: ${this.timerManager.refreshInterval / 1000} segundos`);
     }
 
     /**
@@ -139,42 +135,32 @@ class AutomationInterface {
      */
     async executeConsolidatedRefresh() {
         try {
-            const timestamp = new Date().toLocaleTimeString();
-            console.log(`🔄 [${timestamp}] Executando refresh consolidado...`);
-            
             // Atualizar dados baseado na rota atual
             switch (this.currentRoute) {
                 case 'dashboard':
-                    console.log(`📊 [${timestamp}] Carregando status do dashboard...`);
                     await this.loadStatus();
                     break;
                 case 'atendimentos':
-                    console.log(`👥 [${timestamp}] Carregando pacientes...`);
                     await this.loadPatients();
                     await this.checkFlowState();
                     // Atualizar countdowns junto com os dados principais
                     this.updateCountdowns();
                     break;
                 case 'canais':
-                    console.log(`📱 [${timestamp}] Carregando canais...`);
                     await this.loadChannels();
                     break;
                 case 'configuracoes':
                     // Não atualizar automaticamente configurações
                     break;
                 case 'metricas':
-                    console.log(`📈 [${timestamp}] Carregando métricas...`);
                     await this.loadMetrics();
                     await this.checkFlowState();
                     break;
                 case 'logs':
-                    console.log(`📋 [${timestamp}] Carregando logs...`);
                     await this.loadUserLogs();
                     await this.checkFlowState();
                     break;
             }
-            
-            console.log(`✅ [${timestamp}] Refresh consolidado concluído`);
         } catch (error) {
             console.error('❌ Erro no refresh consolidado:', error);
         }
@@ -680,13 +666,6 @@ class AutomationInterface {
             });
         }
 
-        // Channel metrics button
-        const refreshChannelMetricsBtn = document.getElementById('refresh-channel-metrics-btn');
-        if (refreshChannelMetricsBtn) {
-            refreshChannelMetricsBtn.addEventListener('click', () => {
-                this.loadChannelMetrics();
-            });
-        }
     }
 
     loadRouteData(route) {
@@ -701,6 +680,7 @@ class AutomationInterface {
                 console.log('👥 Carregando dados dos atendimentos...');
                 this.loadPatients();
                 this.loadChannels(); // Carregar canais para filtro
+                this.loadSectors(); // Carregar setores para filtro
                 // Always sync system status when loading patients
                 this.checkFlowState();
                 break;
@@ -730,7 +710,6 @@ class AutomationInterface {
             case 'metricas':
                 console.log('📈 Carregando métricas...');
                 this.loadMetrics();
-                this.loadChannelMetrics(); // Carregar métricas por canal
                 // Always sync system status when loading metrics
                 this.checkFlowState();
                 break;
@@ -745,8 +724,6 @@ class AutomationInterface {
 
     async loadPatients() {
         try {
-            const timestamp = new Date().toLocaleTimeString();
-            console.log(`📋 [${timestamp}] Carregando atendimentos de todos os canais...`);
             
             // Show loading state
             const loadingElement = document.getElementById('loading-patients');
@@ -833,7 +810,6 @@ class AutomationInterface {
             tbody.innerHTML = patients.map(patient => {
                 // Determinar canal do paciente
                 const channelInfo = this.getPatientChannelInfo(patient);
-                const overtimeDisplay = this.calculateOvertimeAfterEndOfDay(patient);
                 
                 return `
             <tr>
@@ -842,7 +818,6 @@ class AutomationInterface {
                 <td>${this.escapeHtml(patient.sectorName || patient.sector_name || 'Setor não informado')}</td>
                 <td>${channelInfo}</td>
                 <td>${this.formatWaitTime(patient.waitTimeMinutes || 0)}</td>
-                <td class="text-danger">${overtimeDisplay}</td>
                 <td>
                     ${this.generateNextMessageInfo(patient)}
                 </td>
@@ -940,7 +915,6 @@ class AutomationInterface {
                 // Atendimentos do canal
                 attendances.forEach(attendance => {
                     const channelInfo = this.getPatientChannelInfo(attendance);
-                    const overtimeDisplay = this.calculateOvertimeAfterEndOfDay(attendance);
                     
                     html += `
                         <tr class="table-light">
@@ -949,7 +923,6 @@ class AutomationInterface {
                             <td>${this.escapeHtml(attendance.sectorName || attendance.sector_name || 'Setor não informado')}</td>
                             <td>${channelInfo}</td>
                             <td>${this.formatWaitTime(attendance.waitTimeMinutes || 0)}</td>
-                            <td class="text-danger">${overtimeDisplay}</td>
                             <td>
                                 ${this.generateNextMessageInfo(attendance)}
                             </td>
@@ -1007,16 +980,6 @@ class AutomationInterface {
         const ignoreBusinessHours = this.systemConfig?.ignoreBusinessHours === 'true' || this.systemConfig?.ignoreBusinessHours === true;
         const endOfDayPaused = this.systemConfig?.endOfDayPaused === 'true' || this.systemConfig?.endOfDayPaused === true;
         
-        // DEBUG: Log das configurações para verificar se estão sendo carregadas
-        console.log(`🔍 generateNextMessageInfo para ${patient.name}:`, {
-            waitTime,
-            currentHour,
-            minWaitTime,
-            maxWaitTime,
-            ignoreBusinessHours,
-            endOfDayPaused,
-            systemConfig: this.systemConfig
-        });
         
         // Obter IDs dos action cards do config e buscar nomes na API
         const actionCard30Min = this.systemConfig?.selectedActionCard30Min;
@@ -1065,17 +1028,8 @@ class AutomationInterface {
         const endHour = parseInt(this.systemConfig?.endOfDayTime?.split(':')[0] || '18');
         const isOutsideBusinessHours = currentHour < startHour || currentHour >= endHour;
         
-        console.log(`🕐 Verificação de horário comercial:`, {
-            startHour,
-            endHour,
-            currentHour,
-            isOutsideBusinessHours,
-            ignoreBusinessHours,
-            shouldShowOutsideHours: !ignoreBusinessHours && isOutsideBusinessHours
-        });
         
         if (!ignoreBusinessHours && isOutsideBusinessHours) {
-            console.log(`❌ Mostrando "Fora do horário" para ${patient.name}`);
             return `
                 <div class="text-warning">
                     <div class="fw-bold">Fora do horário</div>
@@ -1114,7 +1068,7 @@ class AutomationInterface {
             return `
                 <div class="text-danger">
                     <div class="fw-bold">00:00:00</div>
-                    <small class="text-muted">Tempo excedido</small>
+                    <small class="text-muted">Tempo máximo atingido</small>
                 </div>
             `;
         }
@@ -1246,53 +1200,6 @@ class AutomationInterface {
         }
     }
 
-    /**
-     * Calcula o tempo excedido após o fim do expediente
-     * @param {Object} patient - Dados do paciente
-     * @returns {string} Tempo excedido formatado
-     */
-    calculateOvertimeAfterEndOfDay(patient) {
-        try {
-            // Verificar se é após o fim do expediente (18h)
-            const now = new Date();
-            const currentHour = now.getHours();
-            
-            // Se não é após 18h, retornar "--"
-            if (currentHour < 18) {
-                return '--';
-            }
-            
-            // Calcular tempo desde o início do atendimento
-            const waitStartTime = patient.waitStartTime ? new Date(patient.waitStartTime) : null;
-            if (!waitStartTime) {
-                return '--';
-            }
-            
-            // Calcular fim do expediente do dia do atendimento
-            const endOfDayTime = new Date(waitStartTime);
-            endOfDayTime.setHours(18, 0, 0, 0);
-            
-            // Se o atendimento começou após 18h, todo o tempo é excedido
-            if (waitStartTime >= endOfDayTime) {
-                const overtimeMs = now - waitStartTime;
-                const overtimeMinutes = Math.floor(overtimeMs / (1000 * 60));
-                return this.formatWaitTime(overtimeMinutes);
-            }
-            
-            // Se o atendimento começou antes de 18h, calcular apenas o tempo após 18h
-            if (now > endOfDayTime) {
-                const overtimeMs = now - endOfDayTime;
-                const overtimeMinutes = Math.floor(overtimeMs / (1000 * 60));
-                return this.formatWaitTime(overtimeMinutes);
-            }
-            
-            return '--';
-            
-        } catch (error) {
-            console.error('Erro ao calcular tempo excedido:', error);
-            return '--';
-        }
-    }
 
     /**
      * Formata tempo restante em formato HH:MM:SS
@@ -1314,8 +1221,6 @@ class AutomationInterface {
 
     async loadStatus() {
         try {
-            const timestamp = new Date().toLocaleTimeString();
-            console.log(`📊 [${timestamp}] Carregando status da API...`);
             const response = await fetch('/api/status');
             const data = await response.json();
 
@@ -1672,29 +1577,6 @@ class AutomationInterface {
         console.log('✅ availableSectors atualizado com', this.availableSectors.length, 'setores');
     }
 
-    async loadChannels() {
-        try {
-            console.log('📋 Carregando canais...');
-            
-            const response = await fetch('/api/channels');
-            const result = await response.json();
-
-            if (!response.ok) {
-                throw new Error(result.error || 'Erro ao carregar canais');
-            }
-
-            // A API retorna { success: true, data: [...], total: X }
-            const channels = result.success ? result.data : result;
-            console.log('📋 Canais carregados da API:', channels);
-            console.log('📋 Número de canais:', channels ? channels.length : 0);
-
-            this.displayChannels(channels);
-
-        } catch (error) {
-            console.error('❌ Erro ao carregar canais:', error);
-            this.showError('Erro ao carregar canais: ' + error.message);
-        }
-    }
 
     displayChannels(channels) {
         console.log('📱 displayChannels chamada com:', channels?.length || 0, 'canais');
@@ -1827,8 +1709,6 @@ class AutomationInterface {
     }
 
     async toggleFlow() {
-        console.log('🔘 Botão de toggle clicado!');
-        console.log('🔍 Estado atual isFlowPaused:', this.isFlowPaused);
         
         if (this.isFlowPaused === null) {
             console.warn('⚠️ Estado do fluxo ainda não foi carregado, tentando verificar...');
@@ -1932,7 +1812,6 @@ class AutomationInterface {
                 toggleFlowBtn.className = 'btn btn-outline-primary btn-sm';
             }
             
-            console.log(`🔘 Botão atualizado: ${this.isFlowPaused ? 'Retomar' : 'Pausar'} (habilitado)`);
         }
 
         if (pauseFlowBtn) {
@@ -1973,7 +1852,6 @@ class AutomationInterface {
                     this.isFlowPaused ? 'warning' : 'success'
                 );
                 
-                console.log(`🔄 Estado do sistema sincronizado: ${this.isFlowPaused ? 'Pausado' : 'Ativo'}`);
             } else {
                 console.warn('Resposta inválida da API de status:', result);
                 // Enable button even if we can't get status
@@ -2907,7 +2785,6 @@ class AutomationInterface {
      * Filtra pacientes por setor
      */
     filterPatientsBySector(sectorId) {
-        console.log('🔍 Filtrando pacientes por setor:', sectorId);
         
         if (!sectorId) {
             // Mostrar todos os pacientes
@@ -3097,12 +2974,12 @@ class AutomationInterface {
             };
         } else {
             // Paciente já passou do tempo máximo - deve ter recebido mensagem
-            console.log(`⚠️ Tempo excedido - ${waitTime}min > ${maxWaitTime}min`);
+            console.log(`⚠️ Tempo máximo atingido - ${waitTime}min > ${maxWaitTime}min`);
             
             return {
                 timeString: '00:00',
                 timeRemaining: 0,
-                messageType: 'Tempo excedido'
+                messageType: 'Tempo máximo atingido'
             };
         }
     }
@@ -3822,6 +3699,7 @@ class AutomationInterface {
                 this.renderChannels();
                 this.updateChannelsStats();
                 this.populateChannelFilter(); // Popular filtro de canais para pacientes
+                this.displayChannels(this.channels); // Popular dropdown channel-select
                 console.log(`✅ ${this.channels.length} canais carregados`);
             } else {
                 throw new Error(data.error || 'Erro ao carregar canais');
@@ -4446,144 +4324,6 @@ class AutomationInterface {
         });
     }
 
-    /**
-     * Carrega métricas por canal
-     */
-    async loadChannelMetrics() {
-        try {
-            console.log('📊 Carregando métricas por canal...');
-            
-            const loadingElement = document.getElementById('channel-metrics-loading');
-            const containerElement = document.getElementById('channel-metrics-container');
-            
-            if (loadingElement) loadingElement.classList.remove('d-none');
-            if (containerElement) containerElement.classList.add('d-none');
-
-            // Carregar estatísticas de carga dos canais
-            const loadResponse = await fetch('/api/channels/stats/load');
-            const loadData = await loadResponse.json();
-
-            // Carregar estatísticas de conversas
-            const convResponse = await fetch('/api/channels/stats/conversations');
-            const convData = await convResponse.json();
-
-            if (loadData.success && convData.success) {
-                this.renderChannelMetrics(loadData.data, convData.data);
-                console.log('✅ Métricas por canal carregadas');
-            } else {
-                throw new Error('Erro ao carregar métricas dos canais');
-            }
-        } catch (error) {
-            console.error('❌ Erro ao carregar métricas por canal:', error);
-            this.showNotification('Erro ao carregar métricas por canal: ' + error.message, 'error');
-        } finally {
-            const loadingElement = document.getElementById('channel-metrics-loading');
-            const containerElement = document.getElementById('channel-metrics-container');
-            
-            if (loadingElement) loadingElement.classList.add('d-none');
-            if (containerElement) containerElement.classList.remove('d-none');
-        }
-    }
-
-    /**
-     * Renderiza métricas por canal
-     */
-    renderChannelMetrics(loadStats, conversationStats) {
-        const container = document.getElementById('channel-metrics-container');
-        if (!container) return;
-
-        if (!this.channels || this.channels.length === 0) {
-            container.innerHTML = `
-                <div class="text-center py-4">
-                    <i class="bi bi-telephone display-1 text-muted"></i>
-                    <h5 class="mt-3 text-muted">Nenhum canal configurado</h5>
-                    <p class="text-muted">Configure canais para ver métricas detalhadas</p>
-                </div>
-            `;
-            return;
-        }
-
-        const channelsHtml = this.channels.map(channel => {
-            const stats = loadStats[channel.id] || {
-                activeConversations: 0,
-                totalMessages: 0,
-                failedMessages: 0,
-                successRate: 100
-            };
-
-            const conversations = conversationStats.byChannel[channel.id] || 0;
-            const statusClass = channel.active ? 'success' : 'secondary';
-            const statusIcon = channel.active ? 'bi-check-circle-fill' : 'bi-pause-circle-fill';
-
-            return `
-                <div class="col-md-6 col-lg-4 mb-3">
-                    <div class="card h-100">
-                        <div class="card-header d-flex justify-content-between align-items-center">
-                            <div class="d-flex align-items-center">
-                                <i class="bi bi-telephone me-2"></i>
-                                <h6 class="mb-0">${channel.name}</h6>
-                            </div>
-                            <span class="badge bg-${statusClass}">
-                                <i class="bi ${statusIcon} me-1"></i>
-                                ${channel.active ? 'Ativo' : 'Inativo'}
-                            </span>
-                        </div>
-                        <div class="card-body">
-                            <div class="row text-center mb-3">
-                                <div class="col-6">
-                                    <div class="metric-item">
-                                        <div class="h4 text-primary mb-1">${stats.activeConversations || 0}</div>
-                                        <small class="text-muted">Conversas Ativas</small>
-                                    </div>
-                                </div>
-                                <div class="col-6">
-                                    <div class="metric-item">
-                                        <div class="h4 text-success mb-1">${stats.totalMessages || 0}</div>
-                                        <small class="text-muted">Mensagens Enviadas</small>
-                                    </div>
-                                </div>
-                            </div>
-                            <hr class="my-3">
-                            <div class="row text-center">
-                                <div class="col-6">
-                                    <div class="metric-item">
-                                        <div class="h5 text-danger mb-1">${stats.failedMessages || 0}</div>
-                                        <small class="text-muted">Falharam</small>
-                                    </div>
-                                </div>
-                                <div class="col-6">
-                                    <div class="metric-item">
-                                        <div class="h5 text-info mb-1">${stats.successRate || 100}%</div>
-                                        <small class="text-muted">Taxa de Sucesso</small>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="mt-3">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <small class="text-muted">Número:</small>
-                                    <small class="fw-bold">${this.formatPhoneNumber(channel.number)}</small>
-                                </div>
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <small class="text-muted">Departamento:</small>
-                                    <span class="badge bg-light text-dark">${this.getDepartmentName(channel.department)}</span>
-                                </div>
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <small class="text-muted">Prioridade:</small>
-                                    <small class="fw-bold">${channel.priority}</small>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-        }).join('');
-
-        container.innerHTML = `
-            <div class="row">
-                ${channelsHtml}
-            </div>
-        `;
-    }
 
     /**
      * Retorna nome do departamento

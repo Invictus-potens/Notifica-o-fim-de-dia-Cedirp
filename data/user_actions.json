@@ -1,5 +1,36 @@
 [
   {
+    "id": "log_1758597750041_ip37fen2m",
+    "timestamp": "2025-09-23T03:22:30.041Z",
+    "level": "info",
+    "action": "Configurações Salvas",
+    "details": "Usuário salvou configurações do sistema",
+    "metadata": {
+      "startOfDayTime": "08:00",
+      "endOfDayTime": "18:00",
+      "minWaitTime": "30",
+      "maxWaitTime": "120",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0",
+      "ip": "::1"
+    },
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0",
+    "ip": "::1"
+  },
+  {
+    "id": "log_1758597141699_6reamjrg2",
+    "timestamp": "2025-09-23T03:12:21.699Z",
+    "level": "info",
+    "action": "Controle de Fluxo",
+    "details": "Usuário retomou o fluxo de mensagens automáticas",
+    "metadata": {
+      "action": "resume",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0",
+      "ip": "::1"
+    },
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0",
+    "ip": "::1"
+  },
+  {
     "id": "log_1758593162546_nsy87v1ve",
     "timestamp": "2025-09-23T02:06:02.546Z",
     "level": "info",
