@@ -28,6 +28,15 @@ class TimeUtils {
    */
   static getBusinessStartHour() {
     if (this.configManager) {
+      // Verificar se é sábado para usar horário específico
+      const brasiliaTime = this.getBrasiliaTime();
+      if (brasiliaTime.weekday === 6) { // Sábado = 6
+        const startTime = this.configManager.getSaturdayStartTime();
+        const [hour] = startTime.split(':').map(Number);
+        return hour;
+      }
+      
+      // Dias úteis (segunda a sexta)
       const startTime = this.configManager.getStartOfDayTime();
       const [hour] = startTime.split(':').map(Number);
       return hour;
@@ -41,6 +50,15 @@ class TimeUtils {
    */
   static getBusinessEndHour() {
     if (this.configManager) {
+      // Verificar se é sábado para usar horário específico
+      const brasiliaTime = this.getBrasiliaTime();
+      if (brasiliaTime.weekday === 6) { // Sábado = 6
+        const endTime = this.configManager.getSaturdayEndTime();
+        const [hour] = endTime.split(':').map(Number);
+        return hour;
+      }
+      
+      // Dias úteis (segunda a sexta)
       const endTime = this.configManager.getEndOfDayTime();
       const [hour] = endTime.split(':').map(Number);
       return hour;
@@ -69,10 +87,29 @@ class TimeUtils {
   }
 
   /**
-   * Verifica se é dia útil (segunda a sexta)
+   * Verifica se é dia útil (segunda a sexta e sábado)
    * @returns {boolean} True se dia útil
    */
   static isWorkingDay() {
+    const brasiliaTime = this.getBrasiliaTime();
+    const weekday = brasiliaTime.weekday;
+    return weekday >= 1 && weekday <= 6; // Segunda (1) a Sexta (5) e Sábado (6)
+  }
+
+  /**
+   * Verifica se é sábado
+   * @returns {boolean} True se sábado
+   */
+  static isSaturday() {
+    const brasiliaTime = this.getBrasiliaTime();
+    return brasiliaTime.weekday === 6; // Sábado = 6
+  }
+
+  /**
+   * Verifica se é dia útil (segunda a sexta, sem sábado)
+   * @returns {boolean} True se dia útil
+   */
+  static isWeekday() {
     const brasiliaTime = this.getBrasiliaTime();
     const weekday = brasiliaTime.weekday;
     return weekday >= 1 && weekday <= 5; // Segunda (1) a Sexta (5)

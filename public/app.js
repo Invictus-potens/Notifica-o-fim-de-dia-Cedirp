@@ -1036,9 +1036,7 @@ class AutomationInterface {
         }
         
         // Verificar se está fora do horário comercial (apenas se ignoreBusinessHours for false)
-        const startHour = parseInt(this.systemConfig?.startOfDayTime?.split(':')[0] || '8');
-        const endHour = parseInt(this.systemConfig?.endOfDayTime?.split(':')[0] || '18');
-        const isOutsideBusinessHours = currentHour < startHour || currentHour >= endHour;
+        const isOutsideBusinessHours = this.isOutsideBusinessHours(currentHour);
         
         
         if (!ignoreBusinessHours && isOutsideBusinessHours) {
@@ -1146,6 +1144,28 @@ class AutomationInterface {
                 endOfDayTime: '18:00'
             };
         }
+    }
+
+    /**
+     * Verifica se está fora do horário comercial (considerando sábado)
+     * @param {number} currentHour - Hora atual
+     * @returns {boolean} True se fora do horário comercial
+     */
+    isOutsideBusinessHours(currentHour) {
+        const now = new Date();
+        const isSaturday = now.getDay() === 6; // Sábado = 6
+        
+        let startHour, endHour;
+        
+        if (isSaturday) {
+            startHour = parseInt(this.systemConfig?.saturdayStartTime?.split(':')[0] || '8');
+            endHour = parseInt(this.systemConfig?.saturdayEndTime?.split(':')[0] || '12');
+        } else {
+            startHour = parseInt(this.systemConfig?.startOfDayTime?.split(':')[0] || '8');
+            endHour = parseInt(this.systemConfig?.endOfDayTime?.split(':')[0] || '18');
+        }
+        
+        return currentHour < startHour || currentHour >= endHour;
     }
 
     /**
@@ -2590,6 +2610,10 @@ class AutomationInterface {
             year: 'numeric'
         });
         
+        // Obter dia da semana
+        const weekdayNames = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'];
+        const weekdayName = weekdayNames[now.getDay()];
+        
         // Atualizar elementos DOM
         const timeElement = document.getElementById('current-time');
         const dateElement = document.getElementById('current-date');
@@ -2599,7 +2623,7 @@ class AutomationInterface {
         }
         
         if (dateElement) {
-            dateElement.textContent = dateString;
+            dateElement.textContent = `${dateString} - ${weekdayName}`;
         }
     }
 
@@ -3049,11 +3073,14 @@ class AutomationInterface {
         
         console.log(`🧮 Calculando para ${waitTime}min - Hora atual: ${currentHour}h`);
         
-        // Verificar se mensagem de fim de dia está ativa e se é hora (17h55-18h00)
-        if (!endOfDayPaused && currentHour >= 17 && currentHour < 18) {
+        // Verificar se mensagem de fim de dia está ativa e se é hora
+        const isSaturday = now.getDay() === 6;
+        const endHour = isSaturday ? 
+            parseInt(this.systemConfig?.saturdayEndTime?.split(':')[0] || '12') :
+            parseInt(this.systemConfig?.endOfDayTime?.split(':')[0] || '18');
+        
+        if (!endOfDayPaused && currentHour >= (endHour - 1) && currentHour < endHour) {
             const endOfDayTime = new Date(now);
-            // Usar configuração dinâmica do sistema
-            const endHour = parseInt(this.systemConfig?.endOfDayTime?.split(':')[0] || '18');
             endOfDayTime.setHours(endHour, 0, 0, 0);
             const timeRemaining = endOfDayTime.getTime() - now.getTime();
             
@@ -3067,12 +3094,14 @@ class AutomationInterface {
         }
         
         // Verificar se está fora do horário comercial (apenas se ignoreBusinessHours for false)
-        const startHour = parseInt(this.systemConfig?.startOfDayTime?.split(':')[0] || '8');
-        const endHour = parseInt(this.systemConfig?.endOfDayTime?.split(':')[0] || '18');
-        if (!ignoreBusinessHours && (currentHour < startHour || currentHour >= endHour)) {
+        if (!ignoreBusinessHours && this.isOutsideBusinessHours(currentHour)) {
             const nextBusinessDay = new Date(now);
             nextBusinessDay.setDate(nextBusinessDay.getDate() + (nextBusinessDay.getDay() === 6 ? 2 : 1));
-            // Usar configuração dinâmica do sistema (startHour já foi declarado acima)
+            // Usar configuração dinâmica do sistema
+            const isSaturday = now.getDay() === 6;
+            const startHour = isSaturday ? 
+                parseInt(this.systemConfig?.saturdayStartTime?.split(':')[0] || '8') :
+                parseInt(this.systemConfig?.startOfDayTime?.split(':')[0] || '8');
             nextBusinessDay.setHours(startHour, 0, 0, 0);
             const timeRemaining = nextBusinessDay.getTime() - now.getTime();
             
@@ -3185,6 +3214,8 @@ class AutomationInterface {
             // Horários
             startOfDayTime: document.getElementById('start-of-day-time'),
             endOfDayTime: document.getElementById('end-of-day-time'),
+            saturdayStartTime: document.getElementById('saturday-start-time'),
+            saturdayEndTime: document.getElementById('saturday-end-time'),
             logCleanupTime: document.getElementById('log-cleanup-time'),
             
             // Tempos de espera
@@ -3265,7 +3296,9 @@ class AutomationInterface {
                         selectedActionCardEndDay: config.data.selectedActionCardEndDay,
                         selectedActionCardEndDayDescription: config.data.selectedActionCardEndDayDescription,
                         startOfDayTime: config.data.startOfDayTime || '08:00',
-                        endOfDayTime: config.data.endOfDayTime || '18:00'
+                        endOfDayTime: config.data.endOfDayTime || '18:00',
+                        saturdayStartTime: config.data.saturdayStartTime || '08:00',
+                        saturdayEndTime: config.data.saturdayEndTime || '12:00'
                     };
                     console.log('✅ systemConfig atualizado na aba Sistema:', this.systemConfig);
                 }
@@ -3297,6 +3330,14 @@ class AutomationInterface {
         if (this.systemElements.endOfDayTime) {
             this.systemElements.endOfDayTime.value = configData.endOfDayTime || '18:00';
             console.log(`📅 endOfDayTime: ${configData.endOfDayTime || '18:00'}`);
+        }
+        if (this.systemElements.saturdayStartTime) {
+            this.systemElements.saturdayStartTime.value = configData.saturdayStartTime || '08:00';
+            console.log(`📅 saturdayStartTime: ${configData.saturdayStartTime || '08:00'}`);
+        }
+        if (this.systemElements.saturdayEndTime) {
+            this.systemElements.saturdayEndTime.value = configData.saturdayEndTime || '12:00';
+            console.log(`📅 saturdayEndTime: ${configData.saturdayEndTime || '12:00'}`);
         }
         if (this.systemElements.logCleanupTime) {
             this.systemElements.logCleanupTime.value = configData.logCleanupTime || '23:59';
@@ -3369,6 +3410,8 @@ class AutomationInterface {
             // Horários
             startOfDayTime: this.systemElements.startOfDayTime?.value || '08:00',
             endOfDayTime: this.systemElements.endOfDayTime?.value || '18:00',
+            saturdayStartTime: this.systemElements.saturdayStartTime?.value || '08:00',
+            saturdayEndTime: this.systemElements.saturdayEndTime?.value || '12:00',
             logCleanupTime: this.systemElements.logCleanupTime?.value || '23:59',
             
             // Tempos de espera
@@ -3398,9 +3441,16 @@ class AutomationInterface {
         // Validar horários
         const startTime = this.systemElements.startOfDayTime?.value;
         const endTime = this.systemElements.endOfDayTime?.value;
+        const saturdayStartTime = this.systemElements.saturdayStartTime?.value;
+        const saturdayEndTime = this.systemElements.saturdayEndTime?.value;
 
         if (startTime && endTime && startTime >= endTime) {
-            errors.push('O horário de fim do dia deve ser posterior ao horário de início');
+            errors.push('O horário de fim do dia (dias úteis) deve ser posterior ao horário de início');
+            isValid = false;
+        }
+
+        if (saturdayStartTime && saturdayEndTime && saturdayStartTime >= saturdayEndTime) {
+            errors.push('O horário de fim do dia (sábado) deve ser posterior ao horário de início');
             isValid = false;
         }
 

@@ -7,8 +7,10 @@
  * @property {string} [selectedActionCard30Min] - Action card para 30min
  * @property {string} [selectedActionCardEndDay] - Action card para fim do dia
  * @property {string} [selectedTemplate] - Template selecionado
- * @property {string} startOfDayTime - Horário de início de expediente
- * @property {string} endOfDayTime - Horário de fim de expediente
+ * @property {string} startOfDayTime - Horário de início de expediente (segunda a sexta)
+ * @property {string} endOfDayTime - Horário de fim de expediente (segunda a sexta)
+ * @property {string} saturdayStartTime - Horário de início de sábado
+ * @property {string} saturdayEndTime - Horário de fim de sábado
  */
 
 /**
@@ -52,6 +54,8 @@ class ConfigManager {
       selectedTemplate: undefined,
       startOfDayTime: '08:00',
       endOfDayTime: '18:00',
+      saturdayStartTime: '08:00',
+      saturdayEndTime: '12:00',
       logCleanupTime: '02:00',
       refreshInterval: 30,
       channels: [],
@@ -149,6 +153,8 @@ class ConfigManager {
           selectedTemplate: parsedConfig.selectedTemplate || '',
           startOfDayTime: parsedConfig.startOfDayTime || '08:00',
           endOfDayTime: parsedConfig.endOfDayTime || '18:00',
+          saturdayStartTime: parsedConfig.saturdayStartTime || '08:00',
+          saturdayEndTime: parsedConfig.saturdayEndTime || '12:00',
           logCleanupTime: parsedConfig.logCleanupTime || '02:00',
           refreshInterval: parseInt(parsedConfig.refreshInterval) || 30,
           channels: channels,
@@ -194,6 +200,8 @@ class ConfigManager {
           selectedTemplate: '',
           startOfDayTime: '08:00',
           endOfDayTime: '18:00',
+          saturdayStartTime: '08:00',
+          saturdayEndTime: '12:00',
           logCleanupTime: '02:00',
           refreshInterval: 30
         };
@@ -320,6 +328,22 @@ class ConfigManager {
   }
 
   /**
+   * Obtém o horário de início de sábado configurado
+   * @returns {string} Horário no formato HH:MM
+   */
+  getSaturdayStartTime() {
+    return this.systemConfig.saturdayStartTime || '08:00';
+  }
+
+  /**
+   * Obtém o horário de fim de sábado configurado
+   * @returns {string} Horário no formato HH:MM
+   */
+  getSaturdayEndTime() {
+    return this.systemConfig.saturdayEndTime || '12:00';
+  }
+
+  /**
    * Obtém o horário de limpeza de logs configurado
    * @returns {string} Horário no formato HH:MM
    */
@@ -423,6 +447,8 @@ class ConfigManager {
         selectedTemplate: this.systemConfig.selectedTemplate,
         startOfDayTime: this.systemConfig.startOfDayTime,
         endOfDayTime: this.systemConfig.endOfDayTime,
+        saturdayStartTime: this.systemConfig.saturdayStartTime,
+        saturdayEndTime: this.systemConfig.saturdayEndTime,
         logCleanupTime: this.systemConfig.logCleanupTime,
         refreshInterval: this.systemConfig.refreshInterval.toString()
       };
@@ -536,6 +562,8 @@ class ConfigManager {
       selectedActionCardEndDayDescription: this.systemConfig.selectedActionCardEndDayDescription || 'Fim de Expediente',
       startOfDayTime: this.systemConfig.startOfDayTime || '08:00',
       endOfDayTime: this.systemConfig.endOfDayTime || '18:00',
+      saturdayStartTime: this.systemConfig.saturdayStartTime || '08:00',
+      saturdayEndTime: this.systemConfig.saturdayEndTime || '12:00',
       logCleanupTime: this.systemConfig.logCleanupTime || '02:00',
       refreshInterval: this.systemConfig.refreshInterval || 30
     };
