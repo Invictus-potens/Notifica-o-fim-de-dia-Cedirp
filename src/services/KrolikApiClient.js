@@ -237,18 +237,22 @@ class KrolikApiClient {
    */
   async sendActionCard(payload) {
     try {
-      // Validar payload obrigatório
-      if (!payload.number || !payload.contactId || !payload.action_card_id) {
-        throw new Error('Payload incompleto: number, contactId e action_card_id são obrigatórios');
+      // Validar payload obrigatório (contactId não é mais obrigatório)
+      if (!payload.number || !payload.action_card_id) {
+        throw new Error('Payload incompleto: number e action_card_id são obrigatórios');
       }
 
-      // Preparar payload seguindo exatamente o modelo do curl
+      // Preparar payload usando apenas número (contactId é opcional)
       const requestPayload = {
         number: payload.number,
-        contactId: payload.contactId,
         action_card_id: payload.action_card_id,
         forceSend: payload.forceSend !== undefined ? payload.forceSend : true
       };
+
+      // Adicionar contactId apenas se fornecido
+      if (payload.contactId) {
+        requestPayload.contactId = payload.contactId;
+      }
 
       console.log(`📤 Enviando action card para ${payload.number}:`, requestPayload);
 

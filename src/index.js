@@ -1284,13 +1284,19 @@ app.post('/api/messages/send-action-card', async (req, res) => {
           channelToken
         );
         
-        // Enviar action card usando a API correta
-        const sendResult = await apiClient.sendActionCard({
+        // Enviar action card usando a API correta (contactId é opcional)
+        const sendPayload = {
           number: number,
-          contactId: contactId,
           action_card_id: action_card_id,
           forceSend: true
-        });
+        };
+
+        // Adicionar contactId apenas se fornecido
+        if (contactId) {
+          sendPayload.contactId = contactId;
+        }
+
+        const sendResult = await apiClient.sendActionCard(sendPayload);
         
         results.push({
           patient: {

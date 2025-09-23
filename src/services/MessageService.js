@@ -87,18 +87,22 @@ class MessageService {
         throw new Error('ID do action card não especificado');
       }
 
-      // 5. Validar dados do paciente
-      if (!patient.phone || !patient.contactId) {
-        throw new Error('Dados do paciente incompletos (phone ou contactId faltando)');
+      // 5. Validar dados do paciente (contactId não é mais obrigatório)
+      if (!patient.phone) {
+        throw new Error('Dados do paciente incompletos (phone faltando)');
       }
 
-      // 6. Preparar payload
+      // 6. Preparar payload usando apenas número
       const payload = {
         number: patient.phone,
-        contactId: patient.contactId,
         action_card_id: cardId,
         forceSend: forceSend
       };
+
+      // Adicionar contactId apenas se disponível
+      if (patient.contactId) {
+        payload.contactId = patient.contactId;
+      }
 
       console.log(`📤 Enviando action card via ${channel.name} (${channel.number})`);
       console.log(`📋 Payload:`, payload);
@@ -270,18 +274,22 @@ class MessageService {
         throw new Error('ID do action card não fornecido');
       }
 
-      // 5. Validar dados do paciente
-      if (!patient.phone || !patient.contactId) {
-        throw new Error('Dados do paciente incompletos (phone ou contactId faltando)');
+      // 5. Validar dados do paciente (contactId não é mais obrigatório)
+      if (!patient.phone) {
+        throw new Error('Dados do paciente incompletos (phone faltando)');
       }
 
-      // 6. Preparar payload
+      // 6. Preparar payload usando apenas número
       const payload = {
         number: patient.phone,
-        contactId: patient.contactId,
         action_card_id: actionCardId,
         forceSend: true
       };
+
+      // Adicionar contactId apenas se disponível
+      if (patient.contactId) {
+        payload.contactId = patient.contactId;
+      }
 
       console.log(`📤 Enviando action card via ${channel.name} (${channel.number})`);
       console.log(`📋 Payload:`, payload);

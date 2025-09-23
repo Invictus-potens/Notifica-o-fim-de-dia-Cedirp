@@ -1,0 +1,217 @@
+{
+  "testInfo": {
+    "phone": "5519995068303",
+    "contactId": "NOT_USED",
+    "timestamp": "2025-09-23T22:15:16.847Z",
+    "totalTests": 10,
+    "testType": "number_only"
+  },
+  "actionCards": {
+    "THIRTY_MIN": "68d2f410506558bc378e840c",
+    "END_DAY": "68d2f43502376b8f3df8a088"
+  },
+  "channels": [
+    {
+      "id": "anexo1-estoque",
+      "name": "ANEXO 1 - ESTOQUE"
+    },
+    {
+      "id": "whatsapp-oficial",
+      "name": "WHATSAPP OFICIAL"
+    },
+    {
+      "id": "confirmacao1",
+      "name": "CONFIRMAÇÃO 1"
+    },
+    {
+      "id": "confirmacao2-ti",
+      "name": "CONFIRMAÇÃO 2 - TI"
+    },
+    {
+      "id": "confirmacao3-carla",
+      "name": "CONFIRMAÇÃO 3 - CARLA"
+    }
+  ],
+  "results": [
+    {
+      "channel": "ANEXO 1 - ESTOQUE",
+      "channelId": "anexo1-estoque",
+      "cardType": "30min",
+      "actionCardId": "68d2f410506558bc378e840c",
+      "payload": {
+        "number": "5519995068303",
+        "action_card_id": "68d2f410506558bc378e840c",
+        "forceSend": true
+      },
+      "success": true,
+      "response": {
+        "status": "202",
+        "msg": "Successfully added to the transmission queue",
+        "messageSentId": ""
+      },
+      "timestamp": "2025-09-23T22:14:47.498Z"
+    },
+    {
+      "channel": "WHATSAPP OFICIAL",
+      "channelId": "whatsapp-oficial",
+      "cardType": "30min",
+      "actionCardId": "68d2f410506558bc378e840c",
+      "payload": {
+        "number": "5519995068303",
+        "action_card_id": "68d2f410506558bc378e840c",
+        "forceSend": true
+      },
+      "success": true,
+      "response": {
+        "status": "202",
+        "msg": "Successfully added to the transmission queue",
+        "messageSentId": ""
+      },
+      "timestamp": "2025-09-23T22:14:49.898Z"
+    },
+    {
+      "channel": "CONFIRMAÇÃO 1",
+      "channelId": "confirmacao1",
+      "cardType": "30min",
+      "actionCardId": "68d2f410506558bc378e840c",
+      "payload": {
+        "number": "5519995068303",
+        "action_card_id": "68d2f410506558bc378e840c",
+        "forceSend": true
+      },
+      "success": true,
+      "response": {
+        "status": "202",
+        "msg": "Successfully added to the transmission queue",
+        "messageSentId": ""
+      },
+      "timestamp": "2025-09-23T22:14:53.128Z"
+    },
+    {
+      "channel": "CONFIRMAÇÃO 2 - TI",
+      "channelId": "confirmacao2-ti",
+      "cardType": "30min",
+      "actionCardId": "68d2f410506558bc378e840c",
+      "payload": {
+        "number": "5519995068303",
+        "action_card_id": "68d2f410506558bc378e840c",
+        "forceSend": true
+      },
+      "success": true,
+      "response": {
+        "status": "202",
+        "msg": "Successfully added to the transmission queue",
+        "messageSentId": ""
+      },
+      "timestamp": "2025-09-23T22:14:56.478Z"
+    },
+    {
+      "channel": "CONFIRMAÇÃO 3 - CARLA",
+      "channelId": "confirmacao3-carla",
+      "cardType": "30min",
+      "actionCardId": "68d2f410506558bc378e840c",
+      "payload": {
+        "number": "5519995068303",
+        "action_card_id": "68d2f410506558bc378e840c",
+        "forceSend": true
+      },
+      "success": true,
+      "response": {
+        "status": "202",
+        "msg": "Successfully added to the transmission queue",
+        "messageSentId": ""
+      },
+      "timestamp": "2025-09-23T22:14:58.869Z"
+    },
+    {
+      "channel": "ANEXO 1 - ESTOQUE",
+      "channelId": "anexo1-estoque",
+      "cardType": "end_of_day",
+      "actionCardId": "68d2f43502376b8f3df8a088",
+      "payload": {
+        "number": "5519995068303",
+        "action_card_id": "68d2f43502376b8f3df8a088",
+        "forceSend": true
+      },
+      "success": true,
+      "response": {
+        "status": "202",
+        "msg": "Successfully added to the transmission queue",
+        "messageSentId": ""
+      },
+      "timestamp": "2025-09-23T22:15:05.162Z"
+    },
+    {
+      "channel": "WHATSAPP OFICIAL",
+      "channelId": "whatsapp-oficial",
+      "cardType": "end_of_day",
+      "actionCardId": "68d2f43502376b8f3df8a088",
+      "payload": {
+        "number": "5519995068303",
+        "action_card_id": "68d2f43502376b8f3df8a088",
+        "forceSend": true
+      },
+      "success": true,
+      "response": {
+        "status": "202",
+        "msg": "Successfully added to the transmission queue",
+        "messageSentId": ""
+      },
+      "timestamp": "2025-09-23T22:15:07.554Z"
+    },
+    {
+      "channel": "CONFIRMAÇÃO 1",
+      "channelId": "confirmacao1",
+      "cardType": "end_of_day",
+      "actionCardId": "68d2f43502376b8f3df8a088",
+      "payload": {
+        "number": "5519995068303",
+        "action_card_id": "68d2f43502376b8f3df8a088",
+        "forceSend": true
+      },
+      "success": true,
+      "response": {
+        "status": "202",
+        "msg": "Successfully added to the transmission queue",
+        "messageSentId": ""
+      },
+      "timestamp": "2025-09-23T22:15:09.920Z"
+    },
+    {
+      "channel": "CONFIRMAÇÃO 2 - TI",
+      "channelId": "confirmacao2-ti",
+      "cardType": "end_of_day",
+      "actionCardId": "68d2f43502376b8f3df8a088",
+      "payload": {
+        "number": "5519995068303",
+        "action_card_id": "68d2f43502376b8f3df8a088",
+        "forceSend": true
+      },
+      "success": true,
+      "response": {
+        "status": "202",
+        "msg": "Successfully added to the transmission queue",
+        "messageSentId": ""
+      },
+      "timestamp": "2025-09-23T22:15:12.383Z"
+    },
+    {
+      "channel": "CONFIRMAÇÃO 3 - CARLA",
+      "channelId": "confirmacao3-carla",
+      "cardType": "end_of_day",
+      "actionCardId": "68d2f43502376b8f3df8a088",
+      "payload": {
+        "number": "5519995068303",
+        "action_card_id": "68d2f43502376b8f3df8a088",
+        "forceSend": true
+      },
+      "success": true,
+      "response": {
+        "status": "202",
+        "msg": "Successfully added to the transmission queue",
+        "messageSentId": ""
+      },
+      "timestamp": "2025-09-23T22:15:14.767Z"
+    }
+  ]
+}
