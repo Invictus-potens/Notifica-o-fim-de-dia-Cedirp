@@ -245,10 +245,6 @@
                                 Gerenciamento de Canais WhatsApp
                             </h5>
                             <div class="d-flex gap-2">
-                                <button id="add-channel-btn" class="btn btn-primary btn-sm">
-                                    <i class="bi bi-plus-circle me-1"></i>
-                                    Adicionar Canal
-                                </button>
                                 <button id="refresh-channels-btn" class="btn btn-outline-secondary btn-sm">
                                     <i class="bi bi-arrow-clockwise me-1"></i>
                                     Atualizar
@@ -291,86 +287,6 @@
                                 <!-- Canais serão carregados dinamicamente -->
                             </div>
 
-                            <!-- Modal para Adicionar/Editar Canal -->
-                            <div class="modal fade" id="channel-modal" tabindex="-1">
-                                <div class="modal-dialog modal-lg">
-                                    <div class="modal-content">
-                                        <div class="modal-header">
-                                            <h5 class="modal-title" id="channel-modal-title">Adicionar Canal</h5>
-                                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                        </div>
-                                        <div class="modal-body">
-                                            <form id="channel-form">
-                                                <div class="row">
-                                                    <div class="col-md-6">
-                                                        <div class="mb-3">
-                                                            <label for="channel-id" class="form-label">ID do Canal *</label>
-                                                            <input type="text" class="form-control" id="channel-id" required>
-                                                            <div class="form-text">Identificador único do canal (ex: anexo1-estoque)</div>
-                                                        </div>
-                                                    </div>
-                                                    <div class="col-md-6">
-                                                        <div class="mb-3">
-                                                            <label for="channel-name" class="form-label">Nome do Canal *</label>
-                                                            <input type="text" class="form-control" id="channel-name" required>
-                                                            <div class="form-text">Nome descritivo do canal</div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <div class="row">
-                                                    <div class="col-md-6">
-                                                        <div class="mb-3">
-                                                            <label for="channel-number" class="form-label">Número WhatsApp *</label>
-                                                            <input type="text" class="form-control" id="channel-number" required>
-                                                            <div class="form-text">Número completo com DDD (ex: 5516991003715)</div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <div class="row">
-                                                    <div class="col-md-4">
-                                                        <div class="mb-3">
-                                                            <label for="channel-department" class="form-label">Departamento</label>
-                                                            <select class="form-select" id="channel-department">
-                                                                <option value="estoque">Estoque</option>
-                                                                <option value="oficial">Oficial</option>
-                                                                <option value="confirmacao">Confirmação</option>
-                                                                <option value="ti">TI</option>
-                                                                <option value="carla">Carla</option>
-                                                                <option value="default">Padrão</option>
-                                                            </select>
-                                                        </div>
-                                                    </div>
-                                                    <div class="col-md-4">
-                                                        <div class="mb-3">
-                                                            <label for="channel-priority" class="form-label">Prioridade</label>
-                                                            <input type="number" class="form-control" id="channel-priority" value="999" min="1" max="999">
-                                                            <div class="form-text">Menor número = maior prioridade</div>
-                                                        </div>
-                                                    </div>
-                                                    <div class="col-md-4">
-                                                        <div class="mb-3">
-                                                            <div class="form-check mt-4">
-                                                                <input class="form-check-input" type="checkbox" id="channel-active" checked>
-                                                                <label class="form-check-label" for="channel-active">
-                                                                    Canal Ativo
-                                                                </label>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <div class="mb-3">
-                                                    <label for="channel-description" class="form-label">Descrição</label>
-                                                    <textarea class="form-control" id="channel-description" rows="2"></textarea>
-                                                </div>
-                                            </form>
-                                        </div>
-                                        <div class="modal-footer">
-                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                                            <button type="button" class="btn btn-primary" id="save-channel-btn">Salvar Canal</button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
                         </div>
                     </div>
                 </div>
@@ -410,9 +326,6 @@
                                     <select id="channel-select" class="form-select form-select-sm">
                                         <option value="">Selecione um canal...</option>
                                     </select>
-                                    <button id="add-channel-btn" class="btn btn-outline-primary btn-sm">
-                                        <i class="bi bi-plus"></i>
-                                    </button>
                                 </div>
                                 <div id="excluded-channels-list" class="border rounded p-3" style="min-height: 60px; background-color: #f8fafc; border-color: #e2e8f0;">
                                     <small class="text-muted">Nenhum canal excluído</small>

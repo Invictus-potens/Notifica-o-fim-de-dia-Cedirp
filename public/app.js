@@ -612,27 +612,11 @@ class AutomationInterface {
     }
 
     setupChannelEventListeners() {
-        // Add channel button
-        const addChannelBtn = document.getElementById('add-channel-btn');
-        if (addChannelBtn) {
-            addChannelBtn.addEventListener('click', () => {
-                this.openChannelModal();
-            });
-        }
-
         // Refresh channels button
         const refreshChannelsBtn = document.getElementById('refresh-channels-btn');
         if (refreshChannelsBtn) {
             refreshChannelsBtn.addEventListener('click', () => {
                 this.loadChannels();
-            });
-        }
-
-        // Save channel button
-        const saveChannelBtn = document.getElementById('save-channel-btn');
-        if (saveChannelBtn) {
-            saveChannelBtn.addEventListener('click', () => {
-                this.saveChannel();
             });
         }
 
@@ -2309,14 +2293,12 @@ class AutomationInterface {
                     'Action Cards Configurados', 
                     'Usuário atualizou configurações de Action Cards',
                     { 
-                        actionCardDefault: finalActionCard,
                         actionCard30Min: finalActionCard30Min,
                         actionCardEndDay: finalActionCardEndDay
                     }
                 );
                 
                 // 6. Atualizar visualmente os campos com os valores finais
-                if (actionCardSelect) actionCardSelect.value = finalActionCard || '';
                 if (actionCard30MinSelect) actionCard30MinSelect.value = finalActionCard30Min || '';
                 if (actionCardEndDaySelect) actionCardEndDaySelect.value = finalActionCardEndDay || '';
                 
@@ -3723,11 +3705,7 @@ class AutomationInterface {
                     <div class="text-center py-5">
                         <i class="bi bi-telephone display-1 text-muted"></i>
                         <h5 class="mt-3 text-muted">Nenhum canal configurado</h5>
-                        <p class="text-muted">Adicione um canal para começar a usar o sistema</p>
-                        <button class="btn btn-primary" onclick="app.openChannelModal()">
-                            <i class="bi bi-plus-circle me-1"></i>
-                            Adicionar Primeiro Canal
-                        </button>
+                        <p class="text-muted">Canais serão carregados automaticamente quando disponíveis</p>
                     </div>
                 </div>
             `;
@@ -3767,24 +3745,6 @@ class AutomationInterface {
                                 <i class="bi ${statusIcon} me-1"></i>
                                 ${statusText}
                             </span>
-                            <div class="dropdown">
-                                <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="dropdown">
-                                    <i class="bi bi-three-dots-vertical"></i>
-                                </button>
-                                <ul class="dropdown-menu">
-                                    <li><a class="dropdown-item" href="#" onclick="app.editChannel('${channel.id}')">
-                                        <i class="bi bi-pencil me-2"></i>Editar
-                                    </a></li>
-                                    <li><a class="dropdown-item" href="#" onclick="app.toggleChannel('${channel.id}', ${!channel.active})">
-                                        <i class="bi bi-${channel.active ? 'pause' : 'play'} me-2"></i>
-                                        ${channel.active ? 'Desativar' : 'Ativar'}
-                                    </a></li>
-                                    <li><hr class="dropdown-divider"></li>
-                                    <li><a class="dropdown-item text-danger" href="#" onclick="app.deleteChannel('${channel.id}')">
-                                        <i class="bi bi-trash me-2"></i>Excluir
-                                    </a></li>
-                                </ul>
-                            </div>
                         </div>
                     </div>
                     <div class="card-body">
@@ -3910,165 +3870,6 @@ class AutomationInterface {
         }
     }
 
-    /**
-     * Abre modal para adicionar/editar canal
-     */
-    openChannelModal(channelId = null) {
-        const modal = new bootstrap.Modal(document.getElementById('channel-modal'));
-        const title = document.getElementById('channel-modal-title');
-        const form = document.getElementById('channel-form');
-        
-        if (channelId) {
-            // Modo edição
-            const channel = this.channels.find(c => c.id === channelId);
-            if (channel) {
-                title.textContent = 'Editar Canal';
-                this.populateChannelForm(channel);
-            }
-        } else {
-            // Modo adição
-            title.textContent = 'Adicionar Canal';
-            form.reset();
-            document.getElementById('channel-active').checked = true;
-            document.getElementById('channel-priority').value = 999;
-        }
-        
-        modal.show();
-    }
-
-    /**
-     * Preenche formulário com dados do canal
-     */
-    populateChannelForm(channel) {
-        document.getElementById('channel-id').value = channel.id || '';
-        document.getElementById('channel-name').value = channel.name || '';
-        document.getElementById('channel-number').value = channel.number || '';
-        document.getElementById('channel-department').value = channel.department || 'default';
-        document.getElementById('channel-priority').value = channel.priority || 999;
-        document.getElementById('channel-active').checked = channel.active !== false;
-        document.getElementById('channel-description').value = channel.description || '';
-    }
-
-    /**
-     * Edita canal existente
-     */
-    editChannel(channelId) {
-        this.openChannelModal(channelId);
-    }
-
-    /**
-     * Ativa/desativa canal
-     */
-    async toggleChannel(channelId, active) {
-        try {
-            const response = await fetch(`/api/channels/${channelId}/toggle`, {
-                method: 'PATCH',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ active })
-            });
-
-            if (response.ok) {
-                const data = await response.json();
-                if (data.success) {
-                    this.showNotification(`Canal ${active ? 'ativado' : 'desativado'} com sucesso`, 'success');
-                    await this.loadChannels();
-                } else {
-                    throw new Error(data.message || 'Erro ao alterar status do canal');
-                }
-            } else {
-                throw new Error(`Erro HTTP: ${response.status}`);
-            }
-        } catch (error) {
-            console.error('Erro ao alterar status do canal:', error);
-            this.showNotification('Erro ao alterar status do canal: ' + error.message, 'error');
-        }
-    }
-
-    /**
-     * Exclui canal
-     */
-    async deleteChannel(channelId) {
-        const channel = this.channels.find(c => c.id === channelId);
-        if (!channel) return;
-
-        if (confirm(`Tem certeza que deseja excluir o canal "${channel.name}"?`)) {
-            try {
-                const response = await fetch(`/api/channels/${channelId}`, {
-                    method: 'DELETE'
-                });
-
-                if (response.ok) {
-                    const data = await response.json();
-                    if (data.success) {
-                        this.showNotification('Canal excluído com sucesso', 'success');
-                        await this.loadChannels();
-                    } else {
-                        throw new Error(data.message || 'Erro ao excluir canal');
-                    }
-                } else {
-                    throw new Error(`Erro HTTP: ${response.status}`);
-                }
-            } catch (error) {
-                console.error('Erro ao excluir canal:', error);
-                this.showNotification('Erro ao excluir canal: ' + error.message, 'error');
-            }
-        }
-    }
-
-    /**
-     * Salva canal (adicionar ou editar)
-     */
-    async saveChannel() {
-        try {
-            const form = document.getElementById('channel-form');
-            const formData = new FormData(form);
-            
-            const channelData = {
-                id: document.getElementById('channel-id').value,
-                name: document.getElementById('channel-name').value,
-                number: document.getElementById('channel-number').value,
-                department: document.getElementById('channel-department').value,
-                priority: parseInt(document.getElementById('channel-priority').value),
-                active: document.getElementById('channel-active').checked,
-                description: document.getElementById('channel-description').value
-            };
-
-            // Validação básica
-            if (!channelData.id || !channelData.name || !channelData.number) {
-                throw new Error('Preencha todos os campos obrigatórios');
-            }
-
-            const isEdit = this.channels.some(c => c.id === channelData.id);
-            const url = isEdit ? `/api/channels/${channelData.id}` : '/api/channels';
-            const method = isEdit ? 'PUT' : 'POST';
-
-            const response = await fetch(url, {
-                method: method,
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(channelData)
-            });
-
-            if (response.ok) {
-                const data = await response.json();
-                if (data.success) {
-                    this.showNotification(`Canal ${isEdit ? 'atualizado' : 'adicionado'} com sucesso`, 'success');
-                    bootstrap.Modal.getInstance(document.getElementById('channel-modal')).hide();
-                    await this.loadChannels();
-                } else {
-                    throw new Error(data.message || 'Erro ao salvar canal');
-                }
-            } else {
-                throw new Error(`Erro HTTP: ${response.status}`);
-            }
-        } catch (error) {
-            console.error('Erro ao salvar canal:', error);
-            this.showNotification('Erro ao salvar canal: ' + error.message, 'error');
-        }
-    }
 
     /**
      * Obtém informações de canal para um paciente
