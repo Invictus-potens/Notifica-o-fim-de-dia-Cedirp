@@ -1,5 +1,143 @@
 [
   {
+    "id": "log_1758593162546_nsy87v1ve",
+    "timestamp": "2025-09-23T02:06:02.546Z",
+    "level": "info",
+    "action": "Configurações Salvas",
+    "details": "Usuário salvou configurações do sistema",
+    "metadata": {
+      "startOfDayTime": "08:01",
+      "endOfDayTime": "18:00",
+      "minWaitTime": "30",
+      "maxWaitTime": "120",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36 OPR/121.0.0.0",
+      "ip": "::1"
+    },
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36 OPR/121.0.0.0",
+    "ip": "::1"
+  },
+  {
+    "id": "log_1758593145214_4z629arul",
+    "timestamp": "2025-09-23T02:05:45.214Z",
+    "level": "info",
+    "action": "Lista de Exclusão",
+    "details": "Usuário adicionou setor \"Cardiologia\" à lista de exclusão",
+    "metadata": {
+      "sectorId": "65eb5a3c01515baa7fa25c4a",
+      "sectorName": "Cardiologia",
+      "action": "add",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36 OPR/121.0.0.0",
+      "ip": "::1"
+    },
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36 OPR/121.0.0.0",
+    "ip": "::1"
+  },
+  {
+    "id": "log_1758593023988_gwe0hqczb",
+    "timestamp": "2025-09-23T02:03:43.988Z",
+    "level": "warning",
+    "action": "Controle de Fluxo",
+    "details": "Usuário pausou o fluxo de mensagens automáticas",
+    "metadata": {
+      "action": "pause",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36 OPR/121.0.0.0",
+      "ip": "::1"
+    },
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36 OPR/121.0.0.0",
+    "ip": "::1"
+  },
+  {
+    "id": "log_1758593023139_jk9nvxmjh",
+    "timestamp": "2025-09-23T02:03:43.139Z",
+    "level": "info",
+    "action": "Controle de Fluxo",
+    "details": "Usuário retomou o fluxo de mensagens automáticas",
+    "metadata": {
+      "action": "resume",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36 OPR/121.0.0.0",
+      "ip": "::1"
+    },
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36 OPR/121.0.0.0",
+    "ip": "::1"
+  },
+  {
+    "id": "log_1758589704715_6cq5ydd4o",
+    "timestamp": "2025-09-23T01:08:24.715Z",
+    "level": "warning",
+    "action": "Controle de Fluxo",
+    "details": "Usuário pausou o fluxo de mensagens automáticas",
+    "metadata": {
+      "action": "pause",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36 OPR/121.0.0.0",
+      "ip": "::1"
+    },
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36 OPR/121.0.0.0",
+    "ip": "::1"
+  },
+  {
+    "id": "log_1758588389448_mz0c79f71",
+    "timestamp": "2025-09-23T00:46:29.448Z",
+    "level": "info",
+    "action": "Card de ação fim de dia selecionado: Ação opção inválida",
+    "details": "Seleção de Card",
+    "metadata": {
+      "cardId": "65eb53aa0e74e281e12bb8d7",
+      "cardName": "Ação opção inválida",
+      "type": "endday",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36 OPR/121.0.0.0",
+      "ip": "::1"
+    },
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36 OPR/121.0.0.0",
+    "ip": "::1"
+  },
+  {
+    "id": "log_1758588386589_c9q9xy3vv",
+    "timestamp": "2025-09-23T00:46:26.589Z",
+    "level": "info",
+    "action": "Card de ação 30min selecionado: Ação opção inválida",
+    "details": "Seleção de Card",
+    "metadata": {
+      "cardId": "65eb53aa0e74e281e12bb8d7",
+      "cardName": "Ação opção inválida",
+      "type": "30min",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36 OPR/121.0.0.0",
+      "ip": "::1"
+    },
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36 OPR/121.0.0.0",
+    "ip": "::1"
+  },
+  {
+    "id": "log_1758588362129_9qnks00t6",
+    "timestamp": "2025-09-23T00:46:02.129Z",
+    "level": "info",
+    "action": "Configurações Salvas",
+    "details": "Usuário salvou configurações do sistema",
+    "metadata": {
+      "startOfDayTime": "08:00",
+      "endOfDayTime": "18:00",
+      "minWaitTime": "30",
+      "maxWaitTime": "120",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36 OPR/121.0.0.0",
+      "ip": "::1"
+    },
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36 OPR/121.0.0.0",
+    "ip": "::1"
+  },
+  {
+    "id": "log_1758588323658_c82m8jxk7",
+    "timestamp": "2025-09-23T00:45:23.658Z",
+    "level": "info",
+    "action": "Controle de Fluxo",
+    "details": "Usuário retomou o fluxo de mensagens automáticas",
+    "metadata": {
+      "action": "resume",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36 OPR/121.0.0.0",
+      "ip": "::1"
+    },
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36 OPR/121.0.0.0",
+    "ip": "::1"
+  },
+  {
     "id": "log_1758569453923_ndihyhd9s",
     "timestamp": "2025-09-22T19:30:53.923Z",
     "level": "warning",

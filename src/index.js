@@ -295,27 +295,44 @@ app.post('/api/logs/clear', (req, res) => {
 // Pacientes em espera (busca da API CAM Krolik e sincroniza com arquivo local)
 app.get('/api/patients', async (req, res) => {
   try {
-    console.log('📋 API: Buscando pacientes da API CAM Krolik...');
+    console.log('📋 API: Buscando pacientes de TODOS os canais...');
     
-    // Buscar pacientes reais da API CAM Krolik
-    const livePatients = await krolikApiClient.listWaitingAttendances();
-    console.log(`📋 API: Encontrados ${livePatients.length} pacientes na API CAM Krolik`);
+    // Buscar pacientes de todos os canais
+    const allAttendances = await mainController.getAllWaitingAttendances();
+    console.log('📋 API: Dados recebidos de todos os canais:', Object.keys(allAttendances).length);
     
-    // Atualizar arquivo local com dados da API
-    if (livePatients.length > 0) {
-      await mainController.jsonPatientManager.updateActivePatients(livePatients);
-      console.log(`📋 API: Arquivo local atualizado com ${livePatients.length} pacientes`);
+    // Consolidar todos os pacientes em uma única lista
+    let allPatients = [];
+    let totalCount = 0;
+    
+    for (const [channelId, channelData] of Object.entries(allAttendances)) {
+      if (channelData.attendances && channelData.attendances.length > 0) {
+        allPatients = allPatients.concat(channelData.attendances);
+        totalCount += channelData.attendances.length;
+        console.log(`📋 Canal ${channelData.channel.number} (${channelData.channel.name}): ${channelData.attendances.length} pacientes`);
+      }
     }
     
-    // Retornar dados atualizados
+    console.log(`📋 API: Total consolidado: ${totalCount} pacientes de todos os canais`);
+    
+    // Atualizar arquivo local com dados consolidados
+    if (allPatients.length > 0) {
+      await mainController.jsonPatientManager.updateActivePatients(allPatients);
+      console.log(`📋 API: Arquivo local atualizado com ${allPatients.length} pacientes`);
+    }
+    
+    // Retornar dados consolidados
     res.json({
       success: true,
-      data: livePatients,
-      total: livePatients.length,
+      data: allPatients,
+      total: totalCount,
+      channels: Object.keys(allAttendances).length,
+      channelDetails: allAttendances,
       timestamp: new Date().toISOString()
     });
+    
   } catch (error) {
-    console.error('Erro ao buscar pacientes:', error);
+    console.error('Erro ao buscar pacientes de todos os canais:', error);
     
     // Fallback: tentar dados locais se API falhar
     try {
@@ -334,7 +351,7 @@ app.get('/api/patients', async (req, res) => {
     } catch (fallbackError) {
       res.status(500).json({ 
         success: false,
-        error: 'Erro ao buscar pacientes da API CAM Krolik e dados locais',
+        error: 'Erro ao buscar pacientes de todos os canais e dados locais',
         message: error.message,
         data: [],
         total: 0,
@@ -344,26 +361,41 @@ app.get('/api/patients', async (req, res) => {
   }
 });
 
-// Pacientes em espera (dados diretos da API CAM Krolik)
+// Pacientes em espera (dados diretos de TODOS os canais)
 app.get('/api/patients/live', async (req, res) => {
   try {
-    console.log('📋 API: Buscando pacientes na API CAM Krolik...');
+    console.log('📋 API: Buscando pacientes de TODOS os canais (dados diretos)...');
     
-    // Buscar pacientes reais da API CAM Krolik
-    const patients = await krolikApiClient.listWaitingAttendances();
+    // Buscar pacientes de todos os canais
+    const allAttendances = await mainController.getAllWaitingAttendances();
+    console.log('📋 API: Dados recebidos de todos os canais:', Object.keys(allAttendances).length);
     
-    console.log(`📋 API: Retornando ${patients.length} pacientes da API CAM Krolik`);
+    // Consolidar todos os pacientes em uma única lista
+    let allPatients = [];
+    let totalCount = 0;
+    
+    for (const [channelId, channelData] of Object.entries(allAttendances)) {
+      if (channelData.attendances && channelData.attendances.length > 0) {
+        allPatients = allPatients.concat(channelData.attendances);
+        totalCount += channelData.attendances.length;
+        console.log(`📋 Canal ${channelData.channel.number} (${channelData.channel.name}): ${channelData.attendances.length} pacientes`);
+      }
+    }
+    
+    console.log(`📋 API: Retornando ${totalCount} pacientes de todos os canais`);
     res.json({
       success: true,
-      data: patients,
-      total: patients.length,
+      data: allPatients,
+      total: totalCount,
+      channels: Object.keys(allAttendances).length,
+      channelDetails: allAttendances,
       timestamp: new Date().toISOString()
     });
   } catch (error) {
-    console.error('Erro ao buscar pacientes da API CAM Krolik:', error);
+    console.error('Erro ao buscar pacientes de todos os canais:', error);
     res.status(500).json({ 
       success: false,
-      error: 'Erro ao buscar pacientes da API CAM Krolik',
+      error: 'Erro ao buscar pacientes de todos os canais',
       message: error.message,
       data: [],
       total: 0,
@@ -669,7 +701,7 @@ app.get('/api/channels/:channelId', async (req, res) => {
         timestamp: new Date().toISOString()
       });
     }
-
+    
     res.json({
       success: true,
       data: channel,
@@ -805,7 +837,7 @@ app.patch('/api/channels/:channelId/toggle', async (req, res) => {
     const success = mainController.toggleChannel(channelId, active);
     if (success) {
       res.json({
-        success: true,
+        success: true, 
         message: `Canal ${active ? 'ativado' : 'desativado'} com sucesso`,
         data: { channelId, active },
         timestamp: new Date().toISOString()
@@ -837,11 +869,11 @@ app.delete('/api/channels/:channelId', async (req, res) => {
     
     const success = mainController.removeChannel(channelId);
     if (success) {
-      res.json({
-        success: true,
+    res.json({
+      success: true,
         message: 'Canal removido com sucesso',
         data: { channelId },
-        timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString()
       });
     } else {
       res.status(400).json({
@@ -1242,6 +1274,110 @@ app.get('/health', async (req, res) => {
     res.status(503).json({ 
       status: 'unhealthy', 
       error: error.message,
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
+// Envio de Action Card com token específico do canal
+app.post('/api/messages/send-action-card', async (req, res) => {
+  try {
+    console.log('📤 API: Enviando Action Card...');
+    
+    const { patients, action_card_id, channelId } = req.body;
+    
+    if (!patients || !Array.isArray(patients) || patients.length === 0) {
+      return res.status(400).json({
+        success: false,
+        error: 'Lista de pacientes é obrigatória',
+        message: 'É necessário fornecer pelo menos um paciente para envio'
+      });
+    }
+    
+    if (!action_card_id) {
+      return res.status(400).json({
+        success: false,
+        error: 'Action Card ID é obrigatório',
+        message: 'É necessário fornecer o ID do action card'
+      });
+    }
+    
+    const results = [];
+    const errors = [];
+    
+    for (const patient of patients) {
+      try {
+        const { number, contactId, channelId: patientChannelId } = patient;
+        
+        // Determinar qual canal usar
+        const targetChannelId = channelId || patientChannelId || 'whatsapp_oficial'; // Default para canal oficial
+        
+        // Obter token do canal específico
+        const channelToken = mainController.getChannelToken(targetChannelId);
+        if (!channelToken) {
+          throw new Error(`Token não encontrado para canal ${targetChannelId}`);
+        }
+        
+        // Criar cliente API para este canal específico
+        const { KrolikApiClient } = require('./services/KrolikApiClient');
+        const apiClient = new KrolikApiClient(
+          process.env.KROLIK_API_BASE_URL || 'https://api.camkrolik.com.br',
+          channelToken
+        );
+        
+        // Enviar action card usando a API correta
+        const sendResult = await apiClient.sendActionCard({
+          number: number,
+          contactId: contactId,
+          action_card_id: action_card_id,
+          forceSend: true
+        });
+        
+        results.push({
+          patient: {
+            number: number,
+            contactId: contactId,
+            channelId: targetChannelId
+          },
+          success: true,
+          result: sendResult
+        });
+        
+        console.log(`✅ Action Card enviado para ${number} via canal ${targetChannelId}`);
+        
+      } catch (error) {
+        console.error(`❌ Erro ao enviar para ${patient.number}:`, error.message);
+        errors.push({
+          patient: patient,
+          error: error.message
+        });
+      }
+    }
+    
+    const successCount = results.length;
+    const errorCount = errors.length;
+    
+    console.log(`📤 API: Envio concluído - ${successCount} sucessos, ${errorCount} erros`);
+    
+    res.json({
+      success: errorCount === 0,
+      message: `Envio concluído: ${successCount} sucessos, ${errorCount} erros`,
+      results: results,
+      errors: errors,
+      summary: {
+        total: patients.length,
+        success: successCount,
+        failed: errorCount
+      },
+      timestamp: new Date().toISOString()
+    });
+    
+  } catch (error) {
+    console.error('❌ Erro no envio de Action Card:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Erro interno no envio de Action Card',
+      message: error.message,
       timestamp: new Date().toISOString()
     });
   }

@@ -1,19 +1,53 @@
 const axios = require('axios');
 
 class KrolikApiClient {
-  constructor(config = {}) {
-    this.baseURL = config.baseURL || process.env.KROLIK_API_BASE_URL || 'https://api.camkrolik.com.br';
-    this.token = config.token || process.env.KROLIK_API_TOKEN;
+  constructor(baseURL = null, token = null) {
+    // Suporte para dois tipos de chamada:
+    // 1. new KrolikApiClient(baseURL, token) - para canais específicos
+    // 2. new KrolikApiClient(config) - para compatibilidade com código existente
+    
+    if (typeof baseURL === 'object' && baseURL !== null) {
+      // Chamada antiga: new KrolikApiClient(config)
+      const config = baseURL;
+      this.baseURL = config.baseURL || process.env.KROLIK_API_BASE_URL || 'https://api.camkrolik.com.br';
+      this.token = config.token || process.env.KROLIK_API_TOKEN;
+    } else {
+      // Chamada nova: new KrolikApiClient(baseURL, token)
+      this.baseURL = baseURL || process.env.KROLIK_API_BASE_URL || 'https://api.camkrolik.com.br';
+      this.token = token || process.env.KROLIK_API_TOKEN;
+    }
     
     // Contadores de API
     this.apiCalls = 0;
     this.apiSuccess = 0;
     this.apiFailures = 0;
-    this.systemMetrics = config.systemMetrics || null;
+    this.systemMetrics = null;
+    
+    // Cache compartilhado de setores para mapeamento de nomes (estático)
+    if (!KrolikApiClient.sharedSectorsCache) {
+      KrolikApiClient.sharedSectorsCache = {
+        data: null,
+        time: null,
+        ttl: 5 * 60 * 1000 // 5 minutos
+      };
+    }
+    
+    // Configurações padrão
+    const defaultConfig = {
+      timeout: 10000,
+      systemMetrics: null
+    };
+    
+    // Se baseURL era um objeto (chamada antiga), usar suas configurações
+    if (typeof baseURL === 'object' && baseURL !== null) {
+      const config = baseURL;
+      this.systemMetrics = config.systemMetrics || null;
+      defaultConfig.timeout = config.timeout || 10000;
+    }
     
     this.axiosInstance = axios.create({
       baseURL: this.baseURL,
-      timeout: config.timeout || 10000,
+      timeout: defaultConfig.timeout,
       headers: {
         'access-token': this.token,
         'Content-Type': 'application/json',
@@ -108,7 +142,9 @@ class KrolikApiClient {
       });
 
       // Converter dados da API para o modelo interno
-      const patients = response.data.chats?.map(chat => this.convertChatToWaitingPatient(chat)) || [];
+      const patients = await Promise.all(
+        response.data.chats?.map(chat => this.convertChatToWaitingPatient(chat)) || []
+      );
       console.log(`👥 Encontrados ${patients.length} pacientes aguardando`);
       return patients;
     } catch (error) {
@@ -138,7 +174,9 @@ class KrolikApiClient {
       });
 
       // Converter dados da API para o modelo interno
-      const patients = response.data.chats?.map(chat => this.convertChatToWaitingPatient(chat)) || [];
+      const patients = await Promise.all(
+        response.data.chats?.map(chat => this.convertChatToWaitingPatient(chat)) || []
+      );
       console.log(`👥 Canal ${channelId}: ${patients.length} pacientes aguardando`);
       return patients;
     } catch (error) {
@@ -239,7 +277,7 @@ class KrolikApiClient {
   /**
    * Converte dados da API para modelo interno de WaitingPatient
    */
-  convertChatToWaitingPatient(chat) {
+  async convertChatToWaitingPatient(chat) {
     // Calcular tempo de espera baseado no tempo total em espera (em segundos)
     const waitTimeSeconds = chat.timeInWaiting || 0;
     const waitTimeMinutes = Math.floor(waitTimeSeconds / 60);
@@ -258,13 +296,16 @@ class KrolikApiClient {
       10: 'API Externa'
     };
 
+    // Buscar nome do setor usando cache
+    const sectorName = await this.getSectorName(chat.sectorId);
+
     return {
       id: chat.attendanceId, // ID do atendimento
       contactId: chat.contact?.id || '', // ID do contato (para envio de mensagens)
       name: chat.contact?.name || chat.description || 'Nome não informado',
       phone: chat.contact?.number || '',
       sectorId: chat.sectorId || '',
-      sectorName: this.getSectorName(chat.sectorId) || 'Setor não informado',
+      sectorName: sectorName,
       channelId: chat.channel?.id || '',
       channelType: channelTypeMap[chat.channel?.type] || 'normal',
       waitStartTime: chat.utcDhStartChat ? new Date(chat.utcDhStartChat) : null,
@@ -274,18 +315,41 @@ class KrolikApiClient {
   }
 
   /**
-   * Busca o nome do setor baseado no ID
+   * Busca o nome do setor baseado no ID usando cache compartilhado
    */
-  getSectorName(sectorId) {
-    // Mapa de setores conhecidos (pode ser expandido)
-    const sectorMap = {
-      '64d4db384f04cb80ac059912': 'Suporte Geral',
-      '631f7d27307d23f46af88983': 'Administrativo/Financeiro',
-      '6400efb5343817d4ddbb2a4c': 'Suporte CAM',
-      '6401f4f49b1ff8512b525e9c': 'Suporte Telefonia'
-    };
+  async getSectorName(sectorId) {
+    if (!sectorId) return 'Setor não informado';
     
-    return sectorMap[sectorId] || `Setor ${sectorId}`;
+    try {
+      // Verificar se cache compartilhado está válido
+      if (!KrolikApiClient.sharedSectorsCache.data || !KrolikApiClient.sharedSectorsCache.time || 
+          (Date.now() - KrolikApiClient.sharedSectorsCache.time) > KrolikApiClient.sharedSectorsCache.ttl) {
+        await this.loadSectorsCache();
+      }
+      
+      // Buscar setor no cache compartilhado
+      const sector = KrolikApiClient.sharedSectorsCache.data.find(s => s.id === sectorId);
+      return sector ? sector.name : `Setor ${sectorId}`;
+      
+    } catch (error) {
+      console.error('Erro ao buscar nome do setor:', error.message);
+      return `Setor ${sectorId}`;
+    }
+  }
+
+  /**
+   * Carrega cache compartilhado de setores da API
+   */
+  async loadSectorsCache() {
+    try {
+      const response = await this.axiosInstance.get('/core/v2/api/sectors');
+      KrolikApiClient.sharedSectorsCache.data = response.data;
+      KrolikApiClient.sharedSectorsCache.time = Date.now();
+      console.log(`📋 Cache compartilhado de setores atualizado: ${response.data.length} setores`);
+    } catch (error) {
+      console.error('Erro ao carregar cache de setores:', error.message);
+      KrolikApiClient.sharedSectorsCache.data = [];
+    }
   }
 
   /**

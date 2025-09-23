@@ -1,6 +1,6 @@
 const { ErrorHandler } = require('../services/ErrorHandler');
 const { ConfigManager } = require('../services/ConfigManager');
-const { MultiChannelManager } = require('../services/MultiChannelManager');
+const { ChannelManager } = require('../services/ChannelManager');
 const { JsonPatientManager } = require('../services/JsonPatientManager');
 const { ProductionScheduler } = require('../services/ProductionScheduler');
 const { MessageHistoryManager } = require('../services/MessageHistoryManager');
@@ -20,7 +20,8 @@ class MainController {
     // Inicializar ConfigManager
     this.configManager = new ConfigManager(this.errorHandler);
     
-    // MultiChannelManager será inicializado após ConfigManager carregar os canais
+    // Inicializar ChannelManager
+    this.channelManager = new ChannelManager(this.errorHandler);
     
     // Configurar TimeUtils com ConfigManager para horários dinâmicos
     TimeUtils.setConfigManager(this.configManager);
@@ -61,9 +62,8 @@ class MainController {
       await this.configManager.initialize();
       console.log('✅ ConfigManager inicializado');
 
-      // Inicializar MultiChannelManager após ConfigManager carregar os canais
-      this.multiChannelManager = new MultiChannelManager(this.configManager, this.errorHandler);
-      console.log('✅ MultiChannelManager inicializado');
+      // ChannelManager já foi inicializado no construtor
+      console.log('✅ ChannelManager inicializado');
 
       // Inicializar MessageMetricsManager
       await this.messageMetricsManager.initialize();
@@ -816,49 +816,63 @@ class MainController {
    * Obtém todos os canais
    */
   getChannels() {
-    return this.multiChannelManager.getAllChannels();
+    return this.channelManager.getAllChannels();
   }
 
   /**
    * Obtém canais ativos
    */
   getActiveChannels() {
-    return this.multiChannelManager.getActiveChannels();
+    return this.channelManager.getActiveChannels();
   }
 
   /**
    * Obtém canal por ID
    */
   getChannelById(channelId) {
-    return this.multiChannelManager.getChannelById(channelId);
+    return this.channelManager.getChannelById(channelId);
   }
 
   /**
    * Obtém canal por número
    */
   getChannelByNumber(number) {
-    return this.multiChannelManager.getChannelByNumber(number);
+    return this.channelManager.getChannelByNumber(number);
   }
 
   /**
-   * Obtém estatísticas de carga dos canais
+   * Obtém estatísticas dos canais
    */
-  getChannelLoadStats() {
-    return this.multiChannelManager.getChannelLoadStats();
+  getChannelStats() {
+    return this.channelManager.getChannelStats();
   }
 
   /**
-   * Obtém estatísticas de conversas ativas
+   * Obtém dados dos canais para o frontend
    */
-  getConversationStats() {
-    return this.multiChannelManager.getConversationStats();
+  getChannelsForFrontend() {
+    return this.channelManager.getChannelsForFrontend();
   }
 
   /**
-   * Obtém informações completas de um canal
+   * Obtém dados dos canais para dropdowns
    */
-  getChannelInfo(channelId) {
-    return this.multiChannelManager.getChannelInfo(channelId);
+  getChannelsForDropdown() {
+    return this.channelManager.getChannelsForDropdown();
+  }
+
+  /**
+   * Obtém token de um canal específico
+   */
+  getChannelToken(channelId) {
+    return this.channelManager.getChannelToken(channelId);
+  }
+
+  /**
+   * Valida se um canal existe e está ativo
+   */
+  isChannelValid(channelId) {
+    return this.channelManager.isChannelValid(channelId);
   }
 
   /**
@@ -867,8 +881,7 @@ class MainController {
   addChannel(channelData) {
     const success = this.configManager.addChannel(channelData);
     if (success) {
-      // Recarregar canais no MultiChannelManager
-      this.multiChannelManager.reloadChannels();
+      // ChannelManager não precisa recarregar - canais são fixos
     }
     return success;
   }
@@ -879,8 +892,7 @@ class MainController {
   updateChannel(channelId, updateData) {
     const success = this.configManager.updateChannel(channelId, updateData);
     if (success) {
-      // Recarregar canais no MultiChannelManager
-      this.multiChannelManager.reloadChannels();
+      // ChannelManager não precisa recarregar - canais são fixos
     }
     return success;
   }
@@ -891,8 +903,7 @@ class MainController {
   removeChannel(channelId) {
     const success = this.configManager.removeChannel(channelId);
     if (success) {
-      // Recarregar canais no MultiChannelManager
-      this.multiChannelManager.reloadChannels();
+      // ChannelManager não precisa recarregar - canais são fixos
     }
     return success;
   }
@@ -903,8 +914,7 @@ class MainController {
   toggleChannel(channelId, active) {
     const success = this.configManager.toggleChannel(channelId, active);
     if (success) {
-      // Recarregar canais no MultiChannelManager
-      this.multiChannelManager.reloadChannels();
+      // ChannelManager não precisa recarregar - canais são fixos
     }
     return success;
   }
@@ -929,12 +939,28 @@ class MainController {
    */
   async getAllWaitingAttendances() {
     try {
-      const channels = this.multiChannelManager.getAllChannels();
+      const channels = this.channelManager.getAllChannels();
       const attendancesByChannel = {};
 
       for (const channel of channels) {
         try {
-          const attendances = await channel.apiClient.listWaitingAttendances();
+          // Criar cliente API para este canal específico
+          const { KrolikApiClient } = require('../services/KrolikApiClient');
+          const apiClient = new KrolikApiClient(
+            process.env.KROLIK_API_BASE_URL || 'https://api.camkrolik.com.br',
+            channel.token
+          );
+          
+          const attendances = await apiClient.listWaitingAttendances();
+          
+          // Adicionar informação do canal em cada atendimento
+          const attendancesWithChannel = attendances.map(attendance => ({
+            ...attendance,
+            channelId: channel.id,
+            channelName: channel.name,
+            channelNumber: channel.number
+          }));
+          
           attendancesByChannel[channel.id] = {
             channel: {
               id: channel.id,
@@ -942,8 +968,8 @@ class MainController {
               number: channel.number,
               active: channel.active
             },
-            attendances: attendances,
-            count: attendances.length
+            attendances: attendancesWithChannel,
+            count: attendancesWithChannel.length
           };
         } catch (error) {
           console.error(`Erro ao buscar atendimentos do canal ${channel.name}:`, error.message);

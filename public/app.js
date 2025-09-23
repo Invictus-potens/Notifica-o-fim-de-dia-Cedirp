@@ -814,25 +814,26 @@ class AutomationInterface {
 
     displayPatients(patients) {
         try {
-            const tbody = document.getElementById('patients-tbody');
+        const tbody = document.getElementById('patients-tbody');
             if (!tbody) {
                 return;
             }
 
-            if (patients.length === 0) {
-                tbody.innerHTML = `
-                    <tr>
+        if (patients.length === 0) {
+            tbody.innerHTML = `
+                <tr>
                         <td colspan="7" class="text-center text-muted py-4">
-                            Nenhum atendimento em espera
-                        </td>
-                    </tr>
-                `;
-                return;
-            }
+                        Nenhum atendimento em espera
+                    </td>
+                </tr>
+            `;
+            return;
+        }
 
             tbody.innerHTML = patients.map(patient => {
                 // Determinar canal do paciente
                 const channelInfo = this.getPatientChannelInfo(patient);
+                const overtimeDisplay = this.calculateOvertimeAfterEndOfDay(patient);
                 
                 return `
             <tr>
@@ -841,6 +842,7 @@ class AutomationInterface {
                 <td>${this.escapeHtml(patient.sectorName || patient.sector_name || 'Setor não informado')}</td>
                 <td>${channelInfo}</td>
                 <td>${this.formatWaitTime(patient.waitTimeMinutes || 0)}</td>
+                <td class="text-danger">${overtimeDisplay}</td>
                 <td>
                     ${this.generateNextMessageInfo(patient)}
                 </td>
@@ -938,6 +940,7 @@ class AutomationInterface {
                 // Atendimentos do canal
                 attendances.forEach(attendance => {
                     const channelInfo = this.getPatientChannelInfo(attendance);
+                    const overtimeDisplay = this.calculateOvertimeAfterEndOfDay(attendance);
                     
                     html += `
                         <tr class="table-light">
@@ -946,6 +949,7 @@ class AutomationInterface {
                             <td>${this.escapeHtml(attendance.sectorName || attendance.sector_name || 'Setor não informado')}</td>
                             <td>${channelInfo}</td>
                             <td>${this.formatWaitTime(attendance.waitTimeMinutes || 0)}</td>
+                            <td class="text-danger">${overtimeDisplay}</td>
                             <td>
                                 ${this.generateNextMessageInfo(attendance)}
                             </td>
@@ -1239,6 +1243,54 @@ class AutomationInterface {
             const hours = Math.floor(minutes / 60);
             const remainingMinutes = minutes % 60;
             return `${hours}h ${remainingMinutes}min`;
+        }
+    }
+
+    /**
+     * Calcula o tempo excedido após o fim do expediente
+     * @param {Object} patient - Dados do paciente
+     * @returns {string} Tempo excedido formatado
+     */
+    calculateOvertimeAfterEndOfDay(patient) {
+        try {
+            // Verificar se é após o fim do expediente (18h)
+            const now = new Date();
+            const currentHour = now.getHours();
+            
+            // Se não é após 18h, retornar "--"
+            if (currentHour < 18) {
+                return '--';
+            }
+            
+            // Calcular tempo desde o início do atendimento
+            const waitStartTime = patient.waitStartTime ? new Date(patient.waitStartTime) : null;
+            if (!waitStartTime) {
+                return '--';
+            }
+            
+            // Calcular fim do expediente do dia do atendimento
+            const endOfDayTime = new Date(waitStartTime);
+            endOfDayTime.setHours(18, 0, 0, 0);
+            
+            // Se o atendimento começou após 18h, todo o tempo é excedido
+            if (waitStartTime >= endOfDayTime) {
+                const overtimeMs = now - waitStartTime;
+                const overtimeMinutes = Math.floor(overtimeMs / (1000 * 60));
+                return this.formatWaitTime(overtimeMinutes);
+            }
+            
+            // Se o atendimento começou antes de 18h, calcular apenas o tempo após 18h
+            if (now > endOfDayTime) {
+                const overtimeMs = now - endOfDayTime;
+                const overtimeMinutes = Math.floor(overtimeMs / (1000 * 60));
+                return this.formatWaitTime(overtimeMinutes);
+            }
+            
+            return '--';
+            
+        } catch (error) {
+            console.error('Erro ao calcular tempo excedido:', error);
+            return '--';
         }
     }
 
@@ -1633,27 +1685,35 @@ class AutomationInterface {
 
             // A API retorna { success: true, data: [...], total: X }
             const channels = result.success ? result.data : result;
-            console.log('Canais carregados:', channels);
+            console.log('📋 Canais carregados da API:', channels);
+            console.log('📋 Número de canais:', channels ? channels.length : 0);
 
             this.displayChannels(channels);
 
         } catch (error) {
-            console.error('Erro ao carregar canais:', error);
+            console.error('❌ Erro ao carregar canais:', error);
             this.showError('Erro ao carregar canais: ' + error.message);
         }
     }
 
     displayChannels(channels) {
         console.log('📱 displayChannels chamada com:', channels?.length || 0, 'canais');
+        console.log('📱 Dados dos canais:', channels);
         
         // Update channel select in configuracoes page (Listas de Exceção)
         const channelSelect = document.getElementById('channel-select');
+        console.log('📱 Procurando elemento channel-select...');
+        console.log('📱 Elemento encontrado:', channelSelect);
+        
         if (channelSelect) {
             console.log('✅ channel-select encontrado, populando...');
             channelSelect.innerHTML = '<option value="">Selecione um canal...</option>';
             
             if (channels && channels.length > 0) {
-                channels.forEach(channel => {
+                console.log('📱 Adicionando canais ao select...');
+                channels.forEach((channel, index) => {
+                    console.log(`📱 Processando canal ${index + 1}:`, channel);
+                    
                     const option = document.createElement('option');
                     option.value = channel.id;
                     
@@ -1673,12 +1733,27 @@ class AutomationInterface {
                     option.textContent = optionText;
                     option.title = channel.description || channel.identifier || displayName;
                     
+                    console.log(`📱 Adicionando opção: ${option.value} - ${option.textContent}`);
                     channelSelect.appendChild(option);
                 });
                 console.log(`✅ ${channels.length} canais adicionados ao channel-select`);
+                
+                // Verificar se as opções foram realmente adicionadas
+                console.log('📱 Total de opções no select:', channelSelect.children.length);
+                for (let i = 0; i < channelSelect.children.length; i++) {
+                    const option = channelSelect.children[i];
+                    console.log(`📱 Opção ${i + 1}: ${option.value} - ${option.textContent}`);
+                }
+            } else {
+                console.log('⚠️ Nenhum canal para adicionar');
             }
         } else {
             console.log('❌ channel-select não encontrado');
+            console.log('❌ Elementos disponíveis no DOM:');
+            const allSelects = document.querySelectorAll('select');
+            allSelects.forEach((select, index) => {
+                console.log(`   ${index + 1}. ID: ${select.id}, Classes: ${select.className}`);
+            });
         }
 
         // Store channels for later use
@@ -1794,7 +1869,7 @@ class AutomationInterface {
             
             // Log de ação do usuário
             await this.addUserActionLog('warning', 
-                'Controle de Fluxo', 
+                'Controle de Fluxo',
                 'Usuário pausou o fluxo de mensagens automáticas',
                 { action: 'pause' }
             );
@@ -1829,7 +1904,7 @@ class AutomationInterface {
             
             // Log de ação do usuário
             await this.addUserActionLog('info', 
-                'Controle de Fluxo', 
+                'Controle de Fluxo',
                 'Usuário retomou o fluxo de mensagens automáticas',
                 { action: 'resume' }
             );
@@ -2309,7 +2384,7 @@ class AutomationInterface {
                 configData.selectedActionCardEndDay = finalActionCardEndDay;
             }
             
-            // Incluir exclusões na configuração
+                // Incluir exclusões na configuração
             configData.excludedSectors = this.excludedSectors.map(s => s.id);
             configData.excludedChannels = this.excludedChannels.map(c => c.id);
             
@@ -2337,12 +2412,12 @@ class AutomationInterface {
                 // Usar rota geral para outras configurações
                 console.log('📤 Enviando para /api/config:', configData);
                 response = await fetch('/api/config', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(configData)
-                });
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(configData)
+            });
             }
             
             const result = await response.json();
@@ -4122,12 +4197,30 @@ class AutomationInterface {
      */
     getPatientChannelInfo(patient) {
         try {
-            // Verificar se há contexto de conversa para este paciente
+            // Verificar se o paciente tem informações de canal diretamente
+            if (patient.channelNumber && patient.channelName) {
+                const statusClass = patient.channelActive !== false ? 'success' : 'secondary';
+                const statusIcon = patient.channelActive !== false ? 'bi-check-circle-fill' : 'bi-pause-circle-fill';
+                
+                return `
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-telephone me-1 text-muted"></i>
+                        <div>
+                            <div class="fw-bold small">Canal ${patient.channelNumber}</div>
+                            <div class="small text-muted">${patient.channelName}</div>
+                        </div>
+                        <span class="badge bg-${statusClass} ms-2" title="Canal ${patient.channelNumber} - ${patient.channelName}">
+                            <i class="bi ${statusIcon}"></i>
+                        </span>
+                    </div>
+                `;
+            }
+            
+            // Fallback: verificar se há contexto de conversa para este paciente
             const phone = patient.phone || patient.number;
             if (!phone) return '<span class="text-muted">-</span>';
 
-            // Simular busca por canal baseado no número
-            // Em uma implementação real, isso viria da API
+            // Buscar canal baseado no número (método antigo para compatibilidade)
             const channel = this.findChannelForPatient(patient);
             
             if (channel) {
@@ -4139,7 +4232,7 @@ class AutomationInterface {
                         <i class="bi bi-telephone me-1 text-muted"></i>
                         <div>
                             <div class="fw-bold small">${channel.name}</div>
-                            <div class="small text-muted">${this.formatPhoneNumber(channel.number)}</div>
+                            <div class="small text-muted">Canal ${channel.number}</div>
                         </div>
                         <span class="badge bg-${statusClass} ms-2" title="${channel.active ? 'Ativo' : 'Inativo'}">
                             <i class="bi ${statusIcon}"></i>
@@ -4212,12 +4305,19 @@ class AutomationInterface {
             } else {
                 // Verificar se o paciente está associado ao canal selecionado
                 const patientData = this.getPatientDataFromRow(row);
-                const channel = this.findChannelForPatient(patientData);
                 
-                if (channel && channel.id === selectedChannelId) {
+                // Primeiro, verificar se o paciente tem channelId diretamente
+                if (patientData.channelId && patientData.channelId === selectedChannelId) {
                     row.style.display = '';
                 } else {
-                    row.style.display = 'none';
+                    // Fallback: buscar canal baseado em outros critérios
+                    const channel = this.findChannelForPatient(patientData);
+                    
+                    if (channel && channel.id === selectedChannelId) {
+                        row.style.display = '';
+                    } else {
+                        row.style.display = 'none';
+                    }
                 }
             }
         });
@@ -4230,10 +4330,46 @@ class AutomationInterface {
         const cells = row.querySelectorAll('td');
         if (cells.length < 4) return {};
 
+        // Extrair informações de canal da coluna de canal (índice 3)
+        let channelId = null;
+        let channelNumber = null;
+        let channelName = null;
+        
+        if (cells[3]) {
+            const channelCell = cells[3];
+            const channelDiv = channelCell.querySelector('div');
+            if (channelDiv) {
+                const channelText = channelDiv.textContent || '';
+                // Extrair número do canal do texto "Canal X"
+                const channelMatch = channelText.match(/Canal (\d+)/);
+                if (channelMatch) {
+                    channelNumber = channelMatch[1];
+                    // Mapear número do canal para ID baseado nos canais conhecidos
+                    const channelMap = {
+                        '1': 'anexo1_estoque',
+                        '2': 'whatsapp_oficial', 
+                        '3': 'confirmacao1',
+                        '4': 'confirmacao2_ti',
+                        '5': 'confirmacao3_carla'
+                    };
+                    channelId = channelMap[channelNumber];
+                }
+                
+                // Extrair nome do canal
+                const nameDiv = channelDiv.querySelector('div.small.text-muted');
+                if (nameDiv) {
+                    channelName = nameDiv.textContent?.trim();
+                }
+            }
+        }
+
         return {
-            name: cells[1]?.textContent?.trim() || '',
-            phone: cells[2]?.textContent?.trim() || '',
-            sectorName: cells[3]?.textContent?.trim() || ''
+            name: cells[0]?.textContent?.trim() || '',
+            phone: cells[1]?.textContent?.trim() || '',
+            sectorName: cells[2]?.textContent?.trim() || '',
+            channelId: channelId,
+            channelNumber: channelNumber,
+            channelName: channelName
         };
     }
 
@@ -4242,21 +4378,39 @@ class AutomationInterface {
      */
     populateChannelFilter() {
         const channelFilter = document.getElementById('channel-filter-patients');
-        if (!channelFilter || !this.channels) return;
+        if (!channelFilter) return;
 
         // Limpar opções existentes (exceto a primeira)
         channelFilter.innerHTML = '<option value="">Todos os Canais</option>';
 
-        // Adicionar canais ativos
-        this.channels
-            .filter(channel => channel.active)
-            .sort((a, b) => a.priority - b.priority)
-            .forEach(channel => {
+        // Se temos canais carregados, usar eles
+        if (this.channels && this.channels.length > 0) {
+            this.channels
+                .filter(channel => channel.active)
+                .sort((a, b) => a.priority - b.priority)
+                .forEach(channel => {
+                    const option = document.createElement('option');
+                    option.value = channel.id;
+                    option.textContent = `Canal ${channel.number} - ${channel.name}`;
+                    channelFilter.appendChild(option);
+                });
+        } else {
+            // Fallback: usar canais padrão baseados nos dados conhecidos
+            const defaultChannels = [
+                { id: 'anexo1_estoque', number: '1', name: 'ANEXO 1 - ESTOQUE' },
+                { id: 'whatsapp_oficial', number: '2', name: 'WHATSAPP OFICIAL' },
+                { id: 'confirmacao1', number: '3', name: 'CONFIRMAÇÃO 1' },
+                { id: 'confirmacao2_ti', number: '4', name: 'CONFIRMAÇÃO 2 - TI' },
+                { id: 'confirmacao3_carla', number: '5', name: 'CONFIRMAÇÃO 3 - CARLA' }
+            ];
+            
+            defaultChannels.forEach(channel => {
                 const option = document.createElement('option');
                 option.value = channel.id;
-                option.textContent = `${channel.name} (${this.formatPhoneNumber(channel.number)})`;
+                option.textContent = `Canal ${channel.number} - ${channel.name}`;
                 channelFilter.appendChild(option);
             });
+        }
     }
 
     /**
