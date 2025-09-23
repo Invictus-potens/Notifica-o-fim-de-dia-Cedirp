@@ -1269,7 +1269,7 @@ app.post('/api/messages/send-action-card', async (req, res) => {
         const { number, contactId, channelId: patientChannelId } = patient;
         
         // Determinar qual canal usar
-        const targetChannelId = channelId || patientChannelId || 'whatsapp_oficial'; // Default para canal oficial
+        const targetChannelId = channelId || patientChannelId || 'whatsapp-oficial'; // Default para canal oficial
         
         // Obter token do canal específico
         const channelToken = mainController.getChannelToken(targetChannelId);

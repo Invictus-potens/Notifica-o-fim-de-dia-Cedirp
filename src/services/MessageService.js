@@ -241,34 +241,82 @@ class MessageService {
    */
   async sendActionCardInternal(patient, cardId = null, messageType = 'manual') {
     try {
-      if (!this.krolikApiClient) {
-        throw new Error('Cliente Krolik não inicializado');
+      const phone = patient.phone;
+      console.log(`📤 Enviando action card para ${patient.name} (${phone})`);
+      
+      // 1. Verificar se já existe contexto de conversa
+      let channel = this.multiChannelManager.getChannelForConversation(phone);
+      
+      if (!channel) {
+        // 2. Nova conversa - escolher canal apropriado
+        channel = this.multiChannelManager.getBestChannelForPatient(patient);
+        
+        if (!channel) {
+          throw new Error('Nenhum canal ativo disponível');
+        }
+        
+        // 3. Registrar novo contexto de conversa
+        this.multiChannelManager.registerConversation(phone, channel.id);
+        
+        console.log(`🆕 Nova conversa: ${phone} -> ${channel.name} (${channel.number})`);
+      } else {
+        console.log(`🔄 Continuando conversa: ${phone} -> ${channel.name} (${channel.number})`);
       }
 
+      // 4. Usar action card ID fornecido ou o padrão da configuração
       const actionCardId = cardId || this.configManager.getDefaultActionCardId();
       
       if (!actionCardId) {
         throw new Error('ID do action card não fornecido');
       }
 
-      console.log(`📤 Enviando action card ${actionCardId} para ${patient.name} (${patient.phone})`);
+      // 5. Validar dados do paciente
+      if (!patient.phone || !patient.contactId) {
+        throw new Error('Dados do paciente incompletos (phone ou contactId faltando)');
+      }
 
+      // 6. Preparar payload
       const payload = {
-        action_card_id: actionCardId,
+        number: patient.phone,
         contactId: patient.contactId,
-        number: patient.phone
+        action_card_id: actionCardId,
+        forceSend: true
       };
 
+      console.log(`📤 Enviando action card via ${channel.name} (${channel.number})`);
       console.log(`📋 Payload:`, payload);
 
-      // Enviar mensagem
-      const result = await this.krolikApiClient.sendActionCard(payload);
-      
+      // 7. Enviar mensagem usando o canal específico com fallback
+      let result;
+      let success = false;
+      let fallbackUsed = false;
+
+      try {
+        result = await channel.apiClient.sendActionCard(payload);
+        success = true;
+        console.log(`✅ Action card enviado com sucesso via ${channel.name} (${channel.number})`);
+      } catch (channelError) {
+        console.warn(`⚠️ Falha no canal principal ${channel.name}, tentando fallback...`);
+        
+        // Tentar canal de fallback
+        const fallbackChannel = this.multiChannelManager.getFallbackChannel();
+        if (fallbackChannel && fallbackChannel.id !== channel.id) {
+          try {
+            result = await fallbackChannel.apiClient.sendActionCard(payload);
+            success = true;
+            fallbackUsed = true;
+            console.log(`✅ Action card enviado via fallback ${fallbackChannel.name} (${fallbackChannel.number})`);
+          } catch (fallbackError) {
+            throw new Error(`Falha em ambos os canais: ${channelError.message} | ${fallbackError.message}`);
+          }
+        } else {
+          throw channelError;
+        }
+      }
+
       // Atualizar estatísticas
       this.stats.totalSent++;
       this.stats.lastSent = new Date().toISOString();
-      
-      console.log(`✅ Action card enviado com sucesso para ${patient.name}`);
       
       return {
         success: true,

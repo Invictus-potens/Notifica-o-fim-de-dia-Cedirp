@@ -1,5 +1,175 @@
 [
   {
+    "id": "log_1758661154003_duvboffm6",
+    "timestamp": "2025-09-23T20:59:14.003Z",
+    "level": "info",
+    "action": "Action Cards Configurados",
+    "details": "Usuário atualizou configurações de Action Cards",
+    "metadata": {
+      "actionCard30Min": "68d2f410506558bc378e840c",
+      "actionCardEndDay": "68d2f43502376b8f3df8a088",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0",
+      "ip": "::1"
+    },
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0",
+    "ip": "::1"
+  },
+  {
+    "id": "log_1758657525483_tlxixaaur",
+    "timestamp": "2025-09-23T19:58:45.483Z",
+    "level": "info",
+    "action": "Controle de Fluxo",
+    "details": "Usuário retomou o fluxo de mensagens automáticas",
+    "metadata": {
+      "action": "resume",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0",
+      "ip": "::1"
+    },
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0",
+    "ip": "::1"
+  },
+  {
+    "id": "log_1758657524912_32y2w2g2h",
+    "timestamp": "2025-09-23T19:58:44.913Z",
+    "level": "info",
+    "action": "Action Cards Configurados",
+    "details": "Usuário atualizou configurações de Action Cards",
+    "metadata": {
+      "actionCard30Min": "68d2f410506558bc378e840c",
+      "actionCardEndDay": "68d2f43502376b8f3df8a088",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0",
+      "ip": "::1"
+    },
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0",
+    "ip": "::1"
+  },
+  {
+    "id": "log_1758655569113_uvnprh46k",
+    "timestamp": "2025-09-23T19:26:09.113Z",
+    "level": "info",
+    "action": "Configurações Salvas",
+    "details": "Usuário salvou configurações do sistema",
+    "metadata": {
+      "startOfDayTime": "08:00",
+      "endOfDayTime": "18:00",
+      "minWaitTime": "30",
+      "maxWaitTime": "45",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0",
+      "ip": "::1"
+    },
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0",
+    "ip": "::1"
+  },
+  {
+    "id": "log_1758655566031_cx77a9hwr",
+    "timestamp": "2025-09-23T19:26:06.031Z",
+    "level": "info",
+    "action": "Action Cards Configurados",
+    "details": "Usuário atualizou configurações de Action Cards",
+    "metadata": {
+      "actionCard30Min": "68d2f410506558bc378e840c",
+      "actionCardEndDay": "68d2f43502376b8f3df8a088",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0",
+      "ip": "::1"
+    },
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0",
+    "ip": "::1"
+  },
+  {
+    "id": "log_1758655565084_lmpvhh8mq",
+    "timestamp": "2025-09-23T19:26:05.084Z",
+    "level": "info",
+    "action": "Card de ação fim de dia selecionado: Fim de expediente",
+    "details": "Seleção de Card",
+    "metadata": {
+      "cardId": "68d2f43502376b8f3df8a088",
+      "cardName": "Fim de expediente",
+      "type": "endday",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0",
+      "ip": "::1"
+    },
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0",
+    "ip": "::1"
+  },
+  {
+    "id": "log_1758655562580_pase5b5sv",
+    "timestamp": "2025-09-23T19:26:02.580Z",
+    "level": "info",
+    "action": "Card de ação 30min selecionado: 30 Minutos de espera",
+    "details": "Seleção de Card",
+    "metadata": {
+      "cardId": "68d2f410506558bc378e840c",
+      "cardName": "30 Minutos de espera",
+      "type": "30min",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0",
+      "ip": "::1"
+    },
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0",
+    "ip": "::1"
+  },
+  {
+    "id": "log_1758655558287_5i42isp67",
+    "timestamp": "2025-09-23T19:25:58.287Z",
+    "level": "info",
+    "action": "Configurações Salvas",
+    "details": "Usuário salvou configurações do sistema",
+    "metadata": {
+      "startOfDayTime": "08:00",
+      "endOfDayTime": "18:00",
+      "minWaitTime": "30",
+      "maxWaitTime": "45",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0",
+      "ip": "::1"
+    },
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0",
+    "ip": "::1"
+  },
+  {
+    "id": "log_1758651984705_k4n9lhntx",
+    "timestamp": "2025-09-23T18:26:24.705Z",
+    "level": "info",
+    "action": "Configurações Salvas",
+    "details": "Usuário salvou configurações do sistema",
+    "metadata": {
+      "startOfDayTime": "08:00",
+      "endOfDayTime": "18:00",
+      "minWaitTime": "30",
+      "maxWaitTime": "45",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0",
+      "ip": "::1"
+    },
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0",
+    "ip": "::1"
+  },
+  {
+    "id": "log_1758651906805_0m568dqtq",
+    "timestamp": "2025-09-23T18:25:06.805Z",
+    "level": "warning",
+    "action": "Controle de Fluxo",
+    "details": "Usuário pausou o fluxo de mensagens automáticas",
+    "metadata": {
+      "action": "pause",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0",
+      "ip": "::1"
+    },
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0",
+    "ip": "::1"
+  },
+  {
+    "id": "log_1758651873015_9x7ami99t",
+    "timestamp": "2025-09-23T18:24:33.015Z",
+    "level": "info",
+    "action": "Controle de Fluxo",
+    "details": "Usuário retomou o fluxo de mensagens automáticas",
+    "metadata": {
+      "action": "resume",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0",
+      "ip": "::1"
+    },
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0",
+    "ip": "::1"
+  },
+  {
     "id": "log_1758646111590_ejgytk5ht",
     "timestamp": "2025-09-23T16:48:31.590Z",
     "level": "info",

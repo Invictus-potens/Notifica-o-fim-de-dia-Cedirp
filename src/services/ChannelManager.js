@@ -15,7 +15,7 @@ class ChannelManager {
   initializeChannels() {
     const channels = [
       {
-        id: 'anexo1_estoque',
+        id: 'anexo1-estoque',
         name: 'ANEXO 1 - ESTOQUE',
         number: '1',
         token: process.env.TOKEN_ANEXO1_ESTOQUE,
@@ -24,7 +24,7 @@ class ChannelManager {
         active: true
       },
       {
-        id: 'whatsapp_oficial',
+        id: 'whatsapp-oficial',
         name: 'WHATSAPP OFICIAL',
         number: '2',
         token: process.env.TOKEN_WHATSAPP_OFICIAL,
@@ -42,7 +42,7 @@ class ChannelManager {
         active: true
       },
       {
-        id: 'confirmacao2_ti',
+        id: 'confirmacao2-ti',
         name: 'CONFIRMAÇÃO 2 - TI',
         number: '4',
         token: process.env.TOKEN_CONFIRMACAO2_TI,
@@ -51,7 +51,7 @@ class ChannelManager {
         active: true
       },
       {
-        id: 'confirmacao3_carla',
+        id: 'confirmacao3-carla',
         name: 'CONFIRMAÇÃO 3 - CARLA',
         number: '5',
         token: process.env.TOKEN_CONFIRMACAO3_CARLA,

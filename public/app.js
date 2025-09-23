@@ -4229,11 +4229,11 @@ class AutomationInterface {
                     channelNumber = channelMatch[1];
                     // Mapear número do canal para ID baseado nos canais conhecidos
                     const channelMap = {
-                        '1': 'anexo1_estoque',
-                        '2': 'whatsapp_oficial', 
+                        '1': 'anexo1-estoque',
+                        '2': 'whatsapp-oficial', 
                         '3': 'confirmacao1',
-                        '4': 'confirmacao2_ti',
-                        '5': 'confirmacao3_carla'
+                        '4': 'confirmacao2-ti',
+                        '5': 'confirmacao3-carla'
                     };
                     channelId = channelMap[channelNumber];
                 }
@@ -4280,11 +4280,11 @@ class AutomationInterface {
         } else {
             // Fallback: usar canais padrão baseados nos dados conhecidos
             const defaultChannels = [
-                { id: 'anexo1_estoque', number: '1', name: 'ANEXO 1 - ESTOQUE' },
-                { id: 'whatsapp_oficial', number: '2', name: 'WHATSAPP OFICIAL' },
+                { id: 'anexo1-estoque', number: '1', name: 'ANEXO 1 - ESTOQUE' },
+                { id: 'whatsapp-oficial', number: '2', name: 'WHATSAPP OFICIAL' },
                 { id: 'confirmacao1', number: '3', name: 'CONFIRMAÇÃO 1' },
-                { id: 'confirmacao2_ti', number: '4', name: 'CONFIRMAÇÃO 2 - TI' },
-                { id: 'confirmacao3_carla', number: '5', name: 'CONFIRMAÇÃO 3 - CARLA' }
+                { id: 'confirmacao2-ti', number: '4', name: 'CONFIRMAÇÃO 2 - TI' },
+                { id: 'confirmacao3-carla', number: '5', name: 'CONFIRMAÇÃO 3 - CARLA' }
             ];
             
             defaultChannels.forEach(channel => {
