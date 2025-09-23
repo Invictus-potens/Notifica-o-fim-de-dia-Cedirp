@@ -63,6 +63,10 @@ class MainController {
       await this.configManager.initialize();
       console.log('✅ ConfigManager inicializado');
 
+      // Configurar listeners para mudanças de configuração
+      this.setupConfigChangeListeners();
+      console.log('✅ Listeners de configuração configurados');
+
       // ChannelManager já foi inicializado no construtor
       console.log('✅ ChannelManager inicializado');
 
@@ -413,6 +417,62 @@ class MainController {
    */
   async updateSystemConfig(updates) {
     await this.configManager.updateSystemConfig(updates);
+  }
+
+  /**
+   * Configura listeners para mudanças de configuração
+   */
+  setupConfigChangeListeners() {
+    // Listener para mudanças gerais de configuração
+    this.configManager.addConfigListener('configUpdated', (data) => {
+      console.log('🔄 Configuração atualizada - aplicando mudanças em tempo real...');
+      this.handleConfigChange(data);
+    });
+  }
+
+  /**
+   * Processa mudanças de configuração em tempo real
+   * @param {Object} data - Dados da mudança de configuração
+   */
+  handleConfigChange(data) {
+    try {
+      const { changes } = data;
+      
+      console.log('⚙️ Processando mudanças de configuração:', Object.keys(changes));
+      
+      // Atualizar ProductionScheduler se estiver disponível
+      if (this.productionScheduler && typeof this.productionScheduler.updateConfig === 'function') {
+        console.log('🔄 Atualizando configurações do ProductionScheduler...');
+        this.productionScheduler.updateConfig(this.configManager.getSystemConfig());
+      }
+      
+      // Notificar sobre mudanças específicas
+      if (changes.refreshInterval) {
+        console.log(`⏰ Intervalo de refresh atualizado: ${changes.refreshInterval}s`);
+      }
+      
+      if (changes.selectedActionCard30Min) {
+        console.log(`📋 Action Card 30min atualizado: ${changes.selectedActionCard30Min}`);
+      }
+      
+      if (changes.selectedActionCardEndDay) {
+        console.log(`📋 Action Card fim de dia atualizado: ${changes.selectedActionCardEndDay}`);
+      }
+      
+      if (changes.startOfDayTime || changes.endOfDayTime) {
+        console.log(`🕐 Horários de expediente atualizados: ${changes.startOfDayTime || 'N/A'} - ${changes.endOfDayTime || 'N/A'}`);
+      }
+      
+      if (changes.minWaitTime || changes.maxWaitTime) {
+        console.log(`⏱️ Tempos de espera atualizados: ${changes.minWaitTime || 'N/A'} - ${changes.maxWaitTime || 'N/A'} min`);
+      }
+      
+      console.log('✅ Mudanças de configuração aplicadas com sucesso');
+      
+    } catch (error) {
+      console.error('❌ Erro ao processar mudanças de configuração:', error);
+      this.errorHandler.logError(error, 'MainController.handleConfigChange');
+    }
   }
 
   /**

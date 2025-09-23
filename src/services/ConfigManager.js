@@ -28,6 +28,9 @@ class ConfigManager {
     this.errorHandler = errorHandler;
     this.exclusionList = new Map();
     this.systemConfig = this.createDefaultSystemConfig();
+    
+    // Sistema de eventos para notificar mudanças de configuração
+    this.eventListeners = new Map();
   }
 
   /**
@@ -361,6 +364,9 @@ class ConfigManager {
    */
   async updateSystemConfig(updates) {
     try {
+      // Armazenar configuração anterior para comparação
+      const previousConfig = { ...this.systemConfig };
+      
       // Atualizar configuração na memória
       this.systemConfig = { ...this.systemConfig, ...updates };
       
@@ -379,6 +385,13 @@ class ConfigManager {
       if (updates.selectedActionCardEndDay) {
         console.log(`📋 Action Card fim de dia: ${updates.selectedActionCardEndDay}`);
       }
+      
+      // Notificar listeners sobre mudanças
+      this.notifyConfigChange('configUpdated', {
+        previous: previousConfig,
+        current: this.systemConfig,
+        changes: updates
+      });
       
     } catch (error) {
       this.errorHandler.logError(error, 'ConfigManager.updateSystemConfig');
@@ -792,6 +805,88 @@ class ConfigManager {
     return this.updateChannelMetrics(channelId, {
       activeConversations: count
     });
+  }
+
+  /**
+   * ========================================
+   * SISTEMA DE EVENTOS PARA CONFIGURAÇÕES
+   * ========================================
+   */
+
+  /**
+   * Adiciona listener para eventos de configuração
+   * @param {string} event - Nome do evento
+   * @param {Function} callback - Função callback
+   * @returns {string} ID do listener para remoção
+   */
+  addConfigListener(event, callback) {
+    if (!this.eventListeners.has(event)) {
+      this.eventListeners.set(event, new Set());
+    }
+    
+    const listenerId = `listener_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    this.eventListeners.get(event).add({ id: listenerId, callback });
+    
+    console.log(`🔔 Listener adicionado para evento '${event}': ${listenerId}`);
+    return listenerId;
+  }
+
+  /**
+   * Remove listener de eventos de configuração
+   * @param {string} event - Nome do evento
+   * @param {string} listenerId - ID do listener
+   */
+  removeConfigListener(event, listenerId) {
+    if (this.eventListeners.has(event)) {
+      const listeners = this.eventListeners.get(event);
+      for (const listener of listeners) {
+        if (listener.id === listenerId) {
+          listeners.delete(listener);
+          console.log(`🔕 Listener removido para evento '${event}': ${listenerId}`);
+          break;
+        }
+      }
+    }
+  }
+
+  /**
+   * Notifica todos os listeners sobre mudanças de configuração
+   * @param {string} event - Nome do evento
+   * @param {Object} data - Dados do evento
+   */
+  notifyConfigChange(event, data) {
+    if (this.eventListeners.has(event)) {
+      const listeners = this.eventListeners.get(event);
+      console.log(`📢 Notificando ${listeners.size} listeners sobre evento '${event}'`);
+      
+      for (const listener of listeners) {
+        try {
+          listener.callback(data);
+        } catch (error) {
+          console.error(`❌ Erro ao executar listener ${listener.id}:`, error);
+          this.errorHandler.logError(error, 'ConfigManager.notifyConfigChange');
+        }
+      }
+    }
+  }
+
+  /**
+   * Remove todos os listeners de um evento específico
+   * @param {string} event - Nome do evento
+   */
+  clearConfigListeners(event) {
+    if (this.eventListeners.has(event)) {
+      this.eventListeners.get(event).clear();
+      console.log(`🧹 Todos os listeners removidos para evento '${event}'`);
+    }
+  }
+
+  /**
+   * Remove todos os listeners de todos os eventos
+   */
+  clearAllConfigListeners() {
+    this.eventListeners.clear();
+    console.log('🧹 Todos os listeners de configuração removidos');
   }
 }
 

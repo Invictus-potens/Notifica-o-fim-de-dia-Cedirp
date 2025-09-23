@@ -1,11 +1,11 @@
 {
   "excludedSectors": "[\"65eb5a3c01515baa7fa25c4a\"]",
   "excludedChannels": "[]",
-  "flowPaused": "false",
+  "flowPaused": "true",
   "endOfDayPaused": "true",
   "ignoreBusinessHours": "true",
-  "minWaitTime": "30",
-  "maxWaitTime": "120",
+  "minWaitTime": "180",
+  "maxWaitTime": "185",
   "selectedActionCard": "631f2b4f307d23f46ac80a10",
   "selectedActionCard30Min": "65eb53aa0e74e281e12ba122",
   "selectedActionCardEndDay": "65eb53aa0e74e281e12ba274",
@@ -13,5 +13,5 @@
   "startOfDayTime": "08:00",
   "endOfDayTime": "18:00",
   "logCleanupTime": "23:59",
-  "refreshInterval": "60"
+  "refreshInterval": "120"
 }

@@ -377,6 +377,25 @@ class MonitoringService {
       errors: this.stats.errors
     };
   }
+
+  /**
+   * Atualiza configurações do serviço de monitoramento
+   */
+  updateConfig(newConfig) {
+    try {
+      console.log('⚙️ MonitoringService: Configurações atualizadas');
+      
+      // As configurações são obtidas dinamicamente do ConfigManager
+      // Não precisamos armazenar localmente, apenas logar a atualização
+      console.log('🔄 MonitoringService: Usando configurações atualizadas do sistema');
+      
+      // Se necessário, podemos reconfigurar timers ou outros aspectos específicos aqui
+      
+    } catch (error) {
+      console.error('❌ Erro ao atualizar configurações do MonitoringService:', error);
+      this.errorHandler.logError(error, 'MonitoringService.updateConfig');
+    }
+  }
 }
 
 module.exports = { MonitoringService };

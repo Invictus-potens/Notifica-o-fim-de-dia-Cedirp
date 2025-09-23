@@ -828,6 +828,9 @@ class AutomationInterface {
                 return total + channelData.count;
             }, 0);
 
+            // POPULAR this.patients com todos os atendimentos para o filtro funcionar
+            this.patients = [];
+            
             if (totalAttendances === 0) {
                 tbody.innerHTML = `
                     <tr>
@@ -900,13 +903,30 @@ class AutomationInterface {
                 attendances.forEach(attendance => {
                     const channelInfo = this.getPatientChannelInfo(attendance);
                     
+                    // ADICIONAR ATENDIMENTO À LISTA DE PACIENTES PARA FILTRO
+                    const patientData = {
+                        name: attendance.name || 'Nome não informado',
+                        phone: attendance.phone || attendance.number || '',
+                        sectorName: attendance.sectorName || attendance.sector_name || 'Setor não informado',
+                        sectorId: this.getSectorIdByName(attendance.sectorName || attendance.sector_name),
+                        channelId: attendance.channelId,
+                        channelName: attendance.channelName,
+                        channelNumber: attendance.channelNumber,
+                        waitTimeMinutes: attendance.waitTimeMinutes || 0,
+                        attendanceId: attendance.id || attendance.attendanceId,
+                        // Manter dados originais para compatibilidade
+                        ...attendance
+                    };
+                    
+                    this.patients.push(patientData);
+                    
                     html += `
                         <tr class="table-light">
-                            <td>${this.escapeHtml(attendance.name || 'Nome não informado')}</td>
-                            <td>${this.escapeHtml(attendance.phone || attendance.number || '')}</td>
-                            <td>${this.escapeHtml(attendance.sectorName || attendance.sector_name || 'Setor não informado')}</td>
+                            <td>${this.escapeHtml(patientData.name)}</td>
+                            <td>${this.escapeHtml(patientData.phone)}</td>
+                            <td>${this.escapeHtml(patientData.sectorName)}</td>
                             <td>${channelInfo}</td>
-                            <td>${this.formatWaitTime(attendance.waitTimeMinutes || 0)}</td>
+                            <td>${this.formatWaitTime(patientData.waitTimeMinutes)}</td>
                             <td>
                                 ${this.generateNextMessageInfo(attendance)}
                             </td>
@@ -919,6 +939,14 @@ class AutomationInterface {
             });
 
             tbody.innerHTML = html;
+            
+            // Log para debug - mostrar quantos pacientes foram carregados para o filtro
+            console.log(`📊 Total de pacientes carregados para filtro: ${this.patients.length}`);
+            if (this.patients.length > 0) {
+                const sectorsFound = [...new Set(this.patients.map(p => p.sectorName))];
+                console.log(`📋 Setores encontrados nos dados:`, sectorsFound);
+            }
+            
         } catch (error) {
             console.error('Erro em displayAttendancesByChannel:', error);
         }
@@ -1506,6 +1534,10 @@ class AutomationInterface {
             // A API agora retorna { success: true, data: [...], total: X }
             const sectors = result.success ? result.data : result;
             console.log('Setores carregados:', sectors);
+
+            // SALVAR setores em this.sectors para usar no filtro
+            this.sectors = sectors;
+            console.log('✅ Setores salvos em this.sectors:', this.sectors.length);
 
             this.displaySectors(sectors);
 
@@ -2764,13 +2796,30 @@ class AutomationInterface {
 
 
     /**
+     * Obtém o ID do setor pelo nome
+     */
+    getSectorIdByName(sectorName) {
+        if (!sectorName || !this.sectors || this.sectors.length === 0) {
+            return null;
+        }
+        
+        // Buscar setor pelo nome
+        const sector = this.sectors.find(s => 
+            s.name === sectorName || 
+            s.name.toLowerCase() === sectorName.toLowerCase()
+        );
+        
+        return sector ? sector.id : null;
+    }
+
+    /**
      * Filtra pacientes por setor
      */
     filterPatientsBySector(sectorId) {
         
         if (!sectorId) {
-            // Mostrar todos os pacientes
-            this.displayPatients(this.patients);
+            // Mostrar todos os pacientes - recarregar dados originais
+            this.loadPatients();
             return;
         }
         
@@ -2779,8 +2828,113 @@ class AutomationInterface {
             patient.sectorId === sectorId
         );
         
-        console.log(`📊 Filtrados ${filteredPatients.length} pacientes do setor ${sectorId}`);
-        this.displayPatients(filteredPatients);
+        console.log(`📊 Filtrados ${filteredPatients.length} pacientes do setor ${sectorId} (total: ${this.patients.length})`);
+        
+        // Exibir apenas pacientes filtrados
+        this.displayFilteredPatients(filteredPatients, sectorId);
+    }
+
+    /**
+     * Exibe pacientes filtrados por setor
+     */
+    displayFilteredPatients(filteredPatients, sectorId) {
+        try {
+            const tbody = document.getElementById('patients-tbody');
+            if (!tbody) {
+                return;
+            }
+
+            // Obter nome do setor para exibição
+            console.log('🔍 Buscando setor com ID:', sectorId);
+            console.log('📋 Setores disponíveis em this.sectors:', this.sectors ? this.sectors.length : 0);
+            
+            const sector = this.sectors ? this.sectors.find(s => s.id === sectorId) : null;
+            const sectorName = sector ? sector.name : 'Setor Desconhecido';
+            
+            console.log('✅ Setor encontrado:', sector ? sector.name : 'NÃO ENCONTRADO');
+
+            if (filteredPatients.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" class="text-center text-muted py-4">
+                            <div class="d-flex align-items-center justify-content-center">
+                                <i class="bi bi-funnel me-2"></i>
+                                Nenhum atendimento em espera no setor <strong>"${this.escapeHtml(sectorName)}"</strong>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            let html = '';
+            
+            // Agrupar pacientes por canal
+            const patientsByChannel = {};
+            filteredPatients.forEach(patient => {
+                const channelKey = patient.channelId || 'unknown';
+                if (!patientsByChannel[channelKey]) {
+                    patientsByChannel[channelKey] = {
+                        channelName: patient.channelName || 'Canal Desconhecido',
+                        channelNumber: patient.channelNumber || '',
+                        patients: []
+                    };
+                }
+                patientsByChannel[channelKey].patients.push(patient);
+            });
+
+            // Exibir pacientes agrupados por canal
+            Object.entries(patientsByChannel).forEach(([channelId, channelData]) => {
+                const patientCount = channelData.patients.length;
+                
+                // Cabeçalho do canal
+                html += `
+                    <tr class="table-primary">
+                        <td colspan="7" class="fw-bold py-2">
+                            <div class="d-flex align-items-center justify-content-between">
+                                <div>
+                                    <i class="bi bi-funnel me-2"></i>
+                                    <strong>${this.escapeHtml(channelData.channelName)}</strong>
+                                    <span class="ms-2 text-muted">(${this.escapeHtml(channelData.channelNumber)})</span>
+                                    <span class="ms-2 text-info">- Filtrado por: ${this.escapeHtml(sectorName)}</span>
+                                </div>
+                                <div>
+                                    <span class="badge bg-primary">${patientCount} paciente${patientCount > 1 ? 's' : ''}</span>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+
+                // Pacientes do canal
+                channelData.patients.forEach(patient => {
+                    const channelInfo = this.getPatientChannelInfo(patient);
+                    
+                    html += `
+                        <tr class="table-light">
+                            <td>${this.escapeHtml(patient.name)}</td>
+                            <td>${this.escapeHtml(patient.phone)}</td>
+                            <td>${this.escapeHtml(patient.sectorName)}</td>
+                            <td>${channelInfo}</td>
+                            <td>${this.formatWaitTime(patient.waitTimeMinutes)}</td>
+                            <td>
+                                ${this.generateNextMessageInfo(patient)}
+                            </td>
+                            <td>
+                                <span class="badge bg-warning">Aguardando</span>
+                            </td>
+                        </tr>
+                    `;
+                });
+            });
+
+            tbody.innerHTML = html;
+            
+            console.log(`✅ Exibidos ${filteredPatients.length} pacientes filtrados do setor "${sectorName}"`);
+            
+        } catch (error) {
+            console.error('❌ Erro em displayFilteredPatients:', error);
+        }
     }
 
     /**

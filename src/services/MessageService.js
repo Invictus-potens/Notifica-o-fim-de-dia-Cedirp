@@ -639,6 +639,25 @@ class MessageService {
       return null;
     }
   }
+
+  /**
+   * Atualiza configurações do serviço de mensagens
+   */
+  updateConfig(newConfig) {
+    try {
+      console.log('⚙️ MessageService: Configurações atualizadas');
+      
+      // As configurações são obtidas dinamicamente do ConfigManager
+      // Não precisamos armazenar localmente, apenas logar a atualização
+      console.log('🔄 MessageService: Usando configurações atualizadas do sistema');
+      
+      // Se necessário, podemos reconfigurar action cards ou outros aspectos específicos aqui
+      
+    } catch (error) {
+      console.error('❌ Erro ao atualizar configurações do MessageService:', error);
+      this.errorHandler.logError(error, 'MessageService.updateConfig');
+    }
+  }
 }
 
 module.exports = { MessageService };

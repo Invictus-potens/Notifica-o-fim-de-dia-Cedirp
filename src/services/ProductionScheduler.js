@@ -313,8 +313,33 @@ class ProductionScheduler {
    * Atualiza configurações do agendador
    */
   updateConfig(newConfig) {
-    this.config = { ...this.config, ...newConfig };
-    console.log('⚙️ Configurações do agendador atualizadas:', this.config);
+    try {
+      // Atualizar configurações locais
+      this.config = { ...this.config, ...newConfig };
+      console.log('⚙️ Configurações do agendador atualizadas:', this.config);
+      
+      // Propagar mudanças para os serviços filhos se estiverem inicializados
+      if (this.monitoringService && typeof this.monitoringService.updateConfig === 'function') {
+        console.log('🔄 Propagando configurações para MonitoringService...');
+        this.monitoringService.updateConfig(this.configManager.getSystemConfig());
+      }
+      
+      if (this.messageService && typeof this.messageService.updateConfig === 'function') {
+        console.log('🔄 Propagando configurações para MessageService...');
+        this.messageService.updateConfig(this.configManager.getSystemConfig());
+      }
+      
+      if (this.cronService && typeof this.cronService.updateConfig === 'function') {
+        console.log('🔄 Propagando configurações para CronService...');
+        this.cronService.updateConfig(this.configManager.getSystemConfig());
+      }
+      
+      console.log('✅ Configurações propagadas para todos os serviços');
+      
+    } catch (error) {
+      console.error('❌ Erro ao atualizar configurações do agendador:', error);
+      this.errorHandler.logError(error, 'ProductionScheduler.updateConfig');
+    }
   }
 
   /**

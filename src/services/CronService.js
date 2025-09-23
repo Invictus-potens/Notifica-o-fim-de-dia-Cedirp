@@ -344,6 +344,25 @@ class CronService {
       return false;
     }
   }
+
+  /**
+   * Atualiza configurações do serviço de cron
+   */
+  updateConfig(newConfig) {
+    try {
+      console.log('⚙️ CronService: Configurações atualizadas');
+      
+      // As configurações são obtidas dinamicamente do ConfigManager
+      // Não precisamos armazenar localmente, apenas logar a atualização
+      console.log('🔄 CronService: Usando configurações atualizadas do sistema');
+      
+      // Se necessário, podemos reconfigurar jobs ou horários específicos aqui
+      
+    } catch (error) {
+      console.error('❌ Erro ao atualizar configurações do CronService:', error);
+      this.errorHandler.logError(error, 'CronService.updateConfig');
+    }
+  }
 }
 
 module.exports = { CronService };
