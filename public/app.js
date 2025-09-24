@@ -683,10 +683,16 @@ class AutomationInterface {
                 await this.loadActionCards();
             }
 
-            // SEGUNDO: Carregar histórico de mensagens para verificar status dos pacientes
+            // SEGUNDO: Carregar Setores para ter os nomes corretos
+            if (!this.availableSectors || this.availableSectors.length === 0) {
+                console.log('🏥 Carregando Setores antes dos pacientes...');
+                await this.loadSectors();
+            }
+
+            // TERCEIRO: Carregar histórico de mensagens para verificar status dos pacientes
             await this.loadMessageHistory();
 
-            // TERCEIRO: Carregar pacientes
+            // QUARTO: Carregar pacientes
             const response = await fetch('/api/patients');
             const data = await response.json();
 
@@ -763,7 +769,7 @@ class AutomationInterface {
                 </td>
                 <td>${this.escapeHtml(patient.name || 'Nome não informado')}</td>
                 <td>${this.escapeHtml(patient.phone || patient.number || '')}</td>
-                <td>${this.escapeHtml(patient.sectorName || patient.sector_name || 'Setor não informado')}</td>
+                <td>${this.getSectorName(patient.sectorId || patient.sector_id) || 'Setor não informado'}</td>
                 <td>${this.formatWaitTime(patient.waitTimeMinutes || 0)}</td>
                 <td>
                     ${this.generateNextMessageInfo(patient)}
@@ -780,6 +786,29 @@ class AutomationInterface {
         } catch (error) {
             console.error('Erro em displayPatients:', error);
         }
+    }
+
+    /**
+     * Obtém o nome do setor pelo ID
+     */
+    getSectorName(sectorId) {
+        console.log('🔍 getSectorName chamado com sectorId:', sectorId);
+        console.log('📋 availableSectors disponíveis:', this.availableSectors?.length || 0);
+        
+        if (!sectorId) {
+            console.log('❌ sectorId não fornecido');
+            return 'Setor não informado';
+        }
+        
+        if (!this.availableSectors || this.availableSectors.length === 0) {
+            console.log('❌ availableSectors não carregado');
+            return 'Setores não carregados';
+        }
+        
+        const sector = this.availableSectors.find(s => s.id === sectorId);
+        console.log('🔍 Setor encontrado:', sector);
+        
+        return sector ? sector.name : 'Setor não encontrado';
     }
 
     /**
