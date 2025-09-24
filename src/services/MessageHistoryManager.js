@@ -246,10 +246,31 @@ class MessageHistoryManager {
       }
       
       const content = fs.readFileSync(this.messagesFile, 'utf8');
+      
+      // Verificar se o arquivo está vazio ou contém apenas espaços
+      if (!content || content.trim() === '') {
+        console.warn('⚠️ Arquivo de mensagens está vazio, reinicializando...');
+        this.initializeMessagesFile();
+        return this.loadMessagesData(); // Recursão para carregar após reinicialização
+      }
+      
       return JSON.parse(content);
       
     } catch (error) {
       this.errorHandler.logError(error, 'MessageHistoryManager.loadMessagesData');
+      
+      // Se houve erro de parsing, tentar recriar o arquivo
+      if (error instanceof SyntaxError) {
+        console.warn('⚠️ Arquivo de mensagens corrompido, recriando...');
+        try {
+          this.initializeMessagesFile();
+          const content = fs.readFileSync(this.messagesFile, 'utf8');
+          return JSON.parse(content);
+        } catch (recoveryError) {
+          this.errorHandler.logError(recoveryError, 'MessageHistoryManager.loadMessagesData.recovery');
+        }
+      }
+      
       return {
         messages: [],
         lastCleanup: null,

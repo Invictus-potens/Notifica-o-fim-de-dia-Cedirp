@@ -1,103 +1,19 @@
 {
-  "excludedSectors": "[\"65eb53aa0e74e281e12ba594\",\"65eb5a0e681c0098402e5839\",\"65eb5a1a01515baa7f9c6b9f\",\"65eb5a217b2ad8749ef7aa42\",\"65eb5a270c00c6ae4943cdc6\",\"65eb5a3501515baa7fa15ef8\",\"65eb5a3c01515baa7fa25c4a\",\"65eb5a420c00c6ae49486316\",\"65eb5a4d973bd0cedb32efa2\",\"65f0a689746a222fbccc906c\",\"65ef29cf867543e1d040ec9f\",\"6627fab80f0dbc5420282b2b\",\"6627fac62c6fb7d3c7fb7aba\",\"6627fad02c6fb7d3c7fd6d78\",\"665090aef00af9d07c2a5e97\",\"682739784933d4656bf60583\"]",
+  "excludedSectors": "[\"65eb53aa0e74e281e12ba594\",\"65eb5a0e681c0098402e5839\",\"65eb5a1a01515baa7f9c6b9f\",\"65eb5a217b2ad8749ef7aa42\",\"65eb5a270c00c6ae4943cdc6\",\"65eb5a3501515baa7fa15ef8\",\"65eb5a3c01515baa7fa25c4a\",\"65eb5a420c00c6ae49486316\",\"65eb5a4d973bd0cedb32efa2\",\"65ef29cf867543e1d040ec9f\",\"65f0a689746a222fbccc906c\",\"6627fab80f0dbc5420282b2b\",\"6627fac62c6fb7d3c7fb7aba\",\"6627fad02c6fb7d3c7fd6d78\",\"665090aef00af9d07c2a5e97\",\"682739784933d4656bf60583\"]",
   "excludedChannels": "[]",
   "flowPaused": "false",
   "endOfDayPaused": "false",
   "ignoreBusinessHours": "true",
-  "minWaitTime": "120",
-  "maxWaitTime": "200",
+  "minWaitTime": "245",
+  "maxWaitTime": "250",
   "selectedActionCard": "631f2b4f307d23f46ac80a10",
   "selectedActionCard30Min": "68d2f410506558bc378e840c",
   "selectedActionCardEndDay": "68d2f43502376b8f3df8a088",
   "selectedTemplate": "",
   "startOfDayTime": "08:00",
-  "endOfDayTime": "23:00",
+  "endOfDayTime": "12:00",
   "saturdayStartTime": "08:00",
   "saturdayEndTime": "12:00",
   "logCleanupTime": "23:59",
-  "refreshInterval": "120",
-  "channels": [
-    {
-      "id": "anexo1-estoque",
-      "name": "ANEXO1-CLAROpré cel Estoque",
-      "number": "5516991003715",
-      "token": "66180b4e5852dcf886a0ffd0",
-      "active": true,
-      "priority": 1,
-      "department": "estoque",
-      "description": "Canal principal para setor de estoque"
-    },
-    {
-      "id": "whatsapp-oficial",
-      "name": "WhatsApp Oficial",
-      "number": "551639775100",
-      "token": "65f06d5b867543e1d094fa0f",
-      "active": true,
-      "priority": 1,
-      "department": "oficial",
-      "description": "Canal oficial principal"
-    },
-    {
-      "id": "confirmacao1",
-      "name": "Confirmação 1",
-      "number": "5516991703483",
-      "token": "6848611846467bfb329de619",
-      "active": true,
-      "priority": 2,
-      "department": "confirmacao",
-      "description": "Canal de confirmação 1"
-    },
-    {
-      "id": "confirmacao2-ti",
-      "name": "Confirmação 2 TI",
-      "number": "5516991703484",
-      "token": "68486231df08d48001f8951d",
-      "active": true,
-      "priority": 2,
-      "department": "ti",
-      "description": "Canal de TI"
-    },
-    {
-      "id": "confirmacao3-carla",
-      "name": "Confirmação 3 Carla",
-      "number": "5516991703485",
-      "token": "6878f61667716e87a4ca2fbd",
-      "active": true,
-      "priority": 3,
-      "department": "carla",
-      "description": "Canal da Carla"
-    }
-  ],
-  "channelMetrics": {
-    "anexo1-estoque": {
-      "messagesSent": 0,
-      "messagesFailed": 0,
-      "activeConversations": 0,
-      "lastActivity": null
-    },
-    "whatsapp-oficial": {
-      "messagesSent": 0,
-      "messagesFailed": 0,
-      "activeConversations": 0,
-      "lastActivity": null
-    },
-    "confirmacao1": {
-      "messagesSent": 0,
-      "messagesFailed": 0,
-      "activeConversations": 0,
-      "lastActivity": null
-    },
-    "confirmacao2-ti": {
-      "messagesSent": 0,
-      "messagesFailed": 0,
-      "activeConversations": 0,
-      "lastActivity": null
-    },
-    "confirmacao3-carla": {
-      "messagesSent": 0,
-      "messagesFailed": 0,
-      "activeConversations": 0,
-      "lastActivity": null
-    }
-  }
+  "refreshInterval": "120"
 }

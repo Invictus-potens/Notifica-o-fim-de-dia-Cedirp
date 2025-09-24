@@ -1,5 +1,357 @@
 [
   {
+    "id": "log_1758681111093_fjh3aw3l1",
+    "timestamp": "2025-09-24T02:31:51.093Z",
+    "level": "info",
+    "action": "Configurações Salvas",
+    "details": "Usuário salvou configurações do sistema",
+    "metadata": {
+      "startOfDayTime": "08:00",
+      "endOfDayTime": "12:00",
+      "minWaitTime": "245",
+      "maxWaitTime": "250",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36 OPR/121.0.0.0",
+      "ip": "::1"
+    },
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36 OPR/121.0.0.0",
+    "ip": "::1"
+  },
+  {
+    "id": "log_1758681085201_6ganpnbiw",
+    "timestamp": "2025-09-24T02:31:25.201Z",
+    "level": "info",
+    "action": "Configurações Salvas",
+    "details": "Usuário salvou configurações do sistema",
+    "metadata": {
+      "startOfDayTime": "08:00",
+      "endOfDayTime": "23:00",
+      "minWaitTime": "245",
+      "maxWaitTime": "250",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36 OPR/121.0.0.0",
+      "ip": "::1"
+    },
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36 OPR/121.0.0.0",
+    "ip": "::1"
+  },
+  {
+    "id": "log_1758681064788_r27mhkhkd",
+    "timestamp": "2025-09-24T02:31:04.788Z",
+    "level": "info",
+    "action": "Configurações Salvas",
+    "details": "Usuário salvou configurações do sistema",
+    "metadata": {
+      "startOfDayTime": "08:00",
+      "endOfDayTime": "23:00",
+      "minWaitTime": "345",
+      "maxWaitTime": "350",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36 OPR/121.0.0.0",
+      "ip": "::1"
+    },
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36 OPR/121.0.0.0",
+    "ip": "::1"
+  },
+  {
+    "id": "log_1758681016039_5favwk3us",
+    "timestamp": "2025-09-24T02:30:16.039Z",
+    "level": "info",
+    "action": "Configurações Salvas",
+    "details": "Usuário salvou configurações do sistema",
+    "metadata": {
+      "startOfDayTime": "08:00",
+      "endOfDayTime": "23:00",
+      "minWaitTime": "5",
+      "maxWaitTime": "10",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36 OPR/121.0.0.0",
+      "ip": "::1"
+    },
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36 OPR/121.0.0.0",
+    "ip": "::1"
+  },
+  {
+    "id": "log_1758680900560_ml1o1rmau",
+    "timestamp": "2025-09-24T02:28:20.560Z",
+    "level": "info",
+    "action": "Lista de Exclusão",
+    "details": "Usuário adicionou setor \"Confirmação\" à lista de exclusão",
+    "metadata": {
+      "sectorId": "682739784933d4656bf60583",
+      "sectorName": "Confirmação",
+      "action": "add",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36 OPR/121.0.0.0",
+      "ip": "::1"
+    },
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36 OPR/121.0.0.0",
+    "ip": "::1"
+  },
+  {
+    "id": "log_1758680898885_newc93g2x",
+    "timestamp": "2025-09-24T02:28:18.885Z",
+    "level": "info",
+    "action": "Lista de Exclusão",
+    "details": "Usuário adicionou setor \"Cancelar agendamento\" à lista de exclusão",
+    "metadata": {
+      "sectorId": "665090aef00af9d07c2a5e97",
+      "sectorName": "Cancelar agendamento",
+      "action": "add",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36 OPR/121.0.0.0",
+      "ip": "::1"
+    },
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36 OPR/121.0.0.0",
+    "ip": "::1"
+  },
+  {
+    "id": "log_1758680896941_zpv0kdn0o",
+    "timestamp": "2025-09-24T02:28:16.941Z",
+    "level": "info",
+    "action": "Lista de Exclusão",
+    "details": "Usuário adicionou setor \"Orçamento\" à lista de exclusão",
+    "metadata": {
+      "sectorId": "6627fad02c6fb7d3c7fd6d78",
+      "sectorName": "Orçamento",
+      "action": "add",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36 OPR/121.0.0.0",
+      "ip": "::1"
+    },
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36 OPR/121.0.0.0",
+    "ip": "::1"
+  },
+  {
+    "id": "log_1758680895017_jd35yr3bz",
+    "timestamp": "2025-09-24T02:28:15.017Z",
+    "level": "info",
+    "action": "Lista de Exclusão",
+    "details": "Usuário adicionou setor \"Impressão de exame\" à lista de exclusão",
+    "metadata": {
+      "sectorId": "6627fac62c6fb7d3c7fb7aba",
+      "sectorName": "Impressão de exame",
+      "action": "add",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36 OPR/121.0.0.0",
+      "ip": "::1"
+    },
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36 OPR/121.0.0.0",
+    "ip": "::1"
+  },
+  {
+    "id": "log_1758680893118_llcv0ot15",
+    "timestamp": "2025-09-24T02:28:13.118Z",
+    "level": "info",
+    "action": "Lista de Exclusão",
+    "details": "Usuário adicionou setor \"Resultados\" à lista de exclusão",
+    "metadata": {
+      "sectorId": "6627fab80f0dbc5420282b2b",
+      "sectorName": "Resultados",
+      "action": "add",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36 OPR/121.0.0.0",
+      "ip": "::1"
+    },
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36 OPR/121.0.0.0",
+    "ip": "::1"
+  },
+  {
+    "id": "log_1758680890804_4gnwtmhpf",
+    "timestamp": "2025-09-24T02:28:10.804Z",
+    "level": "info",
+    "action": "Lista de Exclusão",
+    "details": "Usuário adicionou setor \"Anexo\" à lista de exclusão",
+    "metadata": {
+      "sectorId": "65f0a689746a222fbccc906c",
+      "sectorName": "Anexo",
+      "action": "add",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36 OPR/121.0.0.0",
+      "ip": "::1"
+    },
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36 OPR/121.0.0.0",
+    "ip": "::1"
+  },
+  {
+    "id": "log_1758680888892_6d6kbn4ln",
+    "timestamp": "2025-09-24T02:28:08.892Z",
+    "level": "info",
+    "action": "Lista de Exclusão",
+    "details": "Usuário adicionou setor \"Outras informações\" à lista de exclusão",
+    "metadata": {
+      "sectorId": "65ef29cf867543e1d040ec9f",
+      "sectorName": "Outras informações",
+      "action": "add",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36 OPR/121.0.0.0",
+      "ip": "::1"
+    },
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36 OPR/121.0.0.0",
+    "ip": "::1"
+  },
+  {
+    "id": "log_1758680887016_tl1lmenie",
+    "timestamp": "2025-09-24T02:28:07.016Z",
+    "level": "info",
+    "action": "Lista de Exclusão",
+    "details": "Usuário adicionou setor \"Biopsias e Procedimentos\" à lista de exclusão",
+    "metadata": {
+      "sectorId": "65eb5a4d973bd0cedb32efa2",
+      "sectorName": "Biopsias e Procedimentos",
+      "action": "add",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36 OPR/121.0.0.0",
+      "ip": "::1"
+    },
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36 OPR/121.0.0.0",
+    "ip": "::1"
+  },
+  {
+    "id": "log_1758680884991_ebkibl0e4",
+    "timestamp": "2025-09-24T02:28:04.991Z",
+    "level": "info",
+    "action": "Lista de Exclusão",
+    "details": "Usuário adicionou setor \"Raio X\" à lista de exclusão",
+    "metadata": {
+      "sectorId": "65eb5a420c00c6ae49486316",
+      "sectorName": "Raio X",
+      "action": "add",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36 OPR/121.0.0.0",
+      "ip": "::1"
+    },
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36 OPR/121.0.0.0",
+    "ip": "::1"
+  },
+  {
+    "id": "log_1758680877765_mwtpe5p4w",
+    "timestamp": "2025-09-24T02:27:57.765Z",
+    "level": "info",
+    "action": "Lista de Exclusão",
+    "details": "Usuário adicionou setor \"Cardiologia\" à lista de exclusão",
+    "metadata": {
+      "sectorId": "65eb5a3c01515baa7fa25c4a",
+      "sectorName": "Cardiologia",
+      "action": "add",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36 OPR/121.0.0.0",
+      "ip": "::1"
+    },
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36 OPR/121.0.0.0",
+    "ip": "::1"
+  },
+  {
+    "id": "log_1758680873702_q3qrguo17",
+    "timestamp": "2025-09-24T02:27:53.702Z",
+    "level": "info",
+    "action": "Lista de Exclusão",
+    "details": "Usuário adicionou setor \"Densitometria Óssea\" à lista de exclusão",
+    "metadata": {
+      "sectorId": "65eb5a3501515baa7fa15ef8",
+      "sectorName": "Densitometria Óssea",
+      "action": "add",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36 OPR/121.0.0.0",
+      "ip": "::1"
+    },
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36 OPR/121.0.0.0",
+    "ip": "::1"
+  },
+  {
+    "id": "log_1758680871773_iur68omxv",
+    "timestamp": "2025-09-24T02:27:51.773Z",
+    "level": "info",
+    "action": "Lista de Exclusão",
+    "details": "Usuário adicionou setor \"Mamografia\" à lista de exclusão",
+    "metadata": {
+      "sectorId": "65eb5a270c00c6ae4943cdc6",
+      "sectorName": "Mamografia",
+      "action": "add",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36 OPR/121.0.0.0",
+      "ip": "::1"
+    },
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36 OPR/121.0.0.0",
+    "ip": "::1"
+  },
+  {
+    "id": "log_1758680870102_5myejrbir",
+    "timestamp": "2025-09-24T02:27:50.102Z",
+    "level": "info",
+    "action": "Lista de Exclusão",
+    "details": "Usuário adicionou setor \"Ultrassom\" à lista de exclusão",
+    "metadata": {
+      "sectorId": "65eb5a217b2ad8749ef7aa42",
+      "sectorName": "Ultrassom",
+      "action": "add",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36 OPR/121.0.0.0",
+      "ip": "::1"
+    },
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36 OPR/121.0.0.0",
+    "ip": "::1"
+  },
+  {
+    "id": "log_1758680868720_r0s49n3mk",
+    "timestamp": "2025-09-24T02:27:48.720Z",
+    "level": "info",
+    "action": "Lista de Exclusão",
+    "details": "Usuário adicionou setor \"Tomografia Computadorizada\" à lista de exclusão",
+    "metadata": {
+      "sectorId": "65eb5a1a01515baa7f9c6b9f",
+      "sectorName": "Tomografia Computadorizada",
+      "action": "add",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36 OPR/121.0.0.0",
+      "ip": "::1"
+    },
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36 OPR/121.0.0.0",
+    "ip": "::1"
+  },
+  {
+    "id": "log_1758680867296_i91p2wukh",
+    "timestamp": "2025-09-24T02:27:47.296Z",
+    "level": "info",
+    "action": "Lista de Exclusão",
+    "details": "Usuário adicionou setor \"Ressonância Magnética\" à lista de exclusão",
+    "metadata": {
+      "sectorId": "65eb5a0e681c0098402e5839",
+      "sectorName": "Ressonância Magnética",
+      "action": "add",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36 OPR/121.0.0.0",
+      "ip": "::1"
+    },
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36 OPR/121.0.0.0",
+    "ip": "::1"
+  },
+  {
+    "id": "log_1758680865502_vkkoef231",
+    "timestamp": "2025-09-24T02:27:45.502Z",
+    "level": "info",
+    "action": "Lista de Exclusão",
+    "details": "Usuário adicionou setor \"Grupos WhatsApp/Setor geral\" à lista de exclusão",
+    "metadata": {
+      "sectorId": "65eb53aa0e74e281e12ba594",
+      "sectorName": "Grupos WhatsApp/Setor geral",
+      "action": "add",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36 OPR/121.0.0.0",
+      "ip": "::1"
+    },
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36 OPR/121.0.0.0",
+    "ip": "::1"
+  },
+  {
+    "id": "log_1758680856178_5rq29gwx0",
+    "timestamp": "2025-09-24T02:27:36.178Z",
+    "level": "info",
+    "action": "Controle de Fluxo",
+    "details": "Usuário retomou o fluxo de mensagens automáticas",
+    "metadata": {
+      "action": "resume",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36 OPR/121.0.0.0",
+      "ip": "::1"
+    },
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36 OPR/121.0.0.0",
+    "ip": "::1"
+  },
+  {
+    "id": "log_1758680856036_wer0n1ook",
+    "timestamp": "2025-09-24T02:27:36.036Z",
+    "level": "warning",
+    "action": "Controle de Fluxo",
+    "details": "Usuário pausou o fluxo de mensagens automáticas",
+    "metadata": {
+      "action": "pause",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36 OPR/121.0.0.0",
+      "ip": "::1"
+    },
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36 OPR/121.0.0.0",
+    "ip": "::1"
+  },
+  {
     "id": "log_1758675306548_m5f1p442h",
     "timestamp": "2025-09-24T00:55:06.548Z",
     "level": "info",
