@@ -9,7 +9,7 @@
     "channelId": "65f06d5b867543e1d094fa0f",
     "channelType": "WhatsApp Business (Principal)",
     "waitStartTime": "2025-09-24T11:35:06.109Z",
-    "waitTimeMinutes": 0,
+    "waitTimeMinutes": 6,
     "status": "waiting",
     "enteredAt": "2025-09-24T11:36:31.449Z"
   },
@@ -23,7 +23,7 @@
     "channelId": "65f06d5b867543e1d094fa0f",
     "channelType": "WhatsApp Business (Principal)",
     "waitStartTime": "2025-09-24T11:33:16.321Z",
-    "waitTimeMinutes": 2,
+    "waitTimeMinutes": 8,
     "status": "waiting",
     "enteredAt": "2025-09-24T11:36:31.449Z"
   },
@@ -37,7 +37,7 @@
     "channelId": "65f06d5b867543e1d094fa0f",
     "channelType": "WhatsApp Business (Principal)",
     "waitStartTime": "2025-09-24T11:32:05.366Z",
-    "waitTimeMinutes": 3,
+    "waitTimeMinutes": 10,
     "status": "waiting",
     "enteredAt": "2025-09-24T11:33:04.631Z"
   },
@@ -51,7 +51,7 @@
     "channelId": "65f06d5b867543e1d094fa0f",
     "channelType": "WhatsApp Business (Principal)",
     "waitStartTime": "2025-09-24T11:28:29.356Z",
-    "waitTimeMinutes": 5,
+    "waitTimeMinutes": 11,
     "status": "waiting",
     "enteredAt": "2025-09-24T11:32:04.623Z"
   },
@@ -65,7 +65,7 @@
     "channelId": "65f06d5b867543e1d094fa0f",
     "channelType": "WhatsApp Business (Principal)",
     "waitStartTime": "2025-09-24T11:28:26.917Z",
-    "waitTimeMinutes": 7,
+    "waitTimeMinutes": 13,
     "status": "waiting",
     "enteredAt": "2025-09-24T11:30:04.176Z"
   },
@@ -79,7 +79,7 @@
     "channelId": "65f06d5b867543e1d094fa0f",
     "channelType": "WhatsApp Business (Principal)",
     "waitStartTime": "2025-09-24T11:28:09.420Z",
-    "waitTimeMinutes": 1,
+    "waitTimeMinutes": 8,
     "status": "waiting",
     "enteredAt": "2025-09-24T11:36:31.449Z"
   },
@@ -93,7 +93,7 @@
     "channelId": "65f06d5b867543e1d094fa0f",
     "channelType": "WhatsApp Business (Principal)",
     "waitStartTime": "2025-09-24T11:27:37.163Z",
-    "waitTimeMinutes": 5,
+    "waitTimeMinutes": 12,
     "status": "waiting",
     "enteredAt": "2025-09-24T11:31:05.056Z"
   },
@@ -107,7 +107,7 @@
     "channelId": "65f06d5b867543e1d094fa0f",
     "channelType": "WhatsApp Business (Principal)",
     "waitStartTime": "2025-09-24T11:23:41.730Z",
-    "waitTimeMinutes": 11,
+    "waitTimeMinutes": 18,
     "status": "waiting",
     "enteredAt": "2025-09-24T11:25:49.987Z"
   },
@@ -121,7 +121,7 @@
     "channelId": "65f06d5b867543e1d094fa0f",
     "channelType": "WhatsApp Business (Principal)",
     "waitStartTime": "2025-09-24T11:22:49.999Z",
-    "waitTimeMinutes": 12,
+    "waitTimeMinutes": 19,
     "status": "waiting",
     "enteredAt": "2025-09-24T11:24:05.780Z"
   },
@@ -135,7 +135,7 @@
     "channelId": "65f06d5b867543e1d094fa0f",
     "channelType": "WhatsApp Business (Principal)",
     "waitStartTime": "2025-09-24T11:22:19.257Z",
-    "waitTimeMinutes": 13,
+    "waitTimeMinutes": 19,
     "status": "waiting",
     "enteredAt": "2025-09-24T11:24:05.780Z"
   },
@@ -149,7 +149,7 @@
     "channelId": "65f06d5b867543e1d094fa0f",
     "channelType": "WhatsApp Business (Principal)",
     "waitStartTime": "2025-09-24T11:20:50.773Z",
-    "waitTimeMinutes": 13,
+    "waitTimeMinutes": 20,
     "status": "waiting",
     "enteredAt": "2025-09-24T11:22:51.764Z"
   },
@@ -163,7 +163,7 @@
     "channelId": "65f06d5b867543e1d094fa0f",
     "channelType": "WhatsApp Business (Principal)",
     "waitStartTime": "2025-09-24T11:20:15.153Z",
-    "waitTimeMinutes": 7,
+    "waitTimeMinutes": 13,
     "status": "waiting",
     "enteredAt": "2025-09-24T11:30:04.176Z"
   },
@@ -177,7 +177,7 @@
     "channelId": "65f06d5b867543e1d094fa0f",
     "channelType": "WhatsApp Business (Principal)",
     "waitStartTime": "2025-09-24T11:19:55.618Z",
-    "waitTimeMinutes": 14,
+    "waitTimeMinutes": 21,
     "status": "waiting",
     "enteredAt": "2025-09-24T11:22:05.765Z"
   },
@@ -191,7 +191,7 @@
     "channelId": "65f06d5b867543e1d094fa0f",
     "channelType": "WhatsApp Business (Principal)",
     "waitStartTime": "2025-09-24T11:17:12.437Z",
-    "waitTimeMinutes": 15,
+    "waitTimeMinutes": 22,
     "status": "waiting",
     "enteredAt": "2025-09-24T11:20:51.729Z"
   },
@@ -205,7 +205,7 @@
     "channelId": "65f06d5b867543e1d094fa0f",
     "channelType": "WhatsApp Business (Principal)",
     "waitStartTime": "2025-09-24T11:17:07.220Z",
-    "waitTimeMinutes": 18,
+    "waitTimeMinutes": 24,
     "status": "waiting",
     "enteredAt": "2025-09-24T11:18:51.293Z"
   },
@@ -219,7 +219,7 @@
     "channelId": "65f06d5b867543e1d094fa0f",
     "channelType": "WhatsApp Business (Principal)",
     "waitStartTime": "2025-09-24T11:16:36.046Z",
-    "waitTimeMinutes": 18,
+    "waitTimeMinutes": 25,
     "status": "waiting",
     "enteredAt": "2025-09-24T11:17:36.723Z"
   },
@@ -233,7 +233,7 @@
     "channelId": "65f06d5b867543e1d094fa0f",
     "channelType": "WhatsApp Business (Principal)",
     "waitStartTime": "2025-09-24T11:15:02.267Z",
-    "waitTimeMinutes": 16,
+    "waitTimeMinutes": 22,
     "status": "waiting",
     "enteredAt": "2025-09-24T11:20:51.729Z"
   },
@@ -247,7 +247,7 @@
     "channelId": "65f06d5b867543e1d094fa0f",
     "channelType": "WhatsApp Business (Principal)",
     "waitStartTime": "2025-09-24T11:14:07.699Z",
-    "waitTimeMinutes": 15,
+    "waitTimeMinutes": 21,
     "status": "waiting",
     "enteredAt": "2025-09-24T11:22:05.766Z"
   },
@@ -261,7 +261,7 @@
     "channelId": "65f06d5b867543e1d094fa0f",
     "channelType": "WhatsApp Business (Principal)",
     "waitStartTime": "2025-09-24T11:10:44.863Z",
-    "waitTimeMinutes": 23,
+    "waitTimeMinutes": 30,
     "status": "waiting",
     "enteredAt": "2025-09-24T11:13:00.743Z"
   },
@@ -275,7 +275,7 @@
     "channelId": "65f06d5b867543e1d094fa0f",
     "channelType": "WhatsApp Business (Principal)",
     "waitStartTime": "2025-09-24T11:07:43.568Z",
-    "waitTimeMinutes": 27,
+    "waitTimeMinutes": 34,
     "status": "waiting",
     "enteredAt": "2025-09-24T11:12:51.976Z"
   },
@@ -289,7 +289,7 @@
     "channelId": "65f06d5b867543e1d094fa0f",
     "channelType": "WhatsApp Business (Principal)",
     "waitStartTime": "2025-09-24T11:07:34.485Z",
-    "waitTimeMinutes": 27,
+    "waitTimeMinutes": 33,
     "status": "waiting",
     "enteredAt": "2025-09-24T11:12:51.976Z"
   },
@@ -303,7 +303,7 @@
     "channelId": "65f06d5b867543e1d094fa0f",
     "channelType": "WhatsApp Business (Principal)",
     "waitStartTime": "2025-09-24T11:07:02.849Z",
-    "waitTimeMinutes": 28,
+    "waitTimeMinutes": 34,
     "status": "waiting",
     "enteredAt": "2025-09-24T11:12:51.976Z"
   },
@@ -317,7 +317,7 @@
     "channelId": "65f06d5b867543e1d094fa0f",
     "channelType": "WhatsApp Business (Principal)",
     "waitStartTime": "2025-09-24T11:05:16.270Z",
-    "waitTimeMinutes": 26,
+    "waitTimeMinutes": 32,
     "status": "waiting",
     "enteredAt": "2025-09-24T11:12:51.976Z"
   },
@@ -331,7 +331,7 @@
     "channelId": "65f06d5b867543e1d094fa0f",
     "channelType": "WhatsApp Business (Principal)",
     "waitStartTime": "2025-09-24T11:05:13.570Z",
-    "waitTimeMinutes": 21,
+    "waitTimeMinutes": 27,
     "status": "waiting",
     "enteredAt": "2025-09-24T11:16:01.489Z"
   },
@@ -345,7 +345,7 @@
     "channelId": "65f06d5b867543e1d094fa0f",
     "channelType": "WhatsApp Business (Principal)",
     "waitStartTime": "2025-09-24T11:04:20.670Z",
-    "waitTimeMinutes": 29,
+    "waitTimeMinutes": 35,
     "status": "waiting",
     "enteredAt": "2025-09-24T11:12:51.976Z"
   }

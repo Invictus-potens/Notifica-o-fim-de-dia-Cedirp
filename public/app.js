@@ -711,6 +711,10 @@ class AutomationInterface {
                 await this.loadActionCards();
             }
             
+            // IMPORTANTE: Armazenar pacientes para filtro funcionar
+            this.patients = patients;
+            console.log('💾 Pacientes armazenados para filtro:', this.patients.length);
+            
             this.displayPatients(patients);
             
             // Update total waiting count in dashboard
@@ -2664,6 +2668,7 @@ class AutomationInterface {
      */
     filterPatientsBySector(sectorId) {
         console.log('🔍 Filtrando pacientes por setor:', sectorId);
+        console.log('📋 Pacientes disponíveis:', this.patients?.length || 0);
         
         if (!sectorId) {
             // Mostrar todos os pacientes
@@ -2672,9 +2677,11 @@ class AutomationInterface {
         }
         
         // Filtrar pacientes pelo setor selecionado
-        const filteredPatients = this.patients.filter(patient => 
-            patient.sectorId === sectorId
-        );
+        const filteredPatients = this.patients.filter(patient => {
+            const patientSectorId = patient.sectorId || patient.sector_id;
+            console.log(`🔍 Paciente ${patient.name}: sectorId=${patientSectorId}, filtro=${sectorId}`);
+            return patientSectorId === sectorId;
+        });
         
         console.log(`📊 Filtrados ${filteredPatients.length} pacientes do setor ${sectorId}`);
         this.displayPatients(filteredPatients);
