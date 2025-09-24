@@ -749,7 +749,7 @@ class AutomationInterface {
             if (patients.length === 0) {
                 tbody.innerHTML = `
                     <tr>
-                        <td colspan="7" class="text-center text-muted py-4">
+                        <td colspan="6" class="text-center text-muted py-4">
                             Nenhum atendimento em espera
                         </td>
                     </tr>
@@ -760,13 +760,6 @@ class AutomationInterface {
             tbody.innerHTML = patients.map(patient => {
                 return `
             <tr>
-                <td>
-                    <input type="checkbox" class="form-check-input patient-checkbox" 
-                           data-patient-id="${patient.id}" 
-                           data-patient-name="${this.escapeHtml(patient.name || 'Nome não informado')}"
-                           data-patient-phone="${this.escapeHtml(patient.phone || patient.number || '')}"
-                           data-contact-id="${patient.contactId || patient.id}">
-                </td>
                 <td>${this.escapeHtml(patient.name || 'Nome não informado')}</td>
                 <td>${this.escapeHtml(patient.phone || patient.number || '')}</td>
                 <td>${this.getSectorName(patient.sectorId || patient.sector_id) || 'Setor não informado'}</td>
@@ -781,8 +774,7 @@ class AutomationInterface {
         `;
         }).join('');
 
-            // Adicionar event listeners para os checkboxes
-            this.setupPatientSelection();
+            // Checkboxes removidos - sistema agora é apenas automático
         } catch (error) {
             console.error('Erro em displayPatients:', error);
         }
@@ -2204,14 +2196,12 @@ class AutomationInterface {
                     'Action Cards Configurados', 
                     'Usuário atualizou configurações de Action Cards',
                     { 
-                        actionCardDefault: finalActionCard,
                         actionCard30Min: finalActionCard30Min,
                         actionCardEndDay: finalActionCardEndDay
                     }
                 );
                 
                 // 6. Atualizar visualmente os campos com os valores finais
-                if (actionCardSelect) actionCardSelect.value = finalActionCard || '';
                 if (actionCard30MinSelect) actionCard30MinSelect.value = finalActionCard30Min || '';
                 if (actionCardEndDaySelect) actionCardEndDaySelect.value = finalActionCardEndDay || '';
                 

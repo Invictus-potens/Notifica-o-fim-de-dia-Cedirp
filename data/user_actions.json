@@ -1,5 +1,52 @@
 [
   {
+    "id": "log_1758713792578_byaxqmie5",
+    "timestamp": "2025-09-24T11:36:32.578Z",
+    "level": "info",
+    "action": "Action Cards Configurados",
+    "details": "Usuário atualizou configurações de Action Cards",
+    "metadata": {
+      "actionCard30Min": "65eb53aa0e74e281e12ba122",
+      "actionCardEndDay": "65eb53aa0e74e281e12ba274",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0",
+      "ip": "::1"
+    },
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0",
+    "ip": "::1"
+  },
+  {
+    "id": "log_1758713704074_gzj7p5k8b",
+    "timestamp": "2025-09-24T11:35:04.074Z",
+    "level": "info",
+    "action": "Card de ação fim de dia selecionado: Mensagem transferência padrão",
+    "details": "Seleção de Card",
+    "metadata": {
+      "cardId": "65eb53aa0e74e281e12ba274",
+      "cardName": "Mensagem transferência padrão",
+      "type": "endday",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0",
+      "ip": "::1"
+    },
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0",
+    "ip": "::1"
+  },
+  {
+    "id": "log_1758713703260_xl7j11j0h",
+    "timestamp": "2025-09-24T11:35:03.260Z",
+    "level": "info",
+    "action": "Card de ação 30min selecionado: Mensagem finalização padrão",
+    "details": "Seleção de Card",
+    "metadata": {
+      "cardId": "65eb53aa0e74e281e12ba122",
+      "cardName": "Mensagem finalização padrão",
+      "type": "30min",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0",
+      "ip": "::1"
+    },
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0",
+    "ip": "::1"
+  },
+  {
     "id": "log_1758712763588_kz80zmgqp",
     "timestamp": "2025-09-24T11:19:23.588Z",
     "level": "warning",
