@@ -61,23 +61,45 @@ class MessageService {
       const phone = patient.phone;
       console.log(`📤 Preparando envio de mensagem para ${patient.name} (${phone})`);
       
-      // 1. Verificar se já existe contexto de conversa
-      let channel = this.multiChannelManager.getChannelForConversation(phone);
+      // 1. Usar canal específico do paciente (se disponível)
+      let channel = null;
       
-      if (!channel) {
-        // 2. Nova conversa - escolher canal apropriado
-        channel = this.multiChannelManager.getBestChannelForPatient(patient);
+      if (patient.channelId && patient.channelName && patient.channelNumber) {
+        // Usar canal específico do paciente
+        channel = {
+          id: patient.channelId,
+          name: patient.channelName,
+          number: patient.channelNumber,
+          token: patient.channelToken
+        };
+        
+        // Criar apiClient para o canal específico
+        const { KrolikApiClient } = require('./KrolikApiClient');
+        channel.apiClient = new KrolikApiClient(
+          process.env.KROLIK_API_BASE_URL || 'https://api.camkrolik.com.br',
+          patient.channelToken
+        );
+        
+        console.log(`📞 Usando canal específico do paciente: ${channel.name} (${channel.number})`);
+      } else {
+        // Fallback: verificar se já existe contexto de conversa
+        channel = this.multiChannelManager.getChannelForConversation(phone);
         
         if (!channel) {
-          throw new Error('Nenhum canal ativo disponível');
+          // 2. Nova conversa - escolher canal apropriado
+          channel = this.multiChannelManager.getBestChannelForPatient(patient);
+          
+          if (!channel) {
+            throw new Error('Nenhum canal ativo disponível');
+          }
+          
+          // 3. Registrar novo contexto de conversa
+          this.multiChannelManager.registerConversation(phone, channel.id);
+          
+          console.log(`🆕 Nova conversa: ${phone} -> ${channel.name} (${channel.number})`);
+        } else {
+          console.log(`🔄 Continuando conversa: ${phone} -> ${channel.name} (${channel.number})`);
         }
-        
-        // 3. Registrar novo contexto de conversa
-        this.multiChannelManager.registerConversation(phone, channel.id);
-        
-        console.log(`🆕 Nova conversa: ${phone} -> ${channel.name} (${channel.number})`);
-      } else {
-        console.log(`🔄 Continuando conversa: ${phone} -> ${channel.name} (${channel.number})`);
       }
 
       // 4. Usar action card ID fornecido ou o padrão da configuração

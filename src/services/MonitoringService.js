@@ -58,45 +58,116 @@ class MonitoringService {
   }
 
   /**
-   * Executa verificação de pacientes elegíveis
+   * Executa verificação de pacientes elegíveis por canal
    */
   async checkEligiblePatients() {
     try {
-      if (!this.isInitialized || !this.krolikApiClient) {
-        throw new Error('MonitoringService não inicializado ou API não disponível');
+      if (!this.isInitialized) {
+        throw new Error('MonitoringService não inicializado');
       }
 
-      console.log('🔍 Verificando pacientes elegíveis...\n');
+      console.log('🔍 Verificando pacientes elegíveis por canal...');
       
-      // 1. Buscar pacientes atuais da API
-      const apiPatients = await this.krolikApiClient.listWaitingAttendances();
-      console.log(`📊 ${apiPatients.length} pacientes encontrados na API`);
+      // 1. Obter todos os canais configurados
+      const channels = this.configManager.getChannels();
+      console.log(`📱 Verificando ${channels.length} canais configurados`);
       
-      // 2. Atualizar lista de pacientes ativos
-      const updateStats = await this.jsonPatientManager.updateActivePatients(apiPatients);
-      console.log(`📈 Pacientes atualizados: +${updateStats.new} ~${updateStats.updated} -${updateStats.removed}`);
+      const allResults = {
+        eligible30Min: [],
+        eligibleEndOfDay: [],
+        totalActive: 0,
+        updateStats: { new: 0, updated: 0, removed: 0 },
+        channelResults: []
+      };
       
-      // 3. Buscar pacientes elegíveis para mensagem de 30min
-      const eligible30Min = await this.getEligiblePatientsFor30MinMessage();
-      console.log(`⏰ ${eligible30Min.length} pacientes elegíveis para mensagem de 30min`);
+      // 2. Processar cada canal separadamente
+      for (const channel of channels) {
+        if (!channel.active) {
+          console.log(`⏸️ Canal ${channel.name} está inativo - pulando`);
+          continue;
+        }
+        
+        try {
+          console.log(`📞 Processando canal: ${channel.name} (${channel.number})`);
+          
+          // Verificar se token existe
+          if (!channel.token) {
+            console.error(`❌ Token não encontrado para canal ${channel.name}`);
+            continue;
+          }
+          
+          // Criar cliente API específico para este canal
+          const { KrolikApiClient } = require('./KrolikApiClient');
+          const channelApiClient = new KrolikApiClient(
+            process.env.KROLIK_API_BASE_URL || 'https://api.camkrolik.com.br',
+            channel.token
+          );
+          
+          // Buscar pacientes aguardando neste canal específico
+          const channelPatients = await channelApiClient.listWaitingAttendances();
+          console.log(`👥 Canal ${channel.name}: ${channelPatients.length} pacientes aguardando`);
+          
+          if (channelPatients.length === 0) {
+            console.log(`📭 Canal ${channel.name}: Nenhum paciente aguardando`);
+            continue;
+          }
+          
+          // Adicionar informações do canal aos pacientes
+          const patientsWithChannel = channelPatients.map(patient => ({
+            ...patient,
+            channelId: channel.id,
+            channelName: channel.name,
+            channelNumber: channel.number,
+            channelToken: channel.token
+          }));
+          
+          // Atualizar lista de pacientes ativos para este canal
+          const updateStats = await this.jsonPatientManager.updateActivePatients(patientsWithChannel);
+          console.log(`📈 Canal ${channel.name}: +${updateStats.new} ~${updateStats.updated} -${updateStats.removed}`);
+          
+          // Buscar pacientes elegíveis para mensagem de 30min neste canal
+          const eligible30Min = await this.getEligiblePatientsFor30MinMessageByChannel(channel.id);
+          console.log(`⏰ Canal ${channel.name}: ${eligible30Min.length} pacientes elegíveis para mensagem de 30min`);
+          
+          // Buscar pacientes elegíveis para mensagem de fim de dia neste canal
+          const eligibleEndOfDay = await this.getEligiblePatientsForEndOfDayMessageByChannel(channel.id);
+          console.log(`🌅 Canal ${channel.name}: ${eligibleEndOfDay.length} pacientes elegíveis para mensagem de fim de dia`);
+          
+          // Adicionar aos resultados gerais
+          allResults.eligible30Min.push(...eligible30Min);
+          allResults.eligibleEndOfDay.push(...eligibleEndOfDay);
+          allResults.totalActive += channelPatients.length;
+          allResults.updateStats.new += updateStats.new;
+          allResults.updateStats.updated += updateStats.updated;
+          allResults.updateStats.removed += updateStats.removed;
+          
+          // Armazenar resultados por canal
+          allResults.channelResults.push({
+            channelId: channel.id,
+            channelName: channel.name,
+            channelNumber: channel.number,
+            totalPatients: channelPatients.length,
+            eligible30Min: eligible30Min.length,
+            eligibleEndOfDay: eligibleEndOfDay.length,
+            updateStats
+          });
+          
+        } catch (channelError) {
+          console.error(`❌ Erro ao processar canal ${channel.name}:`, channelError.message);
+          this.errorHandler.logError(channelError, `MonitoringService.checkEligiblePatients.channel.${channel.id}`);
+        }
+      }
       
-      // 4. Buscar pacientes elegíveis para mensagem de fim de dia
-      const eligibleEndOfDay = await this.getEligiblePatientsForEndOfDayMessage();
-      console.log(`🌅 ${eligibleEndOfDay.length} pacientes elegíveis para mensagem de fim de dia`);
-      
-      // 5. Atualizar estatísticas
+      // 3. Atualizar estatísticas
       this.updateStats();
       
-      return {
-        eligible30Min,
-        eligibleEndOfDay,
-        totalActive: apiPatients.length,
-        updateStats
-      };
+      console.log(`📊 RESUMO: ${allResults.channelResults.length} canais | ${allResults.totalActive} pacientes | 30min: ${allResults.eligible30Min.length} | Fim dia: ${allResults.eligibleEndOfDay.length}`);
+      
+      return allResults;
       
     } catch (error) {
       this.stats.errors++;
-      this.errorHandler.logError(error, 'MonitoringService.checkEligiblePatients');
+      this.errorHandler.error('Erro ao verificar pacientes elegíveis', 'MonitoringService.checkEligiblePatients', error);
       throw error;
     }
   }
@@ -128,6 +199,35 @@ class MonitoringService {
   }
 
   /**
+   * Obtém pacientes elegíveis para mensagem de 30 minutos por canal específico
+   */
+  async getEligiblePatientsFor30MinMessageByChannel(channelId) {
+    try {
+      const activePatients = await this.jsonPatientManager.loadPatientsFromFile(
+        this.jsonPatientManager.files.active
+      );
+      
+      // Filtrar pacientes apenas do canal específico
+      const channelPatients = activePatients.filter(patient => patient.channelId === channelId);
+      
+      const eligiblePatients = [];
+      
+      for (const patient of channelPatients) {
+        // Verificar critérios de elegibilidade
+        if (await this.isPatientEligibleFor30MinMessage(patient)) {
+          eligiblePatients.push(patient);
+        }
+      }
+      
+      return eligiblePatients;
+      
+    } catch (error) {
+      this.errorHandler.logError(error, 'MonitoringService.getEligiblePatientsFor30MinMessageByChannel');
+      return [];
+    }
+  }
+
+  /**
    * Obtém pacientes elegíveis para mensagem de fim de dia
    */
   async getEligiblePatientsForEndOfDayMessage() {
@@ -149,6 +249,35 @@ class MonitoringService {
       
     } catch (error) {
       this.errorHandler.logError(error, 'MonitoringService.getEligiblePatientsForEndOfDayMessage');
+      return [];
+    }
+  }
+
+  /**
+   * Obtém pacientes elegíveis para mensagem de fim de dia por canal específico
+   */
+  async getEligiblePatientsForEndOfDayMessageByChannel(channelId) {
+    try {
+      const activePatients = await this.jsonPatientManager.loadPatientsFromFile(
+        this.jsonPatientManager.files.active
+      );
+      
+      // Filtrar pacientes apenas do canal específico
+      const channelPatients = activePatients.filter(patient => patient.channelId === channelId);
+      
+      const eligiblePatients = [];
+      
+      for (const patient of channelPatients) {
+        // Verificar critérios de elegibilidade para fim de dia
+        if (await this.isPatientEligibleForEndOfDayMessage(patient)) {
+          eligiblePatients.push(patient);
+        }
+      }
+      
+      return eligiblePatients;
+      
+    } catch (error) {
+      this.errorHandler.logError(error, 'MonitoringService.getEligiblePatientsForEndOfDayMessageByChannel');
       return [];
     }
   }

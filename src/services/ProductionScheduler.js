@@ -140,8 +140,12 @@ class ProductionScheduler {
    */
   async handlePatientCheck() {
     try {
-      console.log('\n\n\n🔍 ===============================================');
+      // Limpar terminal para manter logs limpos
+      console.clear();
+      
+      console.log('🔍 ===============================================');
       console.log('   INICIANDO NOVO CICLO DE VERIFICAÇÃO');
+      console.log(`   ${new Date().toLocaleString('pt-BR')}`);
       console.log('===============================================');
       
       // Verificar se é horário comercial (considerando configuração ignoreBusinessHours)
@@ -174,40 +178,95 @@ class ProductionScheduler {
       }
       
       console.log('✅ CICLO DE VERIFICAÇÃO CONCLUÍDO');
-      console.log('===============================================\n');
+      console.log('===============================================');
       
     } catch (error) {
       console.log('❌ ERRO NO CICLO DE VERIFICAÇÃO');
-      console.log('===============================================\n');
+      console.log('===============================================');
       this.errorHandler.logError(error, 'ProductionScheduler.handlePatientCheck');
     }
   }
 
   /**
-   * Manipula mensagens de 30 minutos
+   * Manipula mensagens de 30 minutos por canal
    */
   async handle30MinuteMessages(eligiblePatients) {
     try {
       console.log(`⏰ Processando ${eligiblePatients.length} pacientes elegíveis para mensagem de 30min...`);
       
-      const results = await this.messageService.send30MinuteMessages(eligiblePatients);
+      // Agrupar pacientes por canal
+      const patientsByChannel = this.groupPatientsByChannel(eligiblePatients);
       
-      // Marcar pacientes como processados no JsonPatientManager
-      for (const patient of eligiblePatients) {
-        await this.monitoringService.jsonPatientManager.markPatientAsProcessed(patient.id, results.messageInfo);
+      const allResults = {
+        sent: 0,
+        failed: 0,
+        channelResults: []
+      };
+      
+      // Processar cada canal separadamente
+      for (const [channelId, channelPatients] of Object.entries(patientsByChannel)) {
+        try {
+          console.log(`📞 Canal ${channelId}: ${channelPatients.length} pacientes`);
+          
+          // Criar MessageService específico para este canal
+          const { MessageService } = require('./MessageService');
+          const channelMessageService = new MessageService(this.errorHandler, this.configManager);
+          
+          // Obter token do canal
+          const channel = this.configManager.getChannelById(channelId);
+          if (!channel) {
+            console.error(`❌ Canal ${channelId} não encontrado`);
+            continue;
+          }
+          
+          // Verificar se token existe
+          if (!channel.token) {
+            console.error(`❌ Token não encontrado para canal ${channel.name}`);
+            continue;
+          }
+          
+          // Inicializar MessageService com token do canal
+          await channelMessageService.initialize({
+            baseURL: process.env.KROLIK_API_BASE_URL || 'https://api.camkrolik.com.br',
+            token: channel.token
+          });
+          
+          // Enviar mensagens usando o token do canal
+          const results = await channelMessageService.send30MinuteMessages(channelPatients);
+          
+          // Marcar pacientes como processados
+          for (const patient of channelPatients) {
+            await this.monitoringService.jsonPatientManager.markPatientAsProcessed(patient.id, results.messageInfo);
+          }
+          
+          allResults.sent += results.sent;
+          allResults.failed += results.failed;
+          allResults.channelResults.push({
+            channelId,
+            channelName: channel.name,
+            sent: results.sent,
+            failed: results.failed
+          });
+          
+          console.log(`✅ Canal ${channel.name}: ${results.sent} enviadas, ${results.failed} falharam`);
+          
+        } catch (channelError) {
+          console.error(`❌ Erro ao processar canal ${channelId}:`, channelError.message);
+          this.errorHandler.error('Erro ao processar canal', `ProductionScheduler.handle30MinuteMessages.channel.${channelId}`, channelError);
+        }
       }
       
-      console.log(`✅ Mensagens de 30min processadas: ${results.sent} enviadas, ${results.failed} falharam`);
+      console.log(`✅ 30min: ${allResults.sent} enviadas, ${allResults.failed} falharam`);
       
-      return results;
+      return allResults;
       
     } catch (error) {
-      this.errorHandler.logError(error, 'ProductionScheduler.handle30MinuteMessages');
+      this.errorHandler.error('Erro ao processar mensagens de 30min', 'ProductionScheduler.handle30MinuteMessages', error);
     }
   }
 
   /**
-   * Manipula mensagens de fim de dia
+   * Manipula mensagens de fim de dia por canal
    */
   async handleEndOfDayMessages(eligiblePatients = null) {
     try {
@@ -222,20 +281,75 @@ class ProductionScheduler {
       }
       
       if (patientsToProcess.length > 0) {
-        const results = await this.messageService.sendEndOfDayMessages(patientsToProcess);
+        // Agrupar pacientes por canal
+        const patientsByChannel = this.groupPatientsByChannel(patientsToProcess);
         
-        // Marcar pacientes como processados no JsonPatientManager
-        for (const patient of patientsToProcess) {
-          await this.monitoringService.jsonPatientManager.markPatientAsProcessed(patient.id, results.messageInfo);
+        const allResults = {
+          sent: 0,
+          failed: 0,
+          channelResults: []
+        };
+        
+        // Processar cada canal separadamente
+        for (const [channelId, channelPatients] of Object.entries(patientsByChannel)) {
+          try {
+            console.log(`📞 Canal ${channelId}: ${channelPatients.length} pacientes`);
+            
+            // Criar MessageService específico para este canal
+            const { MessageService } = require('./MessageService');
+            const channelMessageService = new MessageService(this.errorHandler, this.configManager);
+            
+          // Obter token do canal
+          const channel = this.configManager.getChannelById(channelId);
+          if (!channel) {
+            console.error(`❌ Canal ${channelId} não encontrado`);
+            continue;
+          }
+          
+          // Verificar se token existe
+          if (!channel.token) {
+            console.error(`❌ Token não encontrado para canal ${channel.name}`);
+            continue;
+          }
+          
+          // Inicializar MessageService com token do canal
+          await channelMessageService.initialize({
+            baseURL: process.env.KROLIK_API_BASE_URL || 'https://api.camkrolik.com.br',
+            token: channel.token
+          });
+            
+            // Enviar mensagens usando o token do canal
+            const results = await channelMessageService.sendEndOfDayMessages(channelPatients);
+            
+            // Marcar pacientes como processados
+            for (const patient of channelPatients) {
+              await this.monitoringService.jsonPatientManager.markPatientAsProcessed(patient.id, results.messageInfo);
+            }
+            
+            allResults.sent += results.sent;
+            allResults.failed += results.failed;
+            allResults.channelResults.push({
+              channelId,
+              channelName: channel.name,
+              sent: results.sent,
+              failed: results.failed
+            });
+            
+            console.log(`✅ Canal ${channel.name}: ${results.sent} enviadas, ${results.failed} falharam`);
+            
+          } catch (channelError) {
+            console.error(`❌ Erro ao processar canal ${channelId}:`, channelError.message);
+            this.errorHandler.logError(channelError, `ProductionScheduler.handleEndOfDayMessages.channel.${channelId}`);
+          }
         }
         
-        console.log(`✅ Mensagens de fim de dia processadas: ${results.sent} enviadas, ${results.failed} falharam`);
+        console.log(`✅ Fim de dia: ${allResults.sent} enviadas, ${allResults.failed} falharam`);
       } else {
         console.log('📭 Nenhum paciente elegível para mensagem de fim de dia');
       }
       
     } catch (error) {
-      this.errorHandler.logError(error, 'ProductionScheduler.handleEndOfDayMessages');
+      this.errorHandler.error('Erro ao processar mensagens de fim de dia', 'ProductionScheduler.handleEndOfDayMessages', error);
     }
   }
 
@@ -382,6 +496,25 @@ class ProductionScheduler {
     } else {
       console.log('⚠️ CronService não inicializado');
     }
+  }
+
+  /**
+   * Agrupa pacientes por canal
+   */
+  groupPatientsByChannel(patients) {
+    const patientsByChannel = {};
+    
+    for (const patient of patients) {
+      const channelId = patient.channelId || 'unknown';
+      
+      if (!patientsByChannel[channelId]) {
+        patientsByChannel[channelId] = [];
+      }
+      
+      patientsByChannel[channelId].push(patient);
+    }
+    
+    return patientsByChannel;
   }
 }
 

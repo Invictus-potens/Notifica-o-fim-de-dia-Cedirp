@@ -92,14 +92,14 @@ class ConfigManager {
         'TOKEN_CONFIRMACAO3_CARLA': 'confirmacao3-carla'
       };
 
-      // Carregar tokens do .env
-      Object.entries(tokenMapping).forEach(([envVar, channelId]) => {
-        const token = process.env[envVar];
-        if (token) {
-          tokens[channelId] = token;
-          console.log(`🔑 Token carregado para ${channelId}: ${token.substring(0, 8)}...`);
+      // Carregar tokens do system_config.json (não mais do .env)
+      const channels = this.systemConfig.channels || [];
+      channels.forEach(channel => {
+        if (channel.token) {
+          tokens[channel.id] = channel.token;
+          console.log(`🔑 Token carregado para ${channel.id}: ${channel.token.substring(0, 8)}...`);
         } else {
-          console.warn(`⚠️ Token não encontrado no .env: ${envVar}`);
+          console.warn(`⚠️ Token não encontrado no system_config.json para canal: ${channel.name}`);
         }
       });
 
@@ -604,7 +604,21 @@ class ConfigManager {
    * @returns {Array} Lista de canais
    */
   getChannels() {
-    return this.systemConfig.channels || [];
+    const channels = this.systemConfig.channels || [];
+    
+    // Retornar canais com tokens do system_config.json
+    return channels.map(channel => {
+      const channelWithToken = { ...channel };
+      
+      // Verificar se token existe no system_config.json
+      if (channel.token) {
+        channelWithToken.token = channel.token;
+      } else {
+        console.warn(`⚠️ Token não encontrado no system_config.json para canal: ${channel.name}`);
+      }
+      
+      return channelWithToken;
+    });
   }
 
   /**

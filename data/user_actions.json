@@ -1,5 +1,256 @@
 [
   {
+    "id": "log_1758675306548_m5f1p442h",
+    "timestamp": "2025-09-24T00:55:06.548Z",
+    "level": "info",
+    "action": "Mensagem Automática Enviada",
+    "details": "30min para Felipe usando Action Card 68d2f410506558bc378e840c",
+    "metadata": {
+      "patientPhone": "5519995068303",
+      "channel": "Confirmação 3 Carla",
+      "channelNumber": "5516991703485",
+      "fallbackUsed": false
+    },
+    "userAgent": "Sistema",
+    "ip": "local"
+  },
+  {
+    "id": "log_1758675303805_7yxp7jb1u",
+    "timestamp": "2025-09-24T00:55:03.805Z",
+    "level": "info",
+    "action": "Mensagem Automática Enviada",
+    "details": "30min para Felipe usando Action Card 68d2f410506558bc378e840c",
+    "metadata": {
+      "patientPhone": "5519995068303",
+      "channel": "Confirmação 2 TI",
+      "channelNumber": "5516991703484",
+      "fallbackUsed": false
+    },
+    "userAgent": "Sistema",
+    "ip": "local"
+  },
+  {
+    "id": "log_1758675301750_nt6jgdy1h",
+    "timestamp": "2025-09-24T00:55:01.750Z",
+    "level": "info",
+    "action": "Mensagem Automática Enviada",
+    "details": "30min para Felipe usando Action Card 68d2f410506558bc378e840c",
+    "metadata": {
+      "patientPhone": "5519995068303",
+      "channel": "Confirmação 1",
+      "channelNumber": "5516991703483",
+      "fallbackUsed": false
+    },
+    "userAgent": "Sistema",
+    "ip": "local"
+  },
+  {
+    "id": "log_1758675298618_b5u76bmnv",
+    "timestamp": "2025-09-24T00:54:58.618Z",
+    "level": "info",
+    "action": "Mensagem Automática Enviada",
+    "details": "30min para Felipe usando Action Card 68d2f410506558bc378e840c",
+    "metadata": {
+      "patientPhone": "5519995068303",
+      "channel": "WhatsApp Oficial",
+      "channelNumber": "551639775100",
+      "fallbackUsed": false
+    },
+    "userAgent": "Sistema",
+    "ip": "local"
+  },
+  {
+    "id": "log_1758675295936_dv6yxq8u6",
+    "timestamp": "2025-09-24T00:54:55.936Z",
+    "level": "info",
+    "action": "Mensagem Automática Enviada",
+    "details": "30min para Felipe usando Action Card 68d2f410506558bc378e840c",
+    "metadata": {
+      "patientPhone": "5519995068303",
+      "channel": "ANEXO1-CLAROpré cel Estoque",
+      "channelNumber": "5516991003715",
+      "fallbackUsed": false
+    },
+    "userAgent": "Sistema",
+    "ip": "local"
+  },
+  {
+    "id": "log_1758675160359_lozlcpmya",
+    "timestamp": "2025-09-24T00:52:40.359Z",
+    "level": "info",
+    "action": "Mensagem Automática Enviada",
+    "details": "30min para Felipe usando Action Card 68d2f410506558bc378e840c",
+    "metadata": {
+      "patientPhone": "5519995068303",
+      "channel": "ANEXO1-CLAROpré cel Estoque",
+      "channelNumber": "5516991003715",
+      "fallbackUsed": true
+    },
+    "userAgent": "Sistema",
+    "ip": "local"
+  },
+  {
+    "id": "log_1758675157940_mnheij2g0",
+    "timestamp": "2025-09-24T00:52:37.940Z",
+    "level": "info",
+    "action": "Mensagem Automática Enviada",
+    "details": "30min para Felipe usando Action Card 68d2f410506558bc378e840c",
+    "metadata": {
+      "patientPhone": "5519995068303",
+      "channel": "ANEXO1-CLAROpré cel Estoque",
+      "channelNumber": "5516991003715",
+      "fallbackUsed": true
+    },
+    "userAgent": "Sistema",
+    "ip": "local"
+  },
+  {
+    "id": "log_1758675155494_ywbbm4qiz",
+    "timestamp": "2025-09-24T00:52:35.494Z",
+    "level": "info",
+    "action": "Mensagem Automática Enviada",
+    "details": "30min para Felipe usando Action Card 68d2f410506558bc378e840c",
+    "metadata": {
+      "patientPhone": "5519995068303",
+      "channel": "ANEXO1-CLAROpré cel Estoque",
+      "channelNumber": "5516991003715",
+      "fallbackUsed": true
+    },
+    "userAgent": "Sistema",
+    "ip": "local"
+  },
+  {
+    "id": "log_1758675153106_xjgx4d24w",
+    "timestamp": "2025-09-24T00:52:33.106Z",
+    "level": "info",
+    "action": "Mensagem Automática Enviada",
+    "details": "30min para Felipe usando Action Card 68d2f410506558bc378e840c",
+    "metadata": {
+      "patientPhone": "5519995068303",
+      "channel": "ANEXO1-CLAROpré cel Estoque",
+      "channelNumber": "5516991003715",
+      "fallbackUsed": true
+    },
+    "userAgent": "Sistema",
+    "ip": "local"
+  },
+  {
+    "id": "log_1758675150657_kity5w8pm",
+    "timestamp": "2025-09-24T00:52:30.657Z",
+    "level": "info",
+    "action": "Mensagem Automática Enviada",
+    "details": "30min para Felipe usando Action Card 68d2f410506558bc378e840c",
+    "metadata": {
+      "patientPhone": "5519995068303",
+      "channel": "WhatsApp Oficial",
+      "channelNumber": "551639775100",
+      "fallbackUsed": true
+    },
+    "userAgent": "Sistema",
+    "ip": "local"
+  },
+  {
+    "id": "log_1758675072811_mdycv48u5",
+    "timestamp": "2025-09-24T00:51:12.811Z",
+    "level": "info",
+    "action": "Mensagem Automática Enviada",
+    "details": "30min para Felipe usando Action Card 68d2f410506558bc378e840c",
+    "metadata": {
+      "patientPhone": "5519995068303",
+      "contactId": "68d31bd7b42825276a14cb84",
+      "channel": "ANEXO1-CLAROpré cel Estoque",
+      "channelNumber": "5516991003715",
+      "fallbackUsed": true
+    },
+    "userAgent": "Sistema",
+    "ip": "local"
+  },
+  {
+    "id": "log_1758674492295_xiyze9qpk",
+    "timestamp": "2025-09-24T00:41:32.295Z",
+    "level": "info",
+    "action": "Configurações Salvas",
+    "details": "Usuário salvou configurações do sistema",
+    "metadata": {
+      "startOfDayTime": "08:00",
+      "endOfDayTime": "23:00",
+      "minWaitTime": "120",
+      "maxWaitTime": "200",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0",
+      "ip": "::1"
+    },
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0",
+    "ip": "::1"
+  },
+  {
+    "id": "log_1758673043097_6f4ciwir7",
+    "timestamp": "2025-09-24T00:17:23.097Z",
+    "level": "info",
+    "action": "Configurações Salvas",
+    "details": "Usuário salvou configurações do sistema",
+    "metadata": {
+      "startOfDayTime": "08:00",
+      "endOfDayTime": "23:00",
+      "minWaitTime": "100",
+      "maxWaitTime": "160",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0",
+      "ip": "::1"
+    },
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0",
+    "ip": "::1"
+  },
+  {
+    "id": "log_1758671689845_hk6rwt26s",
+    "timestamp": "2025-09-23T23:54:49.845Z",
+    "level": "info",
+    "action": "Configurações Salvas",
+    "details": "Usuário salvou configurações do sistema",
+    "metadata": {
+      "startOfDayTime": "08:00",
+      "endOfDayTime": "23:00",
+      "minWaitTime": "80",
+      "maxWaitTime": "100",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0",
+      "ip": "::1"
+    },
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0",
+    "ip": "::1"
+  },
+  {
+    "id": "log_1758670552680_bjxbot3qu",
+    "timestamp": "2025-09-23T23:35:52.680Z",
+    "level": "info",
+    "action": "Configurações Salvas",
+    "details": "Usuário salvou configurações do sistema",
+    "metadata": {
+      "startOfDayTime": "08:00",
+      "endOfDayTime": "23:00",
+      "minWaitTime": "35",
+      "maxWaitTime": "36",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0",
+      "ip": "::1"
+    },
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0",
+    "ip": "::1"
+  },
+  {
+    "id": "log_1758670550971_n2fwz0bvt",
+    "timestamp": "2025-09-23T23:35:50.971Z",
+    "level": "info",
+    "action": "Configurações Salvas",
+    "details": "Usuário salvou configurações do sistema",
+    "metadata": {
+      "startOfDayTime": "08:00",
+      "endOfDayTime": "23:00",
+      "minWaitTime": "35",
+      "maxWaitTime": "36",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0",
+      "ip": "::1"
+    },
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0",
+    "ip": "::1"
+  },
+  {
     "id": "log_1758668859283_3nja1dslm",
     "timestamp": "2025-09-23T23:07:39.283Z",
     "level": "info",

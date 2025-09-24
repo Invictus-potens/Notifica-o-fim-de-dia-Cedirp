@@ -450,7 +450,7 @@ class JsonPatientManager {
    * @returns {string} Chave única
    */
   getPatientKey(patient) {
-    return `${patient.name}_${patient.phone}_${patient.sectorId}`;
+    return `${patient.name}_${patient.phone}_${patient.sectorId}_${patient.channelId}`;
   }
 
   /**
