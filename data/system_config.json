@@ -3,7 +3,7 @@
   "excludedChannels": "[]",
   "flowPaused": "false",
   "endOfDayPaused": "false",
-  "ignoreBusinessHours": "true",
+  "ignoreBusinessHours": "false",
   "minWaitTime": "245",
   "maxWaitTime": "250",
   "selectedActionCard": "631f2b4f307d23f46ac80a10",
