@@ -1,5 +1,179 @@
 [
   {
+    "id": "log_1758746361778_ho28cusvt",
+    "timestamp": "2025-09-24T20:39:21.778Z",
+    "level": "info",
+    "action": "Action Cards Configurados",
+    "details": "Usuário atualizou configurações de Action Cards",
+    "metadata": {
+      "actionCard30Min": "68d2f410506558bc378e840c",
+      "actionCardEndDay": "68d2f43502376b8f3df8a088",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",
+      "ip": "::1"
+    },
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",
+    "ip": "::1"
+  },
+  {
+    "id": "log_1758725036023_oz5xcxywp",
+    "timestamp": "2025-09-24T14:43:56.023Z",
+    "level": "info",
+    "action": "Configurações Salvas",
+    "details": "Usuário salvou configurações do sistema",
+    "metadata": {
+      "startOfDayTime": "08:00",
+      "endOfDayTime": "18:00",
+      "minWaitTime": "30",
+      "maxWaitTime": "40",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",
+      "ip": "::1"
+    },
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",
+    "ip": "::1"
+  },
+  {
+    "id": "log_1758725033232_8uuu2sac2",
+    "timestamp": "2025-09-24T14:43:53.232Z",
+    "level": "info",
+    "action": "Lista de Exclusão",
+    "details": "Usuário adicionou setor \"Impressão de exame\" à lista de exclusão",
+    "metadata": {
+      "sectorId": "6627fac62c6fb7d3c7fb7aba",
+      "sectorName": "Impressão de exame",
+      "action": "add",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",
+      "ip": "::1"
+    },
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",
+    "ip": "::1"
+  },
+  {
+    "id": "log_1758725030779_oogb4fps6",
+    "timestamp": "2025-09-24T14:43:50.779Z",
+    "level": "info",
+    "action": "Lista de Exclusão",
+    "details": "Usuário adicionou setor \"Resultados\" à lista de exclusão",
+    "metadata": {
+      "sectorId": "6627fab80f0dbc5420282b2b",
+      "sectorName": "Resultados",
+      "action": "add",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",
+      "ip": "::1"
+    },
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",
+    "ip": "::1"
+  },
+  {
+    "id": "log_1758725021464_f1qnqxoz1",
+    "timestamp": "2025-09-24T14:43:41.464Z",
+    "level": "info",
+    "action": "Lista de Exclusão",
+    "details": "Usuário adicionou setor \"Confirmação\" à lista de exclusão",
+    "metadata": {
+      "sectorId": "682739784933d4656bf60583",
+      "sectorName": "Confirmação",
+      "action": "add",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",
+      "ip": "::1"
+    },
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",
+    "ip": "::1"
+  },
+  {
+    "id": "log_1758725015535_zwm0efmis",
+    "timestamp": "2025-09-24T14:43:35.535Z",
+    "level": "info",
+    "action": "Lista de Exclusão",
+    "details": "Usuário adicionou setor \"Anexo\" à lista de exclusão",
+    "metadata": {
+      "sectorId": "65f0a689746a222fbccc906c",
+      "sectorName": "Anexo",
+      "action": "add",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",
+      "ip": "::1"
+    },
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",
+    "ip": "::1"
+  },
+  {
+    "id": "log_1758723063407_6ypl0yy8m",
+    "timestamp": "2025-09-24T14:11:03.407Z",
+    "level": "info",
+    "action": "Controle de Fluxo",
+    "details": "Usuário retomou o fluxo de mensagens automáticas",
+    "metadata": {
+      "action": "resume",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",
+      "ip": "::1"
+    },
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",
+    "ip": "::1"
+  },
+  {
+    "id": "log_1758723006025_oigutww8d",
+    "timestamp": "2025-09-24T14:10:06.025Z",
+    "level": "info",
+    "action": "Configurações Salvas",
+    "details": "Usuário salvou configurações do sistema",
+    "metadata": {
+      "startOfDayTime": "08:00",
+      "endOfDayTime": "18:00",
+      "minWaitTime": "30",
+      "maxWaitTime": "40",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",
+      "ip": "::1"
+    },
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",
+    "ip": "::1"
+  },
+  {
+    "id": "log_1758722989775_cdxup0kcy",
+    "timestamp": "2025-09-24T14:09:49.775Z",
+    "level": "info",
+    "action": "Action Cards Configurados",
+    "details": "Usuário atualizou configurações de Action Cards",
+    "metadata": {
+      "actionCard30Min": "68d2f410506558bc378e840c",
+      "actionCardEndDay": "68d2f43502376b8f3df8a088",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",
+      "ip": "::1"
+    },
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",
+    "ip": "::1"
+  },
+  {
+    "id": "log_1758722988854_gfs5rafso",
+    "timestamp": "2025-09-24T14:09:48.854Z",
+    "level": "info",
+    "action": "Card de ação fim de dia selecionado: Fim de expediente",
+    "details": "Seleção de Card",
+    "metadata": {
+      "cardId": "68d2f43502376b8f3df8a088",
+      "cardName": "Fim de expediente",
+      "type": "endday",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",
+      "ip": "::1"
+    },
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",
+    "ip": "::1"
+  },
+  {
+    "id": "log_1758722985183_fe7dtjyom",
+    "timestamp": "2025-09-24T14:09:45.183Z",
+    "level": "info",
+    "action": "Card de ação 30min selecionado: 30 Minutos de espera",
+    "details": "Seleção de Card",
+    "metadata": {
+      "cardId": "68d2f410506558bc378e840c",
+      "cardName": "30 Minutos de espera",
+      "type": "30min",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",
+      "ip": "::1"
+    },
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",
+    "ip": "::1"
+  },
+  {
     "id": "log_1758713792578_byaxqmie5",
     "timestamp": "2025-09-24T11:36:32.578Z",
     "level": "info",

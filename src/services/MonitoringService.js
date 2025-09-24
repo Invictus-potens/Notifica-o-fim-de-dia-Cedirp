@@ -176,17 +176,24 @@ class MonitoringService {
         return false;
       }
       
-      // 4. Verificar horário comercial (se não estiver configurado para ignorar)
+      // 4. Verificar se o setor do paciente está excluído
+      const excludedSectors = this.configManager.getExcludedSectors();
+      if (excludedSectors.includes(patient.sectorId)) {
+        console.log(`🚫 Paciente ${patient.name} (${patient.phone}) do setor ${patient.sectorId} está em setor excluído`);
+        return false;
+      }
+      
+      // 5. Verificar horário comercial (se não estiver configurado para ignorar)
       if (!this.configManager.shouldIgnoreBusinessHours() && !TimeUtils.isBusinessHours()) {
         return false;
       }
       
-      // 5. Verificar dia útil (apenas se não estiver configurado para ignorar horário comercial)
+      // 6. Verificar dia útil (apenas se não estiver configurado para ignorar horário comercial)
       if (!this.configManager.shouldIgnoreBusinessHours() && !TimeUtils.isWorkingDay()) {
         return false;
       }
       
-      // 6. Verificar se fluxo não está pausado
+      // 7. Verificar se fluxo não está pausado
       if (this.configManager.isFlowPaused()) {
         return false;
       }
@@ -201,7 +208,7 @@ class MonitoringService {
 
   /**
    * Verifica se paciente é elegível para mensagem de fim de dia
-   * TODOS os pacientes aguardando devem receber mensagem de fim de dia
+   * TODOS os pacientes aguardando devem receber mensagem de fim de dia, EXCETO os de setores excluídos
    */
   async isPatientEligibleForEndOfDayMessage(patient) {
     try {
@@ -226,9 +233,25 @@ class MonitoringService {
         return false;
       }
       
-      // 5. TODOS os pacientes aguardando são elegíveis para fim de dia
-      // (removido: verificação de processamento e exclusões)
+      // 5. Verificar se o setor do paciente está excluído
+      const excludedSectors = this.configManager.getExcludedSectors();
+      if (excludedSectors.includes(patient.sectorId)) {
+        console.log(`🚫 Paciente ${patient.name} (${patient.phone}) do setor ${patient.sectorId} está em setor excluído - não receberá mensagem de fim de dia`);
+        return false;
+      }
       
+      // 6. Verificar se já foi processado (recebeu mensagem de fim de dia)
+      if (await this.jsonPatientManager.isPatientProcessed(patient.id)) {
+        return false;
+      }
+      
+      // 7. Verificar se está na lista de exclusões
+      const patientKey = this.jsonPatientManager.getPatientKey(patient);
+      if (await this.configManager.isAttendanceExcluded(patientKey, 'end_of_day')) {
+        return false;
+      }
+      
+      // 8. TODOS os demais pacientes aguardando são elegíveis para fim de dia
       return true;
       
     } catch (error) {
