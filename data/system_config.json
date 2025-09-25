@@ -1,5 +1,5 @@
 {
-  "excludedSectors": "[\"65f0a689746a222fbccc906c\",\"682739784933d4656bf60583\",\"6627fab80f0dbc5420282b2b\",\"6627fac62c6fb7d3c7fb7aba\"]",
+  "excludedSectors": "[\"6627fab80f0dbc5420282b2b\",\"6627fac62c6fb7d3c7fb7aba\",\"65f0a689746a222fbccc906c\",\"682739784933d4656bf60583\"]",
   "flowPaused": "false",
   "endOfDayPaused": "false",
   "ignoreBusinessHours": "true",

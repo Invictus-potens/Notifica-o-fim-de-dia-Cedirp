@@ -840,6 +840,7 @@ class AutomationInterface {
         const waitTime = patient.waitTimeMinutes || 0;
         const now = new Date();
         const currentHour = now.getHours();
+        const currentDayOfWeek = now.getDay(); // 0 = domingo, 1 = segunda, ..., 6 = sábado
         
         // Usar configurações reais do sistema (serão carregadas via API)
         const minWaitTime = this.systemConfig?.minWaitTime || 30;
@@ -1046,6 +1047,68 @@ class AutomationInterface {
                 startOfDayTime: '08:00',
                 endOfDayTime: '18:00'
             };
+        }
+    }
+
+    /**
+     * Recarrega todas as configurações do servidor (força atualização)
+     */
+    async reloadSystemConfig() {
+        try {
+            console.log('🔄 Recarregando configurações do servidor...');
+            
+            // Mostrar feedback visual
+            const reloadBtn = document.getElementById('reload-config-btn');
+            if (reloadBtn) {
+                const originalText = reloadBtn.innerHTML;
+                reloadBtn.innerHTML = '<i class="bi bi-arrow-clockwise spin me-2"></i>Recarregando...';
+                reloadBtn.disabled = true;
+                
+                // Restaurar botão após 2 segundos
+                setTimeout(() => {
+                    reloadBtn.innerHTML = originalText;
+                    reloadBtn.disabled = false;
+                }, 2000);
+            }
+            
+            // Recarregar configurações do sistema
+            await this.loadSystemConfig();
+            
+            // Recarregar Action Cards
+            await this.loadActionCards();
+            
+            // Recarregar setores
+            await this.loadSectors();
+            
+            // Recarregar histórico de mensagens
+            await this.loadMessageHistory();
+            
+            // Recarregar listas de exclusão
+            this.loadExclusionLists();
+            
+            // Recarregar pacientes (se estivermos na aba de atendimentos)
+            if (document.querySelector('[data-route="atendimentos"]').classList.contains('active')) {
+                await this.loadPatients();
+            }
+            
+            // Atualizar estado do fluxo
+            this.checkFlowState();
+            
+            // Mostrar notificação de sucesso
+            this.showSuccess('✅ Configurações recarregadas com sucesso!');
+            
+            console.log('✅ Todas as configurações foram recarregadas');
+            
+        } catch (error) {
+            console.error('❌ Erro ao recarregar configurações:', error);
+            this.showError('Erro ao recarregar configurações: ' + error.message);
+            
+            // Restaurar botão em caso de erro
+            const reloadBtn = document.getElementById('reload-config-btn');
+            if (reloadBtn) {
+                reloadBtn.innerHTML = '<i class="bi bi-arrow-clockwise me-2"></i>Recarregar';
+                reloadBtn.disabled = false;
+            }
         }
     }
 
@@ -2919,6 +2982,11 @@ class AutomationInterface {
         // Salvar configurações
         this.systemElements.saveBtn?.addEventListener('click', () => {
             this.saveSystemConfig();
+        });
+
+        // Recarregar configurações
+        document.getElementById('reload-config-btn')?.addEventListener('click', () => {
+            this.reloadSystemConfig();
         });
 
         // Detectar mudanças nos campos

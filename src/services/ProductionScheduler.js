@@ -8,9 +8,10 @@ const { TimeUtils } = require('../utils/TimeUtils');
  * Coordena todos os serviços de monitoramento e envio de mensagens
  */
 class ProductionScheduler {
-  constructor(errorHandler, configManager) {
+  constructor(errorHandler, configManager, metricsCallback = null) {
     this.errorHandler = errorHandler;
     this.configManager = configManager;
+    this.metricsCallback = metricsCallback; // Callback para incrementar métricas
     
     // Serviços
     this.monitoringService = null;
@@ -39,7 +40,7 @@ class ProductionScheduler {
       console.log('🔧 Inicializando ProductionScheduler...');
       
       // Inicializar serviços
-      this.messageService = new MessageService(this.errorHandler, this.configManager);
+      this.messageService = new MessageService(this.errorHandler, this.configManager, this.metricsCallback);
       this.monitoringService = new MonitoringService(this.errorHandler, this.configManager, this.messageService);
       this.cronService = new CronService(this.errorHandler);
       

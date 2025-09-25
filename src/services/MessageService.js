@@ -8,12 +8,13 @@ const { UserActionLogger } = require('./UserActionLogger');
  * Coordena o envio de action cards e templates para pacientes
  */
 class MessageService {
-  constructor(errorHandler, configManager) {
+  constructor(errorHandler, configManager, metricsCallback = null) {
     this.errorHandler = errorHandler;
     this.configManager = configManager;
     this.krolikApiClient = null;
     this.messageHistoryManager = new MessageHistoryManager(errorHandler);
     this.userActionLogger = new UserActionLogger(errorHandler);
+    this.metricsCallback = metricsCallback; // Callback para incrementar métricas
     
     this.stats = {
       totalSent: 0,
@@ -87,6 +88,11 @@ class MessageService {
       // Atualizar estatísticas
       this.stats.totalSent++;
       this.stats.lastSent = new Date().toISOString();
+      
+      // Incrementar métricas persistentes
+      if (this.metricsCallback && this.metricsCallback.incrementSent) {
+        await this.metricsCallback.incrementSent(messageType);
+      }
       
       // Registrar mensagem no histórico
       await this.messageHistoryManager.recordMessageSent({
@@ -188,6 +194,11 @@ class MessageService {
       this.stats.totalSent++;
       this.stats.lastSent = new Date().toISOString();
       
+      // Incrementar métricas persistentes
+      if (this.metricsCallback && this.metricsCallback.incrementSent) {
+        await this.metricsCallback.incrementSent(messageType);
+      }
+      
       console.log(`✅ Action card enviado com sucesso para ${patient.name}`);
       
       return {
@@ -206,6 +217,11 @@ class MessageService {
         error: error.message,
         timestamp: new Date().toISOString()
       });
+      
+      // Incrementar métricas de falha
+      if (this.metricsCallback && this.metricsCallback.incrementFailed) {
+        await this.metricsCallback.incrementFailed();
+      }
       
       console.error(`❌ Erro ao enviar action card para ${patient.name}:`, error.message);
       

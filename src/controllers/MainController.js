@@ -35,8 +35,11 @@ class MainController {
     this.messageMetricsManager = new MessageMetricsManager(this.errorHandler);
     this.systemMetricsManager = new SystemMetricsManager();
     
-    // Inicializar ProductionScheduler
-    this.productionScheduler = new ProductionScheduler(this.errorHandler, this.configManager);
+    // Inicializar ProductionScheduler com callback de métricas
+    this.productionScheduler = new ProductionScheduler(this.errorHandler, this.configManager, {
+      incrementSent: (messageType) => this.incrementMessageSent(messageType),
+      incrementFailed: () => this.incrementMessageFailed()
+    });
     
     this.isRunning = false;
     this.initialized = false;
