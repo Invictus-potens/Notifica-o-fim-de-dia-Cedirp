@@ -2,13 +2,14 @@
  * @typedef {Object} SystemConfig
  * @property {boolean} flowPaused - Se o fluxo está pausado
  * @property {string[]} excludedSectors - Setores excluídos
- * @property {string[]} excludedChannels - Canais excluídos
  * @property {string} [selectedActionCard] - Action card selecionado
  * @property {string} [selectedActionCard30Min] - Action card para 30min
  * @property {string} [selectedActionCardEndDay] - Action card para fim do dia
  * @property {string} [selectedTemplate] - Template selecionado
  * @property {string} startOfDayTime - Horário de início de expediente
  * @property {string} endOfDayTime - Horário de fim de expediente
+ * @property {string} saturdayStartTime - Horário de início de expediente aos sábados
+ * @property {string} saturdayEndTime - Horário de fim de expediente aos sábados
  */
 
 /**
@@ -42,13 +43,14 @@ class ConfigManager {
       minWaitTime: 60,
       maxWaitTime: 180,
       excludedSectors: [],
-      excludedChannels: [],
       selectedActionCard: undefined,
       selectedActionCard30Min: undefined,
       selectedActionCardEndDay: undefined,
       selectedTemplate: undefined,
       startOfDayTime: '08:00',
       endOfDayTime: '18:00',
+      saturdayStartTime: '08:00',
+      saturdayEndTime: '12:00',
       logCleanupTime: '02:00',
       refreshInterval: 30
     };
@@ -87,7 +89,6 @@ class ConfigManager {
           minWaitTime: parseInt(parsedConfig.minWaitTime) || 60,
           maxWaitTime: parseInt(parsedConfig.maxWaitTime) || 180,
           excludedSectors: this.parseJsonArray(parsedConfig.excludedSectors),
-          excludedChannels: this.parseJsonArray(parsedConfig.excludedChannels),
           selectedActionCard: parsedConfig.selectedActionCard || '631f2b4f307d23f46ac80a10',
           selectedActionCardDescription: parsedConfig.selectedActionCardDescription || 'Mensagem transferência padrão',
           selectedActionCard30Min: parsedConfig.selectedActionCard30Min || '631f2b4f307d23f46ac80a2b',
@@ -97,6 +98,8 @@ class ConfigManager {
           selectedTemplate: parsedConfig.selectedTemplate || '',
           startOfDayTime: parsedConfig.startOfDayTime || '08:00',
           endOfDayTime: parsedConfig.endOfDayTime || '18:00',
+          saturdayStartTime: parsedConfig.saturdayStartTime || '08:00',
+          saturdayEndTime: parsedConfig.saturdayEndTime || '12:00',
           logCleanupTime: parsedConfig.logCleanupTime || '02:00',
           refreshInterval: parseInt(parsedConfig.refreshInterval) || 30
         };
@@ -124,16 +127,14 @@ class ConfigManager {
             '6400efb5343817d4ddbb2a4c',
             '6401f4f49b1ff8512b525e9c'
           ],
-          excludedChannels: [
-            '6787af30bf31d23b04ac8bd1',
-            '65e1db3b3362eebbe8e2afe5'
-          ],
           selectedActionCard: '631f2b4f307d23f46ac80a2b',
           selectedActionCard30Min: '631f2b4f307d23f46ac80a2b',
           selectedActionCardEndDay: '631f2b4f307d23f46ac80a2b',
           selectedTemplate: '',
           startOfDayTime: '08:00',
           endOfDayTime: '18:00',
+          saturdayStartTime: '08:00',
+          saturdayEndTime: '12:00',
           logCleanupTime: '02:00',
           refreshInterval: 30
         };
@@ -168,14 +169,6 @@ class ConfigManager {
     return this.systemConfig.excludedSectors || [];
   }
 
-  /**
-   * Obtém canais excluídos
-   * @returns {string[]} Lista de canais excluídos
-   */
-  getExcludedChannels() {
-    console.log(`🔍 ConfigManager: Retornando ${this.systemConfig.excludedChannels.length} canais excluídos:`, this.systemConfig.excludedChannels);
-    return this.systemConfig.excludedChannels || [];
-  }
 
   /**
    * Adiciona atendimento à lista de exclusão
@@ -260,6 +253,22 @@ class ConfigManager {
   }
 
   /**
+   * Obtém o horário de início do sábado configurado
+   * @returns {string} Horário no formato HH:MM
+   */
+  getSaturdayStartTime() {
+    return this.systemConfig.saturdayStartTime || '08:00';
+  }
+
+  /**
+   * Obtém o horário de fim do sábado configurado
+   * @returns {string} Horário no formato HH:MM
+   */
+  getSaturdayEndTime() {
+    return this.systemConfig.saturdayEndTime || '12:00';
+  }
+
+  /**
    * Obtém o horário de limpeza de logs configurado
    * @returns {string} Horário no formato HH:MM
    */
@@ -341,7 +350,6 @@ class ConfigManager {
       // Converter configuração para formato do arquivo
       const configToSave = {
         excludedSectors: JSON.stringify(this.systemConfig.excludedSectors),
-        excludedChannels: JSON.stringify(this.systemConfig.excludedChannels),
         flowPaused: this.systemConfig.flowPaused.toString(),
         endOfDayPaused: this.systemConfig.endOfDayPaused.toString(),
         ignoreBusinessHours: this.systemConfig.ignoreBusinessHours.toString(),
@@ -353,6 +361,8 @@ class ConfigManager {
         selectedTemplate: this.systemConfig.selectedTemplate,
         startOfDayTime: this.systemConfig.startOfDayTime,
         endOfDayTime: this.systemConfig.endOfDayTime,
+        saturdayStartTime: this.systemConfig.saturdayStartTime,
+        saturdayEndTime: this.systemConfig.saturdayEndTime,
         logCleanupTime: this.systemConfig.logCleanupTime,
         refreshInterval: this.systemConfig.refreshInterval.toString()
       };
@@ -466,6 +476,8 @@ class ConfigManager {
       selectedActionCardEndDayDescription: this.systemConfig.selectedActionCardEndDayDescription || 'Fim de Expediente',
       startOfDayTime: this.systemConfig.startOfDayTime || '08:00',
       endOfDayTime: this.systemConfig.endOfDayTime || '18:00',
+      saturdayStartTime: this.systemConfig.saturdayStartTime || '08:00',
+      saturdayEndTime: this.systemConfig.saturdayEndTime || '12:00',
       logCleanupTime: this.systemConfig.logCleanupTime || '02:00',
       refreshInterval: this.systemConfig.refreshInterval || 30
     };

@@ -901,25 +901,52 @@ class AutomationInterface {
         }
         
         // Verificar se está fora do horário comercial (apenas se ignoreBusinessHours for false)
-        const startHour = parseInt(this.systemConfig?.startOfDayTime?.split(':')[0] || '8');
-        const endHour = parseInt(this.systemConfig?.endOfDayTime?.split(':')[0] || '18');
-        const isOutsideBusinessHours = currentHour < startHour || currentHour >= endHour;
+        let startHour, endHour;
+        let isOutsideBusinessHours = false;
         
-        console.log(`🕐 Verificação de horário comercial:`, {
-            startHour,
-            endHour,
-            currentHour,
-            isOutsideBusinessHours,
-            ignoreBusinessHours,
-            shouldShowOutsideHours: !ignoreBusinessHours && isOutsideBusinessHours
-        });
+        // Verificar se é sábado e usar horários específicos para sábado
+        if (currentDayOfWeek === 6) { // 6 = sábado
+            startHour = parseInt(this.systemConfig?.saturdayStartTime?.split(':')[0] || '8');
+            endHour = parseInt(this.systemConfig?.saturdayEndTime?.split(':')[0] || '12');
+            isOutsideBusinessHours = currentHour < startHour || currentHour >= endHour;
+            
+            console.log(`🗓️ Verificação de horário comercial (SÁBADO):`, {
+                saturdayStartTime: this.systemConfig?.saturdayStartTime || '08:00',
+                saturdayEndTime: this.systemConfig?.saturdayEndTime || '12:00',
+                startHour,
+                endHour,
+                currentHour,
+                currentDayOfWeek,
+                isOutsideBusinessHours,
+                ignoreBusinessHours,
+                shouldShowOutsideHours: !ignoreBusinessHours && isOutsideBusinessHours
+            });
+        } else {
+            // Dias úteis normais (segunda a sexta)
+            startHour = parseInt(this.systemConfig?.startOfDayTime?.split(':')[0] || '8');
+            endHour = parseInt(this.systemConfig?.endOfDayTime?.split(':')[0] || '18');
+            isOutsideBusinessHours = currentHour < startHour || currentHour >= endHour;
+            
+            console.log(`🕐 Verificação de horário comercial (DIAS ÚTEIS):`, {
+                startOfDayTime: this.systemConfig?.startOfDayTime || '08:00',
+                endOfDayTime: this.systemConfig?.endOfDayTime || '18:00',
+                startHour,
+                endHour,
+                currentHour,
+                currentDayOfWeek,
+                isOutsideBusinessHours,
+                ignoreBusinessHours,
+                shouldShowOutsideHours: !ignoreBusinessHours && isOutsideBusinessHours
+            });
+        }
         
         if (!ignoreBusinessHours && isOutsideBusinessHours) {
-            console.log(`❌ Mostrando "Fora do horário" para ${patient.name}`);
+            const dayType = currentDayOfWeek === 6 ? 'sábado' : 'dia útil';
+            console.log(`❌ Mostrando "Fora do horário" para ${patient.name} (${dayType})`);
             return `
                 <div class="text-warning">
                     <div class="fw-bold">Fora do horário</div>
-                    <small class="text-muted">${card30MinName}</small>
+                    <small class="text-muted">${card30MinName} (${dayType})</small>
                 </div>
             `;
         }
@@ -1534,29 +1561,17 @@ class AutomationInterface {
     initializeExclusionLists() {
         // Initialize excluded sectors list
         this.excludedSectors = [];
-        this.excludedChannels = [];
-        this.availableChannels = [];
 
         // Add event listeners
         const addSectorBtn = document.getElementById('add-sector-btn');
-        const addChannelBtn = document.getElementById('add-channel-btn');
         const sectorSelect = document.getElementById('sector-select');
-        const channelSelect = document.getElementById('channel-select');
 
         if (addSectorBtn) {
             addSectorBtn.addEventListener('click', () => this.addSectorToExclusion());
         }
 
-        if (addChannelBtn) {
-            addChannelBtn.addEventListener('click', () => this.addChannelToExclusion());
-        }
-
         if (sectorSelect) {
             sectorSelect.addEventListener('change', () => this.onSectorSelectChange());
-        }
-
-        if (channelSelect) {
-            channelSelect.addEventListener('change', () => this.onChannelSelectChange());
         }
 
         // Load existing exclusions (will be called after sectors/channels are loaded)
@@ -1803,35 +1818,6 @@ class AutomationInterface {
         }
     }
 
-    addChannelToExclusion() {
-        const channelSelect = document.getElementById('channel-select');
-        const selectedChannelId = channelSelect.value;
-
-        if (!selectedChannelId) {
-            this.showError('Selecione um canal para adicionar à lista de exclusão');
-            return;
-        }
-
-        // Check if already excluded
-        if (this.excludedChannels.some(channel => channel.id === selectedChannelId)) {
-            this.showError('Este canal já está na lista de exclusão');
-            return;
-        }
-
-        // Find channel details
-        const channel = this.availableChannels.find(c => c.id === selectedChannelId);
-        if (channel) {
-            this.excludedChannels.push(channel);
-            this.updateExcludedChannelsDisplay();
-            this.saveExcludedChannels();
-            
-            // Reset select
-            channelSelect.value = '';
-            
-            const displayName = channel.description || channel.identifier || `Canal ${channel.id}`;
-            this.showSuccess(`Canal "${displayName}" adicionado à lista de exclusão`);
-        }
-    }
 
     removeSectorFromExclusion(sectorId) {
         console.log('Removendo setor da exclusão:', sectorId);
@@ -1846,12 +1832,6 @@ class AutomationInterface {
         this.showSuccess('Setor removido da lista de exclusão');
     }
 
-    removeChannelFromExclusion(channelId) {
-        this.excludedChannels = this.excludedChannels.filter(channel => channel.id !== channelId);
-        this.updateExcludedChannelsDisplay();
-        this.saveExcludedChannels();
-        this.showSuccess('Canal removido da lista de exclusão');
-    }
 
     updateExcludedSectorsDisplay() {
         const container = document.getElementById('excluded-sectors-list');
@@ -1890,46 +1870,6 @@ class AutomationInterface {
         });
     }
 
-    updateExcludedChannelsDisplay() {
-        const container = document.getElementById('excluded-channels-list');
-        if (!container) return;
-
-        if (this.excludedChannels.length === 0) {
-            container.innerHTML = '<small class="text-muted">Nenhum canal excluído</small>';
-            return;
-        }
-
-        // Clear container
-        container.innerHTML = '';
-
-        // Create elements for each excluded channel
-        this.excludedChannels.forEach(channel => {
-            const channelDiv = document.createElement('div');
-            channelDiv.className = 'd-flex justify-content-between align-items-center mb-2 p-2 bg-white rounded border';
-            
-            const displayName = channel.description || channel.identifier || `Canal ${channel.id}`;
-            const typeInfo = channel.type ? ` (${getChannelTypeName(channel.type)})` : '';
-            
-            channelDiv.innerHTML = `
-                <div>
-                    <strong>${this.escapeHtml(displayName)}</strong>
-                    <br>
-                    <small class="text-muted">ID: ${channel.id}${typeInfo}</small>
-                </div>
-                <button class="btn btn-outline-danger btn-sm remove-channel-btn" data-channel-id="${channel.id}">
-                    <i class="bi bi-x"></i>
-                </button>
-            `;
-
-            // Add event listener to the remove button
-            const removeBtn = channelDiv.querySelector('.remove-channel-btn');
-            removeBtn.addEventListener('click', () => {
-                this.removeChannelFromExclusion(channel.id);
-            });
-
-            container.appendChild(channelDiv);
-        });
-    }
 
     onSectorSelectChange() {
         const sectorSelect = document.getElementById('sector-select');
@@ -1940,14 +1880,6 @@ class AutomationInterface {
         }
     }
 
-    onChannelSelectChange() {
-        const channelSelect = document.getElementById('channel-select');
-        const addChannelBtn = document.getElementById('add-channel-btn');
-        
-        if (channelSelect && addChannelBtn) {
-            addChannelBtn.disabled = !channelSelect.value;
-        }
-    }
 
     async saveExcludedSectors() {
         // Salvar localmente (rápido)
@@ -1968,24 +1900,6 @@ class AutomationInterface {
         }
     }
 
-    async saveExcludedChannels() {
-        // Salvar localmente (rápido)
-        localStorage.setItem('excludedChannels', JSON.stringify(this.excludedChannels));
-        
-        // Sincronizar com backend (persistente)
-        try {
-            await fetch('/api/config', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    excludedChannels: this.excludedChannels.map(c => c.id)
-                })
-            });
-            console.log('✅ Canais excluídos sincronizados com backend');
-        } catch (error) {
-            console.error('❌ Erro ao sincronizar canais excluídos:', error);
-        }
-    }
 
     async loadExcludedSectors() {
         try {
@@ -2026,50 +1940,11 @@ class AutomationInterface {
         }
     }
 
-    async loadExcludedChannels() {
-        try {
-            // Primeiro, tentar carregar do backend
-            const response = await fetch('/api/config');
-            if (response.ok) {
-                const config = await response.json();
-                if (config.excludedChannels && Array.isArray(config.excludedChannels)) {
-                    // Carregar canais completos da lista disponível
-                    this.excludedChannels = this.availableChannels.filter(channel => 
-                        config.excludedChannels.includes(channel.id)
-                    );
-                    this.updateExcludedChannelsDisplay();
-                    console.log('✅ Canais excluídos carregados do backend');
-                    return;
-                }
-            }
-            
-            // Fallback: carregar do localStorage
-            const saved = localStorage.getItem('excludedChannels');
-            if (saved) {
-                this.excludedChannels = JSON.parse(saved);
-                this.updateExcludedChannelsDisplay();
-                console.log('⚠️ Canais excluídos carregados do localStorage (fallback)');
-            }
-        } catch (error) {
-            console.error('Erro ao carregar canais excluídos:', error);
-            // Fallback para localStorage
-            try {
-                const saved = localStorage.getItem('excludedChannels');
-                if (saved) {
-                    this.excludedChannels = JSON.parse(saved);
-                    this.updateExcludedChannelsDisplay();
-                }
-            } catch (localError) {
-                console.error('Erro no fallback localStorage:', localError);
-            }
-        }
-    }
 
     async loadExclusionLists() {
-        // Não carregar setores e canais novamente, pois já foram carregados
+        // Não carregar setores novamente, pois já foram carregados
         // Apenas carregar as exclusões (que dependem das listas já carregadas)
         await this.loadExcludedSectors();
-        await this.loadExcludedChannels();
         
         console.log('✅ Listas de exclusão carregadas com sucesso');
     }
@@ -2155,7 +2030,6 @@ class AutomationInterface {
             
             // Incluir exclusões na configuração
             configData.excludedSectors = this.excludedSectors.map(s => s.id);
-            configData.excludedChannels = this.excludedChannels.map(c => c.id);
             
             console.log('📤 Dados que serão enviados para API:', configData);
             
@@ -3004,6 +2878,10 @@ class AutomationInterface {
             endOfDayTime: document.getElementById('end-of-day-time'),
             logCleanupTime: document.getElementById('log-cleanup-time'),
             
+            // Horários de sábado
+            saturdayStartTime: document.getElementById('saturday-start-time'),
+            saturdayEndTime: document.getElementById('saturday-end-time'),
+            
             // Tempos de espera
             minWaitTime: document.getElementById('min-wait-time'),
             maxWaitTime: document.getElementById('max-wait-time'),
@@ -3082,7 +2960,9 @@ class AutomationInterface {
                         selectedActionCardEndDay: config.data.selectedActionCardEndDay,
                         selectedActionCardEndDayDescription: config.data.selectedActionCardEndDayDescription,
                         startOfDayTime: config.data.startOfDayTime || '08:00',
-                        endOfDayTime: config.data.endOfDayTime || '18:00'
+                        endOfDayTime: config.data.endOfDayTime || '18:00',
+                        saturdayStartTime: config.data.saturdayStartTime || '08:00',
+                        saturdayEndTime: config.data.saturdayEndTime || '12:00'
                     };
                     console.log('✅ systemConfig atualizado na aba Sistema:', this.systemConfig);
                 }
@@ -3118,6 +2998,16 @@ class AutomationInterface {
         if (this.systemElements.logCleanupTime) {
             this.systemElements.logCleanupTime.value = configData.logCleanupTime || '23:59';
             console.log(`📅 logCleanupTime: ${configData.logCleanupTime || '23:59'}`);
+        }
+
+        // Horários de sábado
+        if (this.systemElements.saturdayStartTime) {
+            this.systemElements.saturdayStartTime.value = configData.saturdayStartTime || '08:00';
+            console.log(`🗓️ saturdayStartTime: ${configData.saturdayStartTime || '08:00'}`);
+        }
+        if (this.systemElements.saturdayEndTime) {
+            this.systemElements.saturdayEndTime.value = configData.saturdayEndTime || '12:00';
+            console.log(`🗓️ saturdayEndTime: ${configData.saturdayEndTime || '12:00'}`);
         }
 
         // Tempos de espera
@@ -3188,6 +3078,10 @@ class AutomationInterface {
             endOfDayTime: this.systemElements.endOfDayTime?.value || '18:00',
             logCleanupTime: this.systemElements.logCleanupTime?.value || '23:59',
             
+            // Horários de sábado
+            saturdayStartTime: this.systemElements.saturdayStartTime?.value || '08:00',
+            saturdayEndTime: this.systemElements.saturdayEndTime?.value || '12:00',
+            
             // Tempos de espera
             minWaitTime: this.systemElements.minWaitTime?.value || '30',
             maxWaitTime: this.systemElements.maxWaitTime?.value || '35'
@@ -3218,6 +3112,15 @@ class AutomationInterface {
 
         if (startTime && endTime && startTime >= endTime) {
             errors.push('O horário de fim do dia deve ser posterior ao horário de início');
+            isValid = false;
+        }
+
+        // Validar horários de sábado
+        const saturdayStartTime = this.systemElements.saturdayStartTime?.value;
+        const saturdayEndTime = this.systemElements.saturdayEndTime?.value;
+
+        if (saturdayStartTime && saturdayEndTime && saturdayStartTime >= saturdayEndTime) {
+            errors.push('O horário de fim do sábado deve ser posterior ao horário de início do sábado');
             isValid = false;
         }
 

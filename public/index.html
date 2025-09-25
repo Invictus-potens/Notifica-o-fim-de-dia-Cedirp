@@ -229,89 +229,72 @@
                 <!-- Configurações Route -->
                 <div id="configuracoes-route" class="route-content">
                     <div class="row">
-                    <!-- Exception Lists -->
+                        <!-- Exception Lists -->
                         <div class="col-md-6">
-                    <div class="card mb-4">
-                        <div class="card-header">
-                            <h6 class="mb-0">
-                                <i class="bi bi-shield-x me-2"></i>Listas de Exceção
-                            </h6>
-                        </div>
-                        <div class="card-body">
-                            <!-- Excluded Sectors -->
-                            <div class="mb-4">
-                                <label class="form-label fw-bold">Setores Excluídos</label>
-                                <div class="d-flex gap-2 mb-2">
-                                    <select id="sector-select" class="form-select form-select-sm">
-                                        <option value="">Selecione um setor...</option>
-                                    </select>
-                                    <button id="add-sector-btn" class="btn btn-outline-primary btn-sm">
-                                        <i class="bi bi-plus"></i>
-                                    </button>
+                            <div class="card mb-4">
+                                <div class="card-header">
+                                    <h6 class="mb-0">
+                                        <i class="bi bi-shield-x me-2"></i>Listas de Exceção
+                                    </h6>
                                 </div>
-                                <div id="excluded-sectors-list" class="border rounded p-3" style="min-height: 60px; background-color: #f8fafc; border-color: #e2e8f0;">
-                                    <small class="text-muted">Nenhum setor excluído</small>
-                                </div>
-                            </div>
-
-                            <!-- Excluded Channels -->
-                            <div>
-                                <label class="form-label fw-bold">Canais Excluídos</label>
-                                <div class="d-flex gap-2 mb-2">
-                                    <select id="channel-select" class="form-select form-select-sm">
-                                        <option value="">Selecione um canal...</option>
-                                    </select>
-                                    <button id="add-channel-btn" class="btn btn-outline-primary btn-sm">
-                                        <i class="bi bi-plus"></i>
-                                    </button>
-                                </div>
-                                <div id="excluded-channels-list" class="border rounded p-3" style="min-height: 60px; background-color: #f8fafc; border-color: #e2e8f0;">
-                                    <small class="text-muted">Nenhum canal excluído</small>
+                                <div class="card-body">
+                                    <!-- Excluded Sectors -->
+                                    <div class="mb-4">
+                                        <label class="form-label fw-bold">Setores Excluídos</label>
+                                        <div class="d-flex gap-2 mb-2">
+                                            <select id="sector-select" class="form-select form-select-sm">
+                                                <option value="">Selecione um setor...</option>
+                                            </select>
+                                            <button id="add-sector-btn" class="btn btn-outline-primary btn-sm">
+                                                <i class="bi bi-plus"></i>
+                                            </button>
                                         </div>
+                                        <div id="excluded-sectors-list" class="border rounded p-3" style="min-height: 60px; background-color: #f8fafc; border-color: #e2e8f0;">
+                                            <small class="text-muted">Nenhum setor excluído</small>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
 
-                    <!-- Message Configuration -->
+                        <!-- Message Configuration -->
                         <div class="col-md-6">
-                    <div class="card mb-4">
-                        <div class="card-header">
-                            <h6 class="mb-0">
-                                <i class="bi bi-chat-square-text me-2"></i>Configuração de Mensagens
-                            </h6>
-                        </div>
-                        <div class="card-body">
-                            <!-- Action Card para Mensagem de 30 Minutos -->
-                            <div class="mb-4">
-                                <label class="form-label fw-bold">
-                                    <i class="bi bi-clock me-2"></i>Cartão de Ação - Mensagem de 30 Minutos
-                                </label>
-                                <select id="action-card-30min-select" class="form-select form-select-sm">
-                                    <option value="">Carregando cartões...</option>
-                                </select>
-                                <small class="form-text text-muted">
-                                    Enviado para pacientes aguardando há mais de 30 minutos
-                                </small>
-                            </div>
+                            <div class="card mb-4">
+                                <div class="card-header">
+                                    <h6 class="mb-0">
+                                        <i class="bi bi-chat-square-text me-2"></i>Configuração de Mensagens
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <!-- Action Card para Mensagem de 30 Minutos -->
+                                    <div class="mb-4">
+                                        <label class="form-label fw-bold">
+                                            <i class="bi bi-clock me-2"></i>Cartão de Ação - Mensagem de 30 Minutos
+                                        </label>
+                                        <select id="action-card-30min-select" class="form-select form-select-sm">
+                                            <option value="">Carregando cartões...</option>
+                                        </select>
+                                        <small class="form-text text-muted">
+                                            Enviado para pacientes aguardando há mais de 30 minutos
+                                        </small>
+                                    </div>
 
-                            <!-- Action Card para Mensagem de Fim de Expediente -->
-                            <div class="mb-4">
-                                <label class="form-label fw-bold">
-                                    <i class="bi bi-sunset me-2"></i>Cartão de Ação - Fim de Expediente (18h)
-                                </label>
-                                <select id="action-card-endday-select" class="form-select form-select-sm">
-                                    <option value="">Carregando cartões...</option>
-                                </select>
-                                <small class="form-text text-muted">
-                                    Enviado para pacientes ainda aguardando no fim do expediente
-                                </small>
-                            </div>
+                                    <!-- Action Card para Mensagem de Fim de Expediente -->
+                                    <div class="mb-4">
+                                        <label class="form-label fw-bold">
+                                            <i class="bi bi-sunset me-2"></i>Cartão de Ação - Fim de Expediente (18h)
+                                        </label>
+                                        <select id="action-card-endday-select" class="form-select form-select-sm">
+                                            <option value="">Carregando cartões...</option>
+                                        </select>
+                                        <small class="form-text text-muted">
+                                            Enviado para pacientes ainda aguardando no fim do expediente
+                                        </small>
+                                    </div>
 
-
-                            <button id="save-message-config-btn" class="btn btn-primary btn-sm w-100">
-                                <i class="bi bi-check-lg me-2"></i>Salvar Configurações
-                            </button>
+                                    <button id="save-message-config-btn" class="btn btn-primary btn-sm w-100">
+                                        <i class="bi bi-check-lg me-2"></i>Salvar Configurações
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -349,6 +332,30 @@
                                                     </label>
                                                     <input type="time" class="form-control" id="end-of-day-time" value="18:00">
                                                     <small class="form-text text-muted">Horário de fim do expediente</small>
+                                                </div>
+                                                
+                                                <!-- Separador visual para horários de sábado -->
+                                                <hr class="my-4">
+                                                <div class="text-center mb-3">
+                                                    <h6 class="text-primary mb-0">
+                                                        <i class="bi bi-calendar-week me-2"></i>Horários de Sábado
+                                                    </h6>
+                                                    <small class="text-muted">Configurações específicas para sábados</small>
+                                                </div>
+                                                
+                                                <div class="mb-3">
+                                                    <label class="form-label fw-bold">
+                                                        <i class="bi bi-sunrise me-2"></i>Início do Sábado
+                                                    </label>
+                                                    <input type="time" class="form-control" id="saturday-start-time" value="08:00">
+                                                    <small class="form-text text-muted">Horário de início do expediente aos sábados</small>
+                                                </div>
+                                                <div class="mb-3">
+                                                    <label class="form-label fw-bold">
+                                                        <i class="bi bi-sunset me-2"></i>Fim do Sábado
+                                                    </label>
+                                                    <input type="time" class="form-control" id="saturday-end-time" value="12:00">
+                                                    <small class="form-text text-muted">Horário de fim do expediente aos sábados</small>
                                                 </div>
                                                 <div class="mb-3">
                                                     <label class="form-label fw-bold">
