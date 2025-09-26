@@ -460,7 +460,7 @@ class ConfigManager {
       this.loadSystemConfig();
     }
     
-    return {
+    const config = {
       ...this.systemConfig,
       // Garantir que todos os campos estejam presentes com valores corretos do arquivo
       flowPaused: this.systemConfig.flowPaused || false,
@@ -468,6 +468,7 @@ class ConfigManager {
       ignoreBusinessHours: this.systemConfig.ignoreBusinessHours || false,
       minWaitTime: this.systemConfig.minWaitTime || 30,
       maxWaitTime: this.systemConfig.maxWaitTime || 40,
+      excludedSectors: this.systemConfig.excludedSectors || [],
       selectedActionCard: this.systemConfig.selectedActionCard || '631f2b4f307d23f46ac80a10',
       selectedActionCardDescription: this.systemConfig.selectedActionCardDescription || 'Mensagem transferência padrão',
       selectedActionCard30Min: this.systemConfig.selectedActionCard30Min || '68cbfa96b8640e9721e4feab',
@@ -481,6 +482,12 @@ class ConfigManager {
       logCleanupTime: this.systemConfig.logCleanupTime || '02:00',
       refreshInterval: this.systemConfig.refreshInterval || 30
     };
+    
+    console.log('🔍 [BACKEND] ConfigManager.getSystemConfig() - Retornando configuração:');
+    console.log(`📊 [BACKEND] Setores excluídos: ${config.excludedSectors.length}`);
+    console.log(`📋 [BACKEND] IDs dos setores excluídos:`, config.excludedSectors);
+    
+    return config;
   }
 
   /**

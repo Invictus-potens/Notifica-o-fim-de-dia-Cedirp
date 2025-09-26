@@ -58,44 +58,85 @@ class TimeUtils {
 
   /**
    * Verifica se está em horário comercial (dinâmico baseado na configuração)
+   * Considera horários específicos para sábado
    * @returns {boolean} True se horário comercial
    */
   static isBusinessHours() {
     const brasiliaTime = this.getBrasiliaTime();
     const hour = brasiliaTime.hour;
-    const startHour = this.getBusinessStartHour();
-    const endHour = this.getBusinessEndHour();
+    const weekday = brasiliaTime.weekday;
+    
+    let startHour, endHour;
+    
+    // Verificar se é sábado e usar horários específicos
+    if (weekday === 6 && this.configManager) { // Sábado
+      const saturdayStartTime = this.configManager.getSaturdayStartTime();
+      const saturdayEndTime = this.configManager.getSaturdayEndTime();
+      startHour = parseInt(saturdayStartTime.split(':')[0]);
+      endHour = parseInt(saturdayEndTime.split(':')[0]);
+    } else {
+      // Dias úteis normais
+      startHour = this.getBusinessStartHour();
+      endHour = this.getBusinessEndHour();
+    }
+    
     return hour >= startHour && hour < endHour;
   }
 
   /**
-   * Verifica se é dia útil (segunda a sexta)
+   * Verifica se é dia útil (segunda a sexta + sábado)
    * @returns {boolean} True se dia útil
    */
   static isWorkingDay() {
     const brasiliaTime = this.getBrasiliaTime();
     const weekday = brasiliaTime.weekday;
-    return weekday >= 1 && weekday <= 5; // Segunda (1) a Sexta (5)
+    return weekday >= 1 && weekday <= 6; // Segunda (1) a Sábado (6)
   }
 
   /**
    * Verifica se é horário de fim de expediente (dinâmico baseado na configuração)
+   * Considera horários específicos para sábado
    * @returns {boolean} True se horário de fim de expediente
    */
   static isEndOfDayTime() {
     const brasiliaTime = this.getBrasiliaTime();
-    const endHour = this.getBusinessEndHour();
+    const weekday = brasiliaTime.weekday;
+    
+    let endHour;
+    
+    // Verificar se é sábado e usar horário específico
+    if (weekday === 6 && this.configManager) { // Sábado
+      const saturdayEndTime = this.configManager.getSaturdayEndTime();
+      endHour = parseInt(saturdayEndTime.split(':')[0]);
+    } else {
+      // Dias úteis normais
+      endHour = this.getBusinessEndHour();
+    }
+    
     return brasiliaTime.hour === endHour && brasiliaTime.minute === this.END_OF_DAY_MINUTE;
   }
 
   /**
    * Verifica se é horário de fim de expediente com tolerância (dinâmico ± 1 minuto)
+   * Considera horários específicos para sábado
    * @param {number} toleranceMinutes - Tolerância em minutos (padrão: 1)
    * @returns {boolean} True se dentro da tolerância
    */
   static isEndOfDayTimeWithTolerance(toleranceMinutes = 1) {
     const brasiliaTime = this.getBrasiliaTime();
-    const endHour = this.getBusinessEndHour();
+    const weekday = brasiliaTime.weekday;
+    
+    let endHour;
+    
+    // Verificar se é sábado e usar horário específico
+    if (weekday === 6 && this.configManager) { // Sábado
+      const saturdayEndTime = this.configManager.getSaturdayEndTime();
+      endHour = parseInt(saturdayEndTime.split(':')[0]);
+    } else {
+      // Dias úteis normais
+      endHour = this.getBusinessEndHour();
+    }
+    
     const targetTime = brasiliaTime.set({
       hour: endHour,
       minute: this.END_OF_DAY_MINUTE,

@@ -11,11 +11,11 @@ module.exports = {
     // Configurações de ambiente
     env: {
       NODE_ENV: 'development',
-      PORT: 3000
+      PORT: 48026
     },
     env_production: {
       NODE_ENV: 'production',
-      PORT: 3000
+      PORT: 48026
     },
     
     // Configurações de logging
@@ -43,7 +43,7 @@ module.exports = {
     post_update: ['npm install', 'npm run build'],
     
     // Configurações de saúde
-    health_check_url: 'http://localhost:3000/health',
+    health_check_url: 'http://localhost:48026/health',
     health_check_grace_period: 3000
   }],
 

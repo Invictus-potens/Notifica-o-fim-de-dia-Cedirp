@@ -1,6 +1,6 @@
 {
   "server": {
-    "port": 3000,
+    "port": 48026,
     "host": "0.0.0.0",
     "timeout": 30000,
     "keepAliveTimeout": 5000

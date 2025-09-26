@@ -13,7 +13,7 @@ async function debugMessageSent() {
     console.log('   DEBUGANDO COLUNA "MENSAGEM ENVIADA"');
     console.log('===========================================');
     
-    const baseUrl = 'http://localhost:3000';
+    const baseUrl = 'http://localhost:48026';
     
     // 1. Verificar se servidor está rodando
     console.log('\n1️⃣ Verificando servidor...');

@@ -6,7 +6,7 @@ async function debugChannel2() {
     console.log('🔍 DEBUG: Investigando Canal 2 (WHATSAPP OFICIAL)\n');
     console.log('=' .repeat(70));
 
-    const baseUrl = 'http://localhost:3000';
+    const baseUrl = 'http://localhost:48026';
 
     try {
         // 1. Obter todos os canais

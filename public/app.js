@@ -1072,35 +1072,50 @@ class AutomationInterface {
             }
             
             // Recarregar configurações do sistema
+            console.log('⚙️ [RELOAD] Recarregando configurações do sistema...');
             await this.loadSystemConfig();
+            console.log('✅ [RELOAD] Configurações do sistema recarregadas');
             
             // Recarregar Action Cards
+            console.log('🃏 [RELOAD] Recarregando Action Cards...');
             await this.loadActionCards();
+            console.log('✅ [RELOAD] Action Cards recarregados');
             
             // Recarregar setores
+            console.log('🏥 [RELOAD] Recarregando setores...');
             await this.loadSectors();
+            console.log('✅ [RELOAD] Setores recarregados');
             
             // Recarregar histórico de mensagens
+            console.log('📜 [RELOAD] Recarregando histórico de mensagens...');
             await this.loadMessageHistory();
+            console.log('✅ [RELOAD] Histórico de mensagens recarregado');
             
-            // Recarregar listas de exclusão
-            this.loadExclusionLists();
+            // Recarregar listas de exclusão (COM AWAIT - CORREÇÃO APLICADA)
+            console.log('📋 [RELOAD] Recarregando listas de exclusão (COM AWAIT)...');
+            console.log('🔧 [RELOAD] CORREÇÃO: Usando await para garantir sincronização');
+            await this.loadExclusionLists();
+            console.log('✅ [RELOAD] Listas de exclusão recarregadas com sucesso');
             
             // Recarregar pacientes (se estivermos na aba de atendimentos)
             if (document.querySelector('[data-route="atendimentos"]').classList.contains('active')) {
+                console.log('👥 [RELOAD] Recarregando pacientes...');
                 await this.loadPatients();
+                console.log('✅ [RELOAD] Pacientes recarregados');
             }
             
             // Atualizar estado do fluxo
+            console.log('🔄 [RELOAD] Atualizando estado do fluxo...');
             this.checkFlowState();
+            console.log('✅ [RELOAD] Estado do fluxo atualizado');
             
             // Mostrar notificação de sucesso
             this.showSuccess('✅ Configurações recarregadas com sucesso!');
             
-            console.log('✅ Todas as configurações foram recarregadas');
+            console.log('🎉 [RELOAD] Todas as configurações foram recarregadas com sucesso!');
             
         } catch (error) {
-            console.error('❌ Erro ao recarregar configurações:', error);
+            console.error('❌ [RELOAD] Erro ao recarregar configurações:', error);
             this.showError('Erro ao recarregar configurações: ' + error.message);
             
             // Restaurar botão em caso de erro
@@ -1897,19 +1912,29 @@ class AutomationInterface {
 
 
     updateExcludedSectorsDisplay() {
+        console.log('🖥️ [DISPLAY] Atualizando exibição dos setores excluídos...');
+        console.log(`📊 [DISPLAY] Setores para exibir: ${this.excludedSectors?.length || 0}`);
+        
         const container = document.getElementById('excluded-sectors-list');
-        if (!container) return;
+        if (!container) {
+            console.log('❌ [DISPLAY] Container excluded-sectors-list não encontrado');
+            return;
+        }
 
         if (this.excludedSectors.length === 0) {
+            console.log('📋 [DISPLAY] Nenhum setor excluído, exibindo mensagem padrão');
             container.innerHTML = '<small class="text-muted">Nenhum setor excluído</small>';
             return;
         }
 
+        console.log('🔄 [DISPLAY] Limpando container e criando elementos...');
         // Clear container
         container.innerHTML = '';
 
         // Create elements for each excluded sector
         this.excludedSectors.forEach(sector => {
+            console.log(`➕ [DISPLAY] Adicionando setor: ${sector.name} (ID: ${sector.id})`);
+            
             const sectorDiv = document.createElement('div');
             sectorDiv.className = 'd-flex justify-content-between align-items-center mb-2 p-2 bg-white rounded border';
             sectorDiv.innerHTML = `
@@ -1931,6 +1956,8 @@ class AutomationInterface {
 
             container.appendChild(sectorDiv);
         });
+        
+        console.log(`✅ [DISPLAY] Exibição atualizada com ${this.excludedSectors.length} setores excluídos`);
     }
 
 
@@ -1965,51 +1992,107 @@ class AutomationInterface {
 
 
     async loadExcludedSectors() {
+        console.log('🔍 [EXCLUDED] Iniciando carregamento de setores excluídos...');
+        
         try {
+            // Garantir que os setores estejam carregados antes de tentar filtrá-los
+            console.log(`📊 [EXCLUDED] Verificando availableSectors: ${this.availableSectors?.length || 0} setores`);
+            
+            if (!this.availableSectors || this.availableSectors.length === 0) {
+                console.log('⚠️ [EXCLUDED] availableSectors não carregado, carregando setores primeiro...');
+                await this.loadSectors();
+                console.log(`✅ [EXCLUDED] Setores recarregados: ${this.availableSectors?.length || 0} setores`);
+            }
+            
             // Primeiro, tentar carregar do backend
+            console.log('🌐 [EXCLUDED] Carregando configuração do backend...');
             const response = await fetch('/api/config');
+            
             if (response.ok) {
-                const config = await response.json();
+                const result = await response.json();
+                console.log('✅ [EXCLUDED] Configuração carregada do backend');
+                
+                // CORREÇÃO: Acessar config.data em vez de config diretamente
+                const config = result.data || result;
+                console.log('🔍 [EXCLUDED] Estrutura da resposta:', Object.keys(result));
+                console.log('🔍 [EXCLUDED] Dados da configuração:', Object.keys(config));
+                
                 if (config.excludedSectors && Array.isArray(config.excludedSectors)) {
+                    console.log(`📋 [EXCLUDED] Setores excluídos na config: ${config.excludedSectors.length}`);
+                    console.log('📋 [EXCLUDED] IDs dos setores excluídos:', config.excludedSectors);
+                    
                     // Carregar setores completos da lista disponível
+                    console.log('🔄 [EXCLUDED] Filtrando setores excluídos da lista disponível...');
                     this.excludedSectors = this.availableSectors.filter(sector => 
                         config.excludedSectors.includes(sector.id)
                     );
+                    
+                    console.log(`✅ [EXCLUDED] Setores excluídos filtrados: ${this.excludedSectors.length}`);
+                    console.log('📋 [EXCLUDED] Setores excluídos encontrados:', this.excludedSectors.map(s => s.name));
+                    
                     this.updateExcludedSectorsDisplay();
-                    console.log('✅ Setores excluídos carregados do backend');
+                    console.log('✅ [EXCLUDED] Setores excluídos carregados do backend e exibição atualizada');
                     return;
+                } else {
+                    console.log('⚠️ [EXCLUDED] Nenhum setor excluído encontrado na configuração');
+                    console.log('🔍 [EXCLUDED] Tipo de excludedSectors:', typeof config.excludedSectors);
+                    console.log('🔍 [EXCLUDED] É array?', Array.isArray(config.excludedSectors));
                 }
+            } else {
+                console.log('❌ [EXCLUDED] Erro ao carregar configuração do backend:', response.status);
             }
             
             // Fallback: carregar do localStorage
+            console.log('💾 [EXCLUDED] Tentando carregar do localStorage...');
             const saved = localStorage.getItem('excludedSectors');
             if (saved) {
                 this.excludedSectors = JSON.parse(saved);
                 this.updateExcludedSectorsDisplay();
-                console.log('⚠️ Setores excluídos carregados do localStorage (fallback)');
+                console.log('⚠️ [EXCLUDED] Setores excluídos carregados do localStorage (fallback)');
+                console.log('📋 [EXCLUDED] Setores do localStorage:', this.excludedSectors.map(s => s.name || s));
+            } else {
+                console.log('⚠️ [EXCLUDED] Nenhum setor excluído encontrado no localStorage');
             }
+            
         } catch (error) {
-            console.error('Erro ao carregar setores excluídos:', error);
+            console.error('❌ [EXCLUDED] Erro ao carregar setores excluídos:', error);
+            
             // Fallback para localStorage
             try {
+                console.log('💾 [EXCLUDED] Tentando fallback para localStorage...');
                 const saved = localStorage.getItem('excludedSectors');
                 if (saved) {
                     this.excludedSectors = JSON.parse(saved);
                     this.updateExcludedSectorsDisplay();
+                    console.log('⚠️ [EXCLUDED] Fallback localStorage executado com sucesso');
                 }
             } catch (localError) {
-                console.error('Erro no fallback localStorage:', localError);
+                console.error('❌ [EXCLUDED] Erro no fallback localStorage:', localError);
             }
         }
     }
 
 
     async loadExclusionLists() {
-        // Não carregar setores novamente, pois já foram carregados
-        // Apenas carregar as exclusões (que dependem das listas já carregadas)
-        await this.loadExcludedSectors();
+        console.log('📋 [EXCLUSION] Iniciando carregamento de listas de exclusão...');
         
-        console.log('✅ Listas de exclusão carregadas com sucesso');
+        try {
+            // Não carregar setores novamente, pois já foram carregados
+            // Apenas carregar as exclusões (que dependem das listas já carregadas)
+            console.log('🔄 [EXCLUSION] Chamando loadExcludedSectors...');
+            await this.loadExcludedSectors();
+            
+            console.log('✅ [EXCLUSION] Listas de exclusão carregadas com sucesso');
+            console.log(`📊 [EXCLUSION] Setores excluídos atuais: ${this.excludedSectors?.length || 0}`);
+            
+            if (this.excludedSectors && this.excludedSectors.length > 0) {
+                console.log('📋 [EXCLUSION] Setores excluídos:', this.excludedSectors.map(s => s.name));
+            }
+            
+        } catch (error) {
+            console.error('❌ [EXCLUSION] Erro ao carregar listas de exclusão:', error);
+            throw error;
+        }
     }
 
     async loadMessageConfig() {

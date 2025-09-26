@@ -3,7 +3,7 @@
 # Script de verificação de saúde da aplicação
 # Automação de Mensagem de Espera - CAM Krolik Integration
 
-PORT=${PORT:-3000}
+PORT=${PORT:-48026}
 HOST=${HOST:-localhost}
 
 echo "🏥 Verificando saúde da aplicação..."

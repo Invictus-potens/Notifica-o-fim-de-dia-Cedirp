@@ -144,7 +144,7 @@ KROLIK_TOKEN=63e68f168a48875131856df8
 # Configurações do Sistema
 NODE_ENV=development
 TZ=America/Sao_Paulo
-PORT=3000
+PORT=48026
 
 # Configurações de Monitoramento
 MONITORING_INTERVAL=3min

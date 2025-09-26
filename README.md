@@ -102,7 +102,7 @@ Crie um arquivo `.env` com as seguintes variáveis:
 ```env
 # Configuração de Produção
 NODE_ENV=production
-PORT=3000
+PORT=48026
 
 # API CAM Krolik
 API_URL=https://api.camkrolik.com.br
@@ -319,7 +319,7 @@ O sistema agora permite selecionar atendimentos específicos e enviar mensagens 
 ### Endpoints da API
 ```bash
 # Enviar cartão de ação para pacientes selecionados
-curl -X POST http://localhost:3000/api/messages/send-action-card \
+curl -X POST http://localhost:48026/api/messages/send-action-card \
   -H "Content-Type: application/json" \
   -d '{
     "patients": [
@@ -336,7 +336,7 @@ curl -X POST http://localhost:3000/api/messages/send-action-card \
   }'
 
 # Enviar template para pacientes selecionados
-curl -X POST http://localhost:3000/api/messages/send-template \
+curl -X POST http://localhost:48026/api/messages/send-template \
   -H "Content-Type: application/json" \
   -d '{
     "patients": [

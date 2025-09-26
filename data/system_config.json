@@ -1,8 +1,8 @@
 {
-  "excludedSectors": "[\"6627fab80f0dbc5420282b2b\",\"6627fac62c6fb7d3c7fb7aba\",\"65f0a689746a222fbccc906c\",\"682739784933d4656bf60583\"]",
+  "excludedSectors": "[\"6627fab80f0dbc5420282b2b\",\"6627fac62c6fb7d3c7fb7aba\",\"682739784933d4656bf60583\",\"65f0a689746a222fbccc906c\"]",
   "flowPaused": "false",
   "endOfDayPaused": "false",
-  "ignoreBusinessHours": "true",
+  "ignoreBusinessHours": "false",
   "minWaitTime": "30",
   "maxWaitTime": "40",
   "selectedActionCard": "631f2b4f307d23f46ac80a10",

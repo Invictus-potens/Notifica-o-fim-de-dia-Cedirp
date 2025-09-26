@@ -1,15 +1,21 @@
 {
-  "totalSent": 377,
+  "totalSent": 439,
   "totalFailed": 0,
-  "messages30Min": 276,
+  "messages30Min": 338,
   "messagesEndDay": 101,
-  "lastUpdated": "2025-09-25T20:58:01.676Z",
+  "lastUpdated": "2025-09-26T18:56:01.503Z",
   "dailyStats": {
     "2025-09-25": {
       "sent": 44,
       "failed": 0,
       "messages30Min": 36,
       "messagesEndDay": 8
+    },
+    "2025-09-26": {
+      "sent": 62,
+      "failed": 0,
+      "messages30Min": 62,
+      "messagesEndDay": 0
     }
   }
 }

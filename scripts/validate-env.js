@@ -72,7 +72,7 @@ function validateEnvironment() {
         console.log('   ❌ PORT deve ser um número entre 1 e 65535');
         hasErrors = true;
     } else {
-        console.log(`   ✅ Porta válida: ${port || '3000 (padrão)'}`);
+        console.log(`   ✅ Porta válida: ${port || '48026 (padrão)'}`);
     }
     
     // Validar timezone
