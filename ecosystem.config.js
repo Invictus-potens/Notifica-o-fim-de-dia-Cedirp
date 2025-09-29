@@ -4,7 +4,7 @@
 module.exports = {
   apps: [{
     name: 'automacao-mensagem-espera',
-    script: 'dist/index.js',
+    script: 'src/cedirp.js',
     instances: 1, // Single instance para evitar conflitos de scheduler
     exec_mode: 'fork',
     

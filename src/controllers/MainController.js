@@ -81,8 +81,8 @@ class MainController {
 
       // Inicializar ProductionScheduler com credenciais da API CAM Krolik
       const krolikCredentials = {
-        baseURL: process.env.KROLIK_BASE_URL || 'https://api.camkrolik.com.br',
-        token: process.env.KROLIK_TOKEN || '63e68f168a48875131856df8'
+        baseURL: process.env.KROLIK_API_BASE_URL || 'https://api.camkrolik.com.br',
+        token: process.env.KROLIK_API_TOKEN || '63e68f168a48875131856df8'
       };
       
       await this.productionScheduler.initialize(krolikCredentials);
