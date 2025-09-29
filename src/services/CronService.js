@@ -124,9 +124,10 @@ class CronService {
   }
 
   /**
-   * Agenda mensagens de fim de dia às 18:00
+   * Agenda mensagens de fim de dia com horário dinâmico baseado no dia da semana
+   * Sábados: 12:00, Dias úteis: 18:00
    */
-  scheduleEndOfDayMessages(callback) {
+  scheduleEndOfDayMessages(callback, configManager) {
     try {
       const jobName = 'end-of-day-messages';
       
@@ -136,11 +137,22 @@ class CronService {
         this.jobStatus.set(jobName, false);
       }
 
-      // Criar novo job: todos os dias às 18:00
-      const job = cron.schedule('0 18 * * *', async () => {
+      // Criar job que verifica o horário dinamicamente
+      const job = cron.schedule('* * * * *', async () => {
         try {
-          console.log(`🌅 [${new Date().toLocaleString('pt-BR')}] Executando mensagens de fim de dia (18:00)`);
-          await callback();
+          const { TimeUtils } = require('../utils/TimeUtils');
+          
+          // Verificar se é horário de fim de expediente
+          if (TimeUtils.isEndOfDayTimeWithTolerance(1)) {
+            const brasiliaTime = TimeUtils.getBrasiliaTime();
+            const isSaturday = brasiliaTime.weekday === 6;
+            const endHour = isSaturday ? 
+              parseInt(configManager.getSaturdayEndTime().split(':')[0]) : 
+              parseInt(configManager.getEndOfDayTime().split(':')[0]);
+            
+            console.log(`🌅 [${new Date().toLocaleString('pt-BR')}] Executando mensagens de fim de dia (${endHour}:00 - ${isSaturday ? 'SÁBADO' : 'DIA ÚTIL'})`);
+            await callback();
+          }
         } catch (error) {
           this.errorHandler.logError(error, 'CronService.endOfDayMessages');
         }
@@ -152,7 +164,7 @@ class CronService {
       this.jobs.set(jobName, job);
       this.jobStatus.set(jobName, true); // Marcar como ativo
       
-      console.log('✅ Mensagens de fim de dia agendadas (18:00 diariamente)');
+      console.log('✅ Mensagens de fim de dia agendadas (horário dinâmico: 12:00 sábados, 18:00 dias úteis)');
       return job;
 
     } catch (error) {

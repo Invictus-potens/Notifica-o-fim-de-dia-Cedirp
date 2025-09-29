@@ -1,16 +1,44 @@
 [
   {
-    "id": "68cdf84af42aa528cdb2440e",
-    "contactId": "6863f9b7762b73008f223c5e",
-    "name": "Felipe Prado",
-    "phone": "5516981892476",
-    "sectorId": "6401f4f49b1ff8512b525e9c",
-    "sectorName": "Suporte Telefonia",
-    "channelId": "63e68f168a48875131856df8",
+    "id": "68d7f8f0446dd4d4f8ee8eef",
+    "contactId": "66f2a1f10f46b4d964fc95b4",
+    "name": "Sandra",
+    "phone": "5519992487277",
+    "sectorId": "65eb5a3501515baa7fa15ef8",
+    "sectorName": "Setor 65eb5a3501515baa7fa15ef8",
+    "channelId": "65f06d5b867543e1d094fa0f",
     "channelType": "WhatsApp Business (Principal)",
-    "waitStartTime": "2025-09-20T00:41:46.599Z",
-    "waitTimeMinutes": 66,
+    "waitStartTime": "2025-09-27T14:47:12.094Z",
+    "waitTimeMinutes": 31,
     "status": "waiting",
-    "enteredAt": "2025-09-20T01:24:18.728Z"
+    "enteredAt": "2025-09-27T14:55:55.480Z"
+  },
+  {
+    "id": "68d7ef1ec648e6db95fcab79",
+    "contactId": "68ceddb4b42825276a2837c3",
+    "name": "Vani",
+    "phone": "5516997010449",
+    "sectorId": "6627fac62c6fb7d3c7fb7aba",
+    "sectorName": "Setor 6627fac62c6fb7d3c7fb7aba",
+    "channelId": "65f06d5b867543e1d094fa0f",
+    "channelType": "WhatsApp Business (Principal)",
+    "waitStartTime": "2025-09-27T14:05:18.491Z",
+    "waitTimeMinutes": 75,
+    "status": "waiting",
+    "enteredAt": "2025-09-27T14:07:00.632Z"
+  },
+  {
+    "id": "68d7e7231435e549452e0ab4",
+    "contactId": "67b7620b50414d36cfa4992b",
+    "name": "Vania",
+    "phone": "5516988116057",
+    "sectorId": "6627fac62c6fb7d3c7fb7aba",
+    "sectorName": "Setor 6627fac62c6fb7d3c7fb7aba",
+    "channelId": "65f06d5b867543e1d094fa0f",
+    "channelType": "WhatsApp Business (Principal)",
+    "waitStartTime": "2025-09-27T13:31:15.679Z",
+    "waitTimeMinutes": 95,
+    "status": "waiting",
+    "enteredAt": "2025-09-27T14:06:48.489Z"
   }
 ]

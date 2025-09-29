@@ -82,7 +82,7 @@ class ProductionScheduler {
       // Agendar mensagens de fim de dia
       if (this.config.enableEndOfDayMessages) {
         this.cronService.scheduleEndOfDayMessages(() => 
-          this.handleEndOfDayMessages()
+          this.handleEndOfDayMessages(), this.configManager
         );
       }
       
