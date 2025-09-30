@@ -94,16 +94,29 @@ class KrolikApiClient {
    */
   async listWaitingAttendances() {
     try {
+      // Validar configurações antes de fazer a requisição
+      if (!this.token) {
+        throw new Error('Token da API Krolik não configurado. Verifique a variável KROLIK_API_TOKEN');
+      }
+      
+      if (!this.baseURL) {
+        throw new Error('URL base da API Krolik não configurada. Verifique a variável KROLIK_API_BASE_URL');
+      }
+
       const payload = {
         typeChat: 2,
         status: 1
       };
 
+      console.log(`🔍 Fazendo requisição para: ${this.baseURL}/core/v2/api/chats/list-lite`);
+      console.log(`📋 Payload:`, JSON.stringify(payload, null, 2));
+      console.log(`🔑 Token (primeiros 10 chars): ${this.token.substring(0, 10)}...`);
+
       const response = await this.axiosInstance.post('/core/v2/api/chats/list-lite', payload, {
         headers: {
           'accept': 'application/json',
           'access-token': this.token,
-          'Content-Type': 'application/json-patch+json'
+          'Content-Type': 'application/json'
         }
       });
 
@@ -112,7 +125,27 @@ class KrolikApiClient {
       console.log(`👥 Encontrados ${patients.length} pacientes aguardando`);
       return patients;
     } catch (error) {
-      console.error('Erro ao listar atendimentos aguardando:', error.message);
+      // Log detalhado do erro
+      console.error('❌ Erro detalhado ao listar atendimentos aguardando:');
+      console.error(`   Mensagem: ${error.message}`);
+      
+      if (error.response) {
+        console.error(`   Status: ${error.response.status}`);
+        console.error(`   Status Text: ${error.response.statusText}`);
+        console.error(`   Headers:`, error.response.headers);
+        console.error(`   Data:`, JSON.stringify(error.response.data, null, 2));
+      } else if (error.request) {
+        console.error(`   Request feito mas sem resposta:`, error.request);
+      } else {
+        console.error(`   Erro na configuração da requisição:`, error.message);
+      }
+      
+      // Log das configurações atuais para debug
+      console.error('🔧 Configurações atuais:');
+      console.error(`   Base URL: ${this.baseURL}`);
+      console.error(`   Token configurado: ${this.token ? 'Sim' : 'Não'}`);
+      console.error(`   Timeout: ${this.axiosInstance.defaults.timeout}ms`);
+      
       throw error;
     }
   }
@@ -188,7 +221,7 @@ class KrolikApiClient {
         headers: {
           'accept': 'application/json',
           'access-token': this.token,
-          'Content-Type': 'application/json-patch+json'
+          'Content-Type': 'application/json'
         }
       });
 
@@ -287,10 +320,35 @@ class KrolikApiClient {
    */
   async testConnection() {
     try {
-      await this.axiosInstance.get('/core/v2/api/channel/list');
+      console.log('🔍 Testando conexão com a API Krolik...');
+      console.log(`   URL: ${this.baseURL}/core/v2/api/channel/list`);
+      console.log(`   Token: ${this.token ? this.token.substring(0, 10) + '...' : 'NÃO CONFIGURADO'}`);
+      
+      const response = await this.axiosInstance.get('/core/v2/api/channel/list');
+      console.log('✅ Conexão com API Krolik estabelecida com sucesso');
+      console.log(`   Status: ${response.status}`);
+      console.log(`   Canais encontrados: ${response.data?.length || 0}`);
       return true;
     } catch (error) {
-      console.error('Erro ao testar conexão:', error.message);
+      console.error('❌ Erro ao testar conexão com API Krolik:');
+      console.error(`   Mensagem: ${error.message}`);
+      
+      if (error.response) {
+        console.error(`   Status: ${error.response.status}`);
+        console.error(`   Status Text: ${error.response.statusText}`);
+        console.error(`   Response Data:`, JSON.stringify(error.response.data, null, 2));
+      } else if (error.request) {
+        console.error(`   Erro de rede - sem resposta do servidor`);
+        console.error(`   Request config:`, {
+          url: error.config?.url,
+          method: error.config?.method,
+          baseURL: error.config?.baseURL,
+          timeout: error.config?.timeout
+        });
+      } else {
+        console.error(`   Erro na configuração:`, error.message);
+      }
+      
       return false;
     }
   }

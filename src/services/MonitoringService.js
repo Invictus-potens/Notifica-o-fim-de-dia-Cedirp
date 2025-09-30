@@ -68,13 +68,37 @@ class MonitoringService {
 
       console.log('🔍 Verificando pacientes elegíveis...\n');
       
-      // 1. Buscar pacientes atuais da API
-      const apiPatients = await this.krolikApiClient.listWaitingAttendances();
-      console.log(`📊 ${apiPatients.length} pacientes encontrados na API`);
+      let apiPatients = [];
+      let updateStats = { new: 0, updated: 0, removed: 0 };
       
-      // 2. Atualizar lista de pacientes ativos
-      const updateStats = await this.jsonPatientManager.updateActivePatients(apiPatients);
-      console.log(`📈 Pacientes atualizados: +${updateStats.new} ~${updateStats.updated} -${updateStats.removed}`);
+      try {
+        // 1. Buscar pacientes atuais da API
+        apiPatients = await this.krolikApiClient.listWaitingAttendances();
+        console.log(`📊 ${apiPatients.length} pacientes encontrados na API`);
+        
+        // 2. Atualizar lista de pacientes ativos
+        updateStats = await this.jsonPatientManager.updateActivePatients(apiPatients);
+        console.log(`📈 Pacientes atualizados: +${updateStats.new} ~${updateStats.updated} -${updateStats.removed}`);
+        
+      } catch (apiError) {
+        console.error('⚠️ Erro ao buscar pacientes da API, usando dados locais como fallback:', apiError.message);
+        
+        // Fallback: usar dados locais se API falhar
+        try {
+          const localPatients = await this.jsonPatientManager.loadPatientsFromFile(
+            this.jsonPatientManager.files.active
+          );
+          apiPatients = localPatients || [];
+          console.log(`📋 Usando ${apiPatients.length} pacientes do arquivo local`);
+          
+          // Marcar estatísticas como fallback
+          updateStats = { new: 0, updated: 0, removed: 0, fallback: true };
+          
+        } catch (fallbackError) {
+          console.error('❌ Erro também no fallback local:', fallbackError.message);
+          apiPatients = [];
+        }
+      }
       
       // 3. Buscar pacientes elegíveis para mensagem de 30min
       const eligible30Min = await this.getEligiblePatientsFor30MinMessage();
@@ -96,8 +120,16 @@ class MonitoringService {
       
     } catch (error) {
       this.stats.errors++;
+      console.error('❌ Erro crítico no MonitoringService:', error.message);
       this.errorHandler.logError(error, 'MonitoringService.checkEligiblePatients');
-      throw error;
+      
+      // Retornar resultado vazio em caso de erro crítico
+      return {
+        eligible30Min: [],
+        eligibleEndOfDay: [],
+        totalActive: 0,
+        updateStats: { new: 0, updated: 0, removed: 0, error: true }
+      };
     }
   }
 

@@ -1,6 +1,16 @@
 const fs = require('fs');
 const path = require('path');
 
+// Função utilitária para formatação segura de datas (compatibilidade Linux)
+function formatDateTime(date = new Date()) {
+  try {
+    return date.toLocaleString('pt-BR');
+  } catch (error) {
+    // Fallback para Linux sem locale pt-BR
+    return date.toISOString().replace('T', ' ').substring(0, 19);
+  }
+}
+
 /**
  * Gerenciador de histórico de mensagens enviadas
  * Armazena mensagens enviadas e implementa limpeza diária
@@ -72,7 +82,7 @@ class MessageHistoryManager {
         actionCardId: messageData.actionCardId,
         messageType: messageData.messageType,
         sentAt: messageData.sentAt || new Date(),
-        sentAtFormatted: (messageData.sentAt || new Date()).toLocaleString('pt-BR'),
+        sentAtFormatted: formatDateTime(messageData.sentAt || new Date()),
         success: messageData.success !== false,
         createdAt: new Date().toISOString()
       };

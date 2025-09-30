@@ -16,11 +16,21 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Função utilitária para formatação segura de datas (compatibilidade Linux)
+function formatDateTime(date = new Date()) {
+  try {
+    return date.toLocaleString('pt-BR');
+  } catch (error) {
+    // Fallback para Linux sem locale pt-BR
+    return date.toISOString().replace('T', ' ').substring(0, 19);
+  }
+}
+
 // Middleware de logging básico para requisições
 app.use((req, res, next) => {
   // Log para requisições de API e health check
   if (req.url.startsWith('/api/') || req.url === '/health') {
-    const timestamp = new Date().toLocaleString('pt-BR');
+    const timestamp = formatDateTime();
     const method = req.method;
     const url = req.url;
     const ip = req.ip || 'desconhecido';
@@ -683,7 +693,7 @@ app.get('/health', async (req, res) => {
     console.log('   🔍 EXECUTANDO HEALTH CHECK');
     console.log('===========================================');
     console.log(`🕐 Tipo: ${quickCheck ? 'Rápido' : 'Completo'}`);
-    console.log(`⏰ Iniciado: ${new Date().toLocaleString('pt-BR')}`);
+    console.log(`⏰ Iniciado: ${formatDateTime()}`);
     
     let healthResult;
     if (quickCheck) {
@@ -830,7 +840,7 @@ app.get('/health', async (req, res) => {
     console.log('   🔍 EXECUTANDO HEALTH CHECK');
     console.log('===========================================');
     console.log(`🕐 Tipo: ${quickCheck ? 'Rápido' : 'Completo'}`);
-    console.log(`⏰ Iniciado: ${new Date().toLocaleString('pt-BR')}`);
+    console.log(`⏰ Iniciado: ${formatDateTime()}`);
     
     let healthResult;
     if (quickCheck) {

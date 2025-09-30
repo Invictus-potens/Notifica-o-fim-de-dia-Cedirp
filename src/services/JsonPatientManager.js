@@ -1,6 +1,16 @@
 const fs = require('fs');
 const path = require('path');
 
+// Função utilitária para formatação segura de datas (compatibilidade Linux)
+function formatDateTime(date = new Date()) {
+  try {
+    return date.toLocaleString('pt-BR');
+  } catch (error) {
+    // Fallback para Linux sem locale pt-BR
+    return date.toISOString().replace('T', ' ').substring(0, 19);
+  }
+}
+
 /**
  * @typedef {Object} PatientRecord
  * @property {string} id
@@ -410,7 +420,7 @@ class JsonPatientManager {
             actionCardId: messageInfo.actionCardId,
             messageType: messageInfo.messageType,
             sentAt: messageInfo.sentAt || new Date(),
-            sentAtFormatted: (messageInfo.sentAt || new Date()).toLocaleString('pt-BR')
+            sentAtFormatted: formatDateTime(messageInfo.sentAt || new Date())
           };
         }
 

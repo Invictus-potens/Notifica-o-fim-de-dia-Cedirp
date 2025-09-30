@@ -1,5 +1,15 @@
 const cron = require('node-cron');
 
+// Função utilitária para formatação segura de datas (compatibilidade Linux)
+function formatDateTime(date = new Date()) {
+  try {
+    return date.toLocaleString('pt-BR');
+  } catch (error) {
+    // Fallback para Linux sem locale pt-BR
+    return date.toISOString().replace('T', ' ').substring(0, 19);
+  }
+}
+
 /**
  * Serviço de agendamento usando cron jobs
  * Gerencia execução de tarefas em horários específicos
@@ -63,7 +73,7 @@ class CronService {
       // Criar novo job: a cada 3 minutos
       const job = cron.schedule('*/3 * * * *', async () => {
         try {
-          console.log(`🔄 [${new Date().toLocaleString('pt-BR')}] Executando verificação de pacientes (3min)`);
+          console.log(`🔄 [${formatDateTime()}] Executando verificação de pacientes (3min)`);
           await callback();
         } catch (error) {
           this.errorHandler.logError(error, 'CronService.patientCheck');
@@ -101,7 +111,7 @@ class CronService {
       // Criar novo job: a cada minuto
       const job = cron.schedule('* * * * *', async () => {
         try {
-          console.log(`🔄 [${new Date().toLocaleString('pt-BR')}] Executando verificação intensiva de pacientes (1min)`);
+          console.log(`🔄 [${formatDateTime()}] Executando verificação intensiva de pacientes (1min)`);
           await callback();
         } catch (error) {
           this.errorHandler.logError(error, 'CronService.intensivePatientCheck');
@@ -150,7 +160,7 @@ class CronService {
               parseInt(configManager.getSaturdayEndTime().split(':')[0]) : 
               parseInt(configManager.getEndOfDayTime().split(':')[0]);
             
-            console.log(`🌅 [${new Date().toLocaleString('pt-BR')}] Executando mensagens de fim de dia (${endHour}:00 - ${isSaturday ? 'SÁBADO' : 'DIA ÚTIL'})`);
+            console.log(`🌅 [${formatDateTime()}] Executando mensagens de fim de dia (${endHour}:00 - ${isSaturday ? 'SÁBADO' : 'DIA ÚTIL'})`);
             await callback();
           }
         } catch (error) {
@@ -194,7 +204,7 @@ class CronService {
       const cronExpression = `${minutes} ${hours} * * *`;
       const job = cron.schedule(cronExpression, async () => {
         try {
-          console.log(`🧹 [${new Date().toLocaleString('pt-BR')}] Executando limpeza diária (${cleanupTime})`);
+          console.log(`🧹 [${formatDateTime()}] Executando limpeza diária (${cleanupTime})`);
           await callback();
         } catch (error) {
           this.errorHandler.logError(error, 'CronService.dailyCleanup');
@@ -232,7 +242,7 @@ class CronService {
       // Criar novo job: todos os dias às 23:00
       const job = cron.schedule('0 23 * * *', async () => {
         try {
-          console.log(`💾 [${new Date().toLocaleString('pt-BR')}] Executando backup diário (23:00)`);
+          console.log(`💾 [${formatDateTime()}] Executando backup diário (23:00)`);
           await callback();
         } catch (error) {
           this.errorHandler.logError(error, 'CronService.dailyBackup');
@@ -268,7 +278,7 @@ class CronService {
       // Criar novo job
       const job = cron.schedule(cronExpression, async () => {
         try {
-          console.log(`🔄 [${new Date().toLocaleString('pt-BR')}] Executando job '${jobName}' ${description}`);
+          console.log(`🔄 [${formatDateTime()}] Executando job '${jobName}' ${description}`);
           await callback();
         } catch (error) {
           this.errorHandler.logError(error, `CronService.${jobName}`);
