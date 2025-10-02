@@ -187,6 +187,7 @@ class MonitoringService {
 
   /**
    * Verifica se paciente é elegível para mensagem de 30min
+   * 🎀 ATUALIZADO: Usa sistema de TAGS ao invés de isPatientProcessed
    */
   async isPatientEligibleFor30MinMessage(patient) {
     try {
@@ -197,8 +198,8 @@ class MonitoringService {
         return false;
       }
       
-      // 2. Verificar se já foi processado
-      if (await this.jsonPatientManager.isPatientProcessed(patient.id)) {
+      // 2. 🎀 NOVO: Verificar se já recebeu mensagem de 30min (usando TAGS)
+      if (await this.jsonPatientManager.hasMessageTag(patient.id, '30min')) {
         return false;
       }
       
@@ -215,8 +216,9 @@ class MonitoringService {
         return false;
       }
       
-      // 5. Verificar horário comercial (se não estiver configurado para ignorar)
+      // 5. 🎀 IMPORTANTE: Verificar horário comercial (mensagem de 30min SÓ durante expediente)
       if (!this.configManager.shouldIgnoreBusinessHours() && !TimeUtils.isBusinessHours()) {
+        console.log(`🕐 Paciente ${patient.name} não receberá mensagem de 30min - fora do horário comercial`);
         return false;
       }
       
@@ -240,7 +242,8 @@ class MonitoringService {
 
   /**
    * Verifica se paciente é elegível para mensagem de fim de dia
-   * TODOS os pacientes aguardando devem receber mensagem de fim de dia, EXCETO os de setores excluídos
+   * 🎀 ATUALIZADO: Usa sistema de TAGS - TODOS os pacientes aguardando devem receber, 
+   * EXCETO os de setores excluídos ou que JÁ RECEBERAM mensagem de fim de dia
    */
   async isPatientEligibleForEndOfDayMessage(patient) {
     try {
@@ -272,8 +275,10 @@ class MonitoringService {
         return false;
       }
       
-      // 6. Verificar se já foi processado (recebeu mensagem de fim de dia)
-      if (await this.jsonPatientManager.isPatientProcessed(patient.id)) {
+      // 6. 🎀 NOVO: Verificar se já recebeu mensagem de fim de dia (usando TAGS)
+      // NÃO IMPORTA se recebeu mensagem de 30min, pode receber fim de dia!
+      if (await this.jsonPatientManager.hasMessageTag(patient.id, 'end_of_day')) {
+        console.log(`🚫 Paciente ${patient.name} já recebeu mensagem de fim de dia`);
         return false;
       }
       
@@ -284,6 +289,7 @@ class MonitoringService {
       }
       
       // 8. TODOS os demais pacientes aguardando são elegíveis para fim de dia
+      // (mesmo se já tiverem recebido mensagem de 30min)
       return true;
       
     } catch (error) {

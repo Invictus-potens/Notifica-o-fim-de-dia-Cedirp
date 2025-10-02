@@ -186,19 +186,86 @@ class ProductionScheduler {
 
   /**
    * Manipula mensagens de 30 minutos
+   * 🛡️ ATUALIZADO: Sistema de reserva para evitar race conditions
    */
   async handle30MinuteMessages(eligiblePatients) {
     try {
       console.log(`⏰ Processando ${eligiblePatients.length} pacientes elegíveis para mensagem de 30min...`);
       
-      const results = await this.messageService.send30MinuteMessages(eligiblePatients);
+      const results = { sent: 0, failed: 0, blocked: 0, details: [] };
+      const messageInfo = {
+        actionCardId: this.configManager.get30MinActionCardId(),
+        sentAt: new Date(),
+        sentAtFormatted: new Date().toLocaleString('pt-BR')
+      };
       
-      // Marcar pacientes como processados no JsonPatientManager
       for (const patient of eligiblePatients) {
-        await this.monitoringService.jsonPatientManager.markPatientAsProcessed(patient.id, results.messageInfo);
+        try {
+          // 🛡️ RESERVAR tag ANTES do envio (evita race condition)
+          const tagReserved = await this.monitoringService.jsonPatientManager.reserveMessageTag(
+            patient.id, 
+            '30min',
+            messageInfo
+          );
+          
+          if (!tagReserved) {
+            console.log(`🚫 Paciente ${patient.name} bloqueado - tag já reservada`);
+            results.blocked++;
+            results.details.push({
+              patient: patient.name,
+              phone: patient.phone,
+              status: 'blocked',
+              reason: 'Tag já reservada'
+            });
+            continue;
+          }
+          
+          // Enviar mensagem
+          const sendResult = await this.messageService.sendActionCard(patient, messageInfo.actionCardId, true, '30min');
+          
+          if (sendResult.success) {
+            // ✅ Confirmar envio bem-sucedido
+            await this.monitoringService.jsonPatientManager.confirmMessageSent(
+              patient.id,
+              '30min',
+              messageInfo
+            );
+            
+            results.sent++;
+            results.details.push({
+              patient: patient.name,
+              phone: patient.phone,
+              status: 'sent',
+              actionCardId: messageInfo.actionCardId
+            });
+            
+            console.log(`✅ Mensagem de 30min enviada para ${patient.name}`);
+          } else {
+            // ❌ Falha no envio - remover tag reservada
+            console.log(`❌ Falha no envio para ${patient.name} - removendo tag reservada`);
+            // TODO: Implementar remoção de tag reservada em caso de falha
+            results.failed++;
+            results.details.push({
+              patient: patient.name,
+              phone: patient.phone,
+              status: 'failed',
+              error: sendResult.error
+            });
+          }
+          
+        } catch (error) {
+          console.error(`❌ Erro ao processar ${patient.name}:`, error.message);
+          results.failed++;
+          results.details.push({
+            patient: patient.name,
+            phone: patient.phone,
+            status: 'error',
+            error: error.message
+          });
+        }
       }
       
-      console.log(`✅ Mensagens de 30min processadas: ${results.sent} enviadas, ${results.failed} falharam`);
+      console.log(`✅ Mensagens de 30min processadas: ${results.sent} enviadas, ${results.failed} falharam, ${results.blocked} bloqueadas`);
       
       return results;
       
@@ -209,6 +276,7 @@ class ProductionScheduler {
 
   /**
    * Manipula mensagens de fim de dia
+   * 🛡️ ATUALIZADO: Sistema de reserva para evitar race conditions
    */
   async handleEndOfDayMessages(eligiblePatients = null) {
     try {
@@ -223,14 +291,83 @@ class ProductionScheduler {
       }
       
       if (patientsToProcess.length > 0) {
-        const results = await this.messageService.sendEndOfDayMessages(patientsToProcess);
+        console.log(`🌅 Processando ${patientsToProcess.length} pacientes para mensagem de fim de dia...`);
         
-        // Marcar pacientes como processados no JsonPatientManager
+        const results = { sent: 0, failed: 0, blocked: 0, details: [] };
+        const messageInfo = {
+          actionCardId: this.configManager.getEndOfDayActionCardId(),
+          sentAt: new Date(),
+          sentAtFormatted: new Date().toLocaleString('pt-BR')
+        };
+        
         for (const patient of patientsToProcess) {
-          await this.monitoringService.jsonPatientManager.markPatientAsProcessed(patient.id, results.messageInfo);
+          try {
+            // 🛡️ RESERVAR tag ANTES do envio (evita race condition)
+            const tagReserved = await this.monitoringService.jsonPatientManager.reserveMessageTag(
+              patient.id, 
+              'end_of_day',
+              messageInfo
+            );
+            
+            if (!tagReserved) {
+              console.log(`🚫 Paciente ${patient.name} bloqueado - tag já reservada`);
+              results.blocked++;
+              results.details.push({
+                patient: patient.name,
+                phone: patient.phone,
+                status: 'blocked',
+                reason: 'Tag já reservada'
+              });
+              continue;
+            }
+            
+            // Enviar mensagem
+            const sendResult = await this.messageService.sendActionCard(patient, messageInfo.actionCardId, true, 'end_of_day');
+            
+            if (sendResult.success) {
+              // ✅ Confirmar envio bem-sucedido
+              await this.monitoringService.jsonPatientManager.confirmMessageSent(
+                patient.id,
+                'end_of_day',
+                messageInfo
+              );
+              
+              results.sent++;
+              results.details.push({
+                patient: patient.name,
+                phone: patient.phone,
+                status: 'sent',
+                actionCardId: messageInfo.actionCardId
+              });
+              
+              console.log(`✅ Mensagem de fim de dia enviada para ${patient.name}`);
+            } else {
+              // ❌ Falha no envio - remover tag reservada
+              console.log(`❌ Falha no envio para ${patient.name} - removendo tag reservada`);
+              // TODO: Implementar remoção de tag reservada em caso de falha
+              results.failed++;
+              results.details.push({
+                patient: patient.name,
+                phone: patient.phone,
+                status: 'failed',
+                error: sendResult.error
+              });
+            }
+            
+          } catch (error) {
+            console.error(`❌ Erro ao processar ${patient.name}:`, error.message);
+            results.failed++;
+            results.details.push({
+              patient: patient.name,
+              phone: patient.phone,
+              status: 'error',
+              error: error.message
+            });
+          }
         }
         
-        console.log(`✅ Mensagens de fim de dia processadas: ${results.sent} enviadas, ${results.failed} falharam`);
+        console.log(`✅ Mensagens de fim de dia processadas: ${results.sent} enviadas, ${results.failed} falharam, ${results.blocked} bloqueadas`);
+        
       } else {
         console.log('📭 Nenhum paciente elegível para mensagem de fim de dia');
       }

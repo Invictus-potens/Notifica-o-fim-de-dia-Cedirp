@@ -329,7 +329,8 @@ class MessageService {
         sentAtFormatted: sentAt.toLocaleString('pt-BR')
       };
       
-      // Marcar pacientes como processados
+      // 🎀 SISTEMA DE TAGS: As tags são adicionadas no ProductionScheduler
+      // A lista de exclusões abaixo ainda é usada como backup/compatibilidade
       for (const patient of eligiblePatients) {
         const patientKey = `${patient.name}_${patient.phone}_${patient.sectorId}`;
         this.configManager.addToExclusionList(patientKey);
@@ -383,7 +384,8 @@ class MessageService {
         sentAtFormatted: sentAt.toLocaleString('pt-BR')
       };
       
-      // Marcar pacientes como processados
+      // 🎀 SISTEMA DE TAGS: As tags são adicionadas no ProductionScheduler
+      // A lista de exclusões abaixo ainda é usada como backup/compatibilidade
       for (const patient of eligiblePatients) {
         const patientKey = `${patient.name}_${patient.phone}_${patient.sectorId}`;
         this.configManager.addToExclusionList(patientKey);

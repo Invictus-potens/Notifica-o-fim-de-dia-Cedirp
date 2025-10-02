@@ -455,6 +455,210 @@ class JsonPatientManager {
   }
 
   /**
+   * 🎀 NOVO SISTEMA DE TAGS 🎀
+   * Adiciona tag de mensagem a um paciente (SEM removê-lo dos ativos)
+   * @param {string} patientId - ID do paciente
+   * @param {string} messageTag - Tag da mensagem ('30min' ou 'end_of_day')
+   * @param {Object} messageInfo - Informações da mensagem enviada (opcional)
+   * @returns {boolean} True se tag foi adicionada com sucesso
+   */
+  async addMessageTagToPatient(patientId, messageTag, messageInfo = null) {
+    try {
+      const activePatients = await this.loadPatientsFromFile(this.files.active);
+      const patient = activePatients.find(p => p.id === patientId);
+
+      if (patient) {
+        // Inicializar array de tags se não existir
+        if (!patient.messagesTags) {
+          patient.messagesTags = [];
+        }
+
+        // Verificar se já tem essa tag (proteção contra duplicação)
+        if (patient.messagesTags.includes(messageTag)) {
+          console.log(`⚠️ Paciente ${patient.name} já possui a tag '${messageTag}'`);
+          return false;
+        }
+
+        // Adicionar tag
+        patient.messagesTags.push(messageTag);
+
+        // Adicionar informações detalhadas da mensagem (se fornecidas)
+        if (messageInfo) {
+          if (!patient.messagesInfo) {
+            patient.messagesInfo = [];
+          }
+
+          patient.messagesInfo.push({
+            messageTag,
+            actionCardId: messageInfo.actionCardId,
+            sentAt: messageInfo.sentAt || new Date(),
+            sentAtFormatted: (messageInfo.sentAt || new Date()).toLocaleString('pt-BR')
+          });
+        }
+
+        // Salvar arquivo de ativos atualizado
+        await this.savePatientsToFile(this.files.active, activePatients);
+
+        console.log(`✅ Tag '${messageTag}' adicionada ao paciente ${patient.name} (${patient.phone})`);
+        return true;
+      } else {
+        console.log(`⚠️ Paciente ${patientId} não encontrado na lista de ativos`);
+        return false;
+      }
+
+    } catch (error) {
+      this.errorHandler.logError(error, 'JsonPatientManager.addMessageTagToPatient');
+      return false;
+    }
+  }
+
+  /**
+   * 🛡️ NOVO: Adiciona tag ANTES do envio para evitar race conditions
+   * @param {string} patientId - ID do paciente
+   * @param {string} messageTag - Tag da mensagem
+   * @param {Object} messageInfo - Informações da mensagem
+   * @returns {boolean} True se tag foi reservada com sucesso
+   */
+  async reserveMessageTag(patientId, messageTag, messageInfo = null) {
+    try {
+      const activePatients = await this.loadPatientsFromFile(this.files.active);
+      const patient = activePatients.find(p => p.id === patientId);
+
+      if (patient) {
+        // Inicializar array de tags se não existir
+        if (!patient.messagesTags) {
+          patient.messagesTags = [];
+        }
+
+        // Verificar se já tem essa tag (proteção contra duplicação)
+        if (patient.messagesTags.includes(messageTag)) {
+          console.log(`🚫 RESERVA BLOQUEADA: Paciente ${patient.name} já possui a tag '${messageTag}'`);
+          return false;
+        }
+
+        // 🛡️ ADICIONAR TAG ANTES DO ENVIO (lock natural)
+        patient.messagesTags.push(messageTag);
+
+        // Adicionar informações da mensagem (com status "reservado")
+        if (messageInfo) {
+          if (!patient.messagesInfo) {
+            patient.messagesInfo = [];
+          }
+
+          patient.messagesInfo.push({
+            messageTag,
+            actionCardId: messageInfo.actionCardId,
+            status: 'reserved', // Marcar como reservado
+            reservedAt: new Date(),
+            reservedAtFormatted: new Date().toLocaleString('pt-BR')
+          });
+        }
+
+        // Salvar arquivo IMEDIATAMENTE para criar lock
+        await this.savePatientsToFile(this.files.active, activePatients);
+
+        console.log(`🛡️ Tag '${messageTag}' RESERVADA para paciente ${patient.name} (${patient.phone})`);
+        return true;
+      } else {
+        console.log(`⚠️ Paciente ${patientId} não encontrado na lista de ativos`);
+        return false;
+      }
+
+    } catch (error) {
+      this.errorHandler.logError(error, 'JsonPatientManager.reserveMessageTag');
+      return false;
+    }
+  }
+
+  /**
+   * 🛡️ NOVO: Confirma envio da mensagem e atualiza status da tag
+   * @param {string} patientId - ID do paciente
+   * @param {string} messageTag - Tag da mensagem
+   * @param {Object} messageInfo - Informações da mensagem enviada
+   * @returns {boolean} True se confirmação foi bem-sucedida
+   */
+  async confirmMessageSent(patientId, messageTag, messageInfo) {
+    try {
+      const activePatients = await this.loadPatientsFromFile(this.files.active);
+      const patient = activePatients.find(p => p.id === patientId);
+
+      if (patient && patient.messagesInfo) {
+        // Encontrar e atualizar a entrada reservada
+        const reservedEntry = patient.messagesInfo.find(entry => 
+          entry.messageTag === messageTag && entry.status === 'reserved'
+        );
+
+        if (reservedEntry) {
+          // Atualizar com informações do envio
+          reservedEntry.status = 'sent';
+          reservedEntry.sentAt = messageInfo.sentAt || new Date();
+          reservedEntry.sentAtFormatted = (messageInfo.sentAt || new Date()).toLocaleString('pt-BR');
+          reservedEntry.success = true;
+
+          // Salvar arquivo atualizado
+          await this.savePatientsToFile(this.files.active, activePatients);
+
+          console.log(`✅ Mensagem '${messageTag}' CONFIRMADA para paciente ${patient.name}`);
+          return true;
+        } else {
+          console.log(`⚠️ Entrada reservada não encontrada para paciente ${patient.name}`);
+          return false;
+        }
+      } else {
+        console.log(`⚠️ Paciente ${patientId} não encontrado ou sem mensagens`);
+        return false;
+      }
+
+    } catch (error) {
+      this.errorHandler.logError(error, 'JsonPatientManager.confirmMessageSent');
+      return false;
+    }
+  }
+
+  /**
+   * Verifica se paciente tem uma tag específica de mensagem
+   * @param {string} patientId - ID do paciente
+   * @param {string} messageTag - Tag a verificar ('30min' ou 'end_of_day')
+   * @returns {boolean} True se paciente tem a tag
+   */
+  async hasMessageTag(patientId, messageTag) {
+    try {
+      const activePatients = await this.loadPatientsFromFile(this.files.active);
+      const patient = activePatients.find(p => p.id === patientId);
+
+      if (patient && patient.messagesTags) {
+        return patient.messagesTags.includes(messageTag);
+      }
+
+      return false;
+    } catch (error) {
+      this.errorHandler.logError(error, 'JsonPatientManager.hasMessageTag');
+      return false;
+    }
+  }
+
+  /**
+   * Obtém todas as tags de mensagem de um paciente
+   * @param {string} patientId - ID do paciente
+   * @returns {Array} Array de tags ou vazio
+   */
+  async getPatientMessageTags(patientId) {
+    try {
+      const activePatients = await this.loadPatientsFromFile(this.files.active);
+      const patient = activePatients.find(p => p.id === patientId);
+
+      if (patient && patient.messagesTags) {
+        return patient.messagesTags;
+      }
+
+      return [];
+    } catch (error) {
+      this.errorHandler.logError(error, 'JsonPatientManager.getPatientMessageTags');
+      return [];
+    }
+  }
+
+  /**
    * Obtém chave única do paciente
    * @param {Object} patient - Paciente
    * @returns {string} Chave única
