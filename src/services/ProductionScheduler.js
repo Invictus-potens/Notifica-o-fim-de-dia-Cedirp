@@ -137,50 +137,124 @@ class ProductionScheduler {
   }
 
   /**
-   * Manipula verificação de pacientes
+   * Manipula verificação de pacientes (FUNÇÃO UNIFICADA - COMPATIBILIDADE)
+   * Agora chama as funções separadas internamente
    */
   async handlePatientCheck() {
     try {
       console.log('\n\n\n🔍 ===============================================');
-      console.log('   INICIANDO NOVO CICLO DE VERIFICAÇÃO');
+      console.log('   INICIANDO CICLO DE VERIFICAÇÃO UNIFICADO');
       console.log('===============================================');
       
       // Verificar se é horário comercial (considerando configuração ignoreBusinessHours)
       const ignoreBusinessHours = this.configManager.shouldIgnoreBusinessHours();
       if (!ignoreBusinessHours && (!TimeUtils.isBusinessHours() || !TimeUtils.isWorkingDay())) {
         console.log('🕐 Fora do horário comercial - apenas monitorando');
-        return;
+        return { 
+          thirtyMinute: { sent: 0, failed: 0, blocked: 0, details: [] },
+          endOfDay: { sent: 0, failed: 0, blocked: 0, details: [] },
+          timestamp: new Date().toISOString()
+        };
       }
 
       // Verificar se fluxo está pausado
       if (this.configManager.isFlowPaused()) {
         console.log('⏸️ Fluxo pausado - apenas monitorando');
-        return;
+        return { 
+          thirtyMinute: { sent: 0, failed: 0, blocked: 0, details: [] },
+          endOfDay: { sent: 0, failed: 0, blocked: 0, details: [] },
+          timestamp: new Date().toISOString()
+        };
       }
 
-      // Verificar pacientes elegíveis
-      const checkResult = await this.monitoringService.checkEligiblePatients();
+      // 🌸 NOVA IMPLEMENTAÇÃO: Chamar funções separadas
+      const thirtyMinuteResults = await this.handle30MinuteCheck();
+      const endOfDayResults = await this.handleEndOfDayCheck();
       
-      // Processar pacientes elegíveis para mensagem de 30min
-      if (this.config.enable30MinuteMessages && checkResult.eligible30Min.length > 0) {
-        await this.handle30MinuteMessages(checkResult.eligible30Min);
-      }
+      // Consolidar resultados
+      const consolidatedResults = {
+        thirtyMinute: thirtyMinuteResults,
+        endOfDay: endOfDayResults,
+        totalSent: thirtyMinuteResults.sent + endOfDayResults.sent,
+        totalFailed: thirtyMinuteResults.failed + endOfDayResults.failed,
+        totalBlocked: thirtyMinuteResults.blocked + endOfDayResults.blocked,
+        timestamp: new Date().toISOString()
+      };
       
-      // Processar pacientes elegíveis para mensagem de fim de dia
-      const isEndOfDayPaused = this.configManager.isEndOfDayPaused();
-      const isEndOfDayTime = TimeUtils.isEndOfDayTimeWithTolerance(5);
-      
-      if (this.config.enableEndOfDayMessages && !isEndOfDayPaused && isEndOfDayTime && checkResult.eligibleEndOfDay.length > 0) {
-        await this.handleEndOfDayMessages(checkResult.eligibleEndOfDay);
-      }
-      
-      console.log('✅ CICLO DE VERIFICAÇÃO CONCLUÍDO');
+      console.log('✅ CICLO DE VERIFICAÇÃO UNIFICADO CONCLUÍDO');
+      console.log(`📊 Resumo: ${consolidatedResults.totalSent} enviadas, ${consolidatedResults.totalFailed} falharam, ${consolidatedResults.totalBlocked} bloqueadas`);
       console.log('===============================================\n');
+      
+      return consolidatedResults;
       
     } catch (error) {
-      console.log('❌ ERRO NO CICLO DE VERIFICAÇÃO');
+      console.log('❌ ERRO NO CICLO DE VERIFICAÇÃO UNIFICADO');
       console.log('===============================================\n');
       this.errorHandler.logError(error, 'ProductionScheduler.handlePatientCheck');
+      
+      return {
+        thirtyMinute: { sent: 0, failed: 0, blocked: 0, details: [], error: error.message },
+        endOfDay: { sent: 0, failed: 0, blocked: 0, details: [], error: error.message },
+        timestamp: new Date().toISOString()
+      };
+    }
+  }
+
+  /**
+   * 🌸 NOVA FUNÇÃO: Verifica pacientes elegíveis para mensagem de 30min
+   * Felipe-chan, esta função é independente e só verifica pacientes de 30min! 💕
+   */
+  async handle30MinuteCheck() {
+    try {
+      console.log('\n\n\n⏰ ===============================================');
+      console.log('   VERIFICAÇÃO ESPECÍFICA: MENSAGENS DE 30MIN');
+      console.log('===============================================');
+      
+      // Verificar se é horário comercial (mensagem de 30min só durante expediente)
+      const ignoreBusinessHours = this.configManager.shouldIgnoreBusinessHours();
+      if (!ignoreBusinessHours && (!TimeUtils.isBusinessHours() || !TimeUtils.isWorkingDay())) {
+        console.log('🕐 Fora do horário comercial - mensagens de 30min não são enviadas');
+        return { sent: 0, failed: 0, blocked: 0, details: [], messageType: '30min', timestamp: new Date().toISOString() };
+      }
+
+      // Verificar se fluxo está pausado
+      if (this.configManager.isFlowPaused()) {
+        console.log('⏸️ Fluxo pausado - mensagens de 30min não são enviadas');
+        return { sent: 0, failed: 0, blocked: 0, details: [], messageType: '30min', timestamp: new Date().toISOString() };
+      }
+
+      // Verificar se mensagens de 30min estão habilitadas
+      if (!this.config.enable30MinuteMessages) {
+        console.log('🚫 Mensagens de 30min desabilitadas via configuração');
+        return { sent: 0, failed: 0, blocked: 0, details: [], messageType: '30min', timestamp: new Date().toISOString() };
+      }
+
+      // Buscar APENAS pacientes elegíveis para 30min
+      const eligible30Min = await this.monitoringService.getEligiblePatientsFor30MinMessage();
+      console.log(`⏰ ${eligible30Min.length} pacientes elegíveis para mensagem de 30min`);
+      
+      if (eligible30Min.length > 0) {
+        const results = await this.handle30MinuteMessages(eligible30Min);
+        console.log('✅ VERIFICAÇÃO DE 30MIN CONCLUÍDA');
+        console.log(`📊 30min: ${results.sent} enviadas, ${results.failed} falharam, ${results.blocked} bloqueadas`);
+        console.log('===============================================\n');
+        
+        return {
+          ...results,
+          messageType: '30min',
+          timestamp: new Date().toISOString()
+        };
+      } else {
+        console.log('📭 Nenhum paciente elegível para mensagem de 30min');
+        console.log('===============================================\n');
+        return { sent: 0, failed: 0, blocked: 0, details: [], messageType: '30min', timestamp: new Date().toISOString() };
+      }
+      
+    } catch (error) {
+      console.log('❌ ERRO NA VERIFICAÇÃO DE 30MIN');
+      console.log('===============================================\n');
+      this.errorHandler.logError(error, 'ProductionScheduler.handle30MinuteCheck');
+      return { sent: 0, failed: 0, blocked: 0, details: [], error: error.message, messageType: '30min', timestamp: new Date().toISOString() };
     }
   }
 
@@ -271,6 +345,78 @@ class ProductionScheduler {
       
     } catch (error) {
       this.errorHandler.logError(error, 'ProductionScheduler.handle30MinuteMessages');
+    }
+  }
+
+  /**
+   * 🌅 NOVA FUNÇÃO: Verifica pacientes elegíveis para mensagem de fim de dia (18h)
+   * Felipe-chan, esta função é independente e só verifica pacientes de fim de dia! 💕
+   */
+  async handleEndOfDayCheck() {
+    try {
+      console.log('\n\n\n🌅 ===============================================');
+      console.log('   VERIFICAÇÃO ESPECÍFICA: MENSAGENS DE FIM DE DIA');
+      console.log('===============================================');
+      
+      // Verificar se é horário de fim de expediente
+      const isEndOfDayTime = TimeUtils.isEndOfDayTimeWithTolerance(5);
+      if (!isEndOfDayTime) {
+        console.log('🕐 Não é horário de fim de expediente - mensagens de fim de dia não são enviadas');
+        return { sent: 0, failed: 0, blocked: 0, details: [], messageType: 'end_of_day', timestamp: new Date().toISOString() };
+      }
+
+      // Verificar se é dia útil (apenas se não estiver configurado para ignorar horário comercial)
+      const ignoreBusinessHours = this.configManager.shouldIgnoreBusinessHours();
+      if (!ignoreBusinessHours && !TimeUtils.isWorkingDay()) {
+        console.log('📅 Não é dia útil - mensagens de fim de dia não são enviadas');
+        return { sent: 0, failed: 0, blocked: 0, details: [], messageType: 'end_of_day', timestamp: new Date().toISOString() };
+      }
+
+      // Verificar se mensagem de fim de dia está pausada
+      const isEndOfDayPaused = this.configManager.isEndOfDayPaused();
+      if (isEndOfDayPaused) {
+        console.log('⏸️ Mensagem de fim de dia está pausada via configuração');
+        return { sent: 0, failed: 0, blocked: 0, details: [], messageType: 'end_of_day', timestamp: new Date().toISOString() };
+      }
+
+      // Verificar se fluxo está pausado
+      if (this.configManager.isFlowPaused()) {
+        console.log('⏸️ Fluxo pausado - mensagens de fim de dia não são enviadas');
+        return { sent: 0, failed: 0, blocked: 0, details: [], messageType: 'end_of_day', timestamp: new Date().toISOString() };
+      }
+
+      // Verificar se mensagens de fim de dia estão habilitadas
+      if (!this.config.enableEndOfDayMessages) {
+        console.log('🚫 Mensagens de fim de dia desabilitadas via configuração');
+        return { sent: 0, failed: 0, blocked: 0, details: [], messageType: 'end_of_day', timestamp: new Date().toISOString() };
+      }
+
+      // Buscar APENAS pacientes elegíveis para fim de dia
+      const eligibleEndOfDay = await this.monitoringService.getEligiblePatientsForEndOfDayMessage();
+      console.log(`🌅 ${eligibleEndOfDay.length} pacientes elegíveis para mensagem de fim de dia`);
+      
+      if (eligibleEndOfDay.length > 0) {
+        const results = await this.handleEndOfDayMessages(eligibleEndOfDay);
+        console.log('✅ VERIFICAÇÃO DE FIM DE DIA CONCLUÍDA');
+        console.log(`📊 Fim de dia: ${results.sent} enviadas, ${results.failed} falharam, ${results.blocked} bloqueadas`);
+        console.log('===============================================\n');
+        
+        return {
+          ...results,
+          messageType: 'end_of_day',
+          timestamp: new Date().toISOString()
+        };
+      } else {
+        console.log('📭 Nenhum paciente elegível para mensagem de fim de dia');
+        console.log('===============================================\n');
+        return { sent: 0, failed: 0, blocked: 0, details: [], messageType: 'end_of_day', timestamp: new Date().toISOString() };
+      }
+      
+    } catch (error) {
+      console.log('❌ ERRO NA VERIFICAÇÃO DE FIM DE DIA');
+      console.log('===============================================\n');
+      this.errorHandler.logError(error, 'ProductionScheduler.handleEndOfDayCheck');
+      return { sent: 0, failed: 0, blocked: 0, details: [], error: error.message, messageType: 'end_of_day', timestamp: new Date().toISOString() };
     }
   }
 
@@ -413,39 +559,7 @@ class ProductionScheduler {
     }
   }
 
-  /**
-   * Executa verificação manual de pacientes
-   */
-  async runManualPatientCheck() {
-    try {
-      console.log('🔍 Executando verificação manual de pacientes...');
-      
-      await this.handlePatientCheck();
-      
-      console.log('✅ Verificação manual concluída');
-      
-    } catch (error) {
-      this.errorHandler.logError(error, 'ProductionScheduler.runManualPatientCheck');
-      throw error;
-    }
-  }
 
-  /**
-   * Executa envio manual de mensagens de fim de dia
-   */
-  async runManualEndOfDayMessages() {
-    try {
-      console.log('🌅 Executando mensagens de fim de dia manual...');
-      
-      await this.handleEndOfDayMessages();
-      
-      console.log('✅ Mensagens de fim de dia manuais concluídas');
-      
-    } catch (error) {
-      this.errorHandler.logError(error, 'ProductionScheduler.runManualEndOfDayMessages');
-      throw error;
-    }
-  }
 
   /**
    * Atualiza configurações do agendador

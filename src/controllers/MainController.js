@@ -618,43 +618,6 @@ class MainController {
     };
   }
 
-  /**
-   * Executa verificação manual de pacientes
-   */
-  async runManualPatientCheck() {
-    try {
-      if (!this.productionScheduler) {
-        throw new Error('ProductionScheduler não inicializado');
-      }
-      
-      console.log('🔍 Executando verificação manual de pacientes...');
-      await this.productionScheduler.runManualPatientCheck();
-      console.log('✅ Verificação manual concluída');
-      
-    } catch (error) {
-      this.errorHandler.logError(error, 'MainController.runManualPatientCheck');
-      throw error;
-    }
-  }
-
-  /**
-   * Executa mensagens de fim de dia manualmente
-   */
-  async runManualEndOfDayMessages() {
-    try {
-      if (!this.productionScheduler) {
-        throw new Error('ProductionScheduler não inicializado');
-      }
-      
-      console.log('🌅 Executando mensagens de fim de dia manual...');
-      await this.productionScheduler.runManualEndOfDayMessages();
-      console.log('✅ Mensagens de fim de dia manuais concluídas');
-      
-    } catch (error) {
-      this.errorHandler.logError(error, 'MainController.runManualEndOfDayMessages');
-      throw error;
-    }
-  }
 
   /**
    * Obtém estatísticas detalhadas do sistema
