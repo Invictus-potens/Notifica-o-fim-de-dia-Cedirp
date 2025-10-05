@@ -59,12 +59,18 @@ class TimeUtils {
   /**
    * Verifica se está em horário comercial (dinâmico baseado na configuração)
    * Considera horários específicos para sábado
+   * 🚫 NOVA CORREÇÃO: Verifica se é dia útil ANTES de verificar horário
    * @returns {boolean} True se horário comercial
    */
   static isBusinessHours() {
     const brasiliaTime = this.getBrasiliaTime();
     const hour = brasiliaTime.hour;
     const weekday = brasiliaTime.weekday;
+    
+    // 🚫 CORREÇÃO CRÍTICA: Verificar se é dia útil PRIMEIRO
+    if (!this.isWorkingDay()) {
+      return false; // Domingo não é dia útil
+    }
     
     let startHour, endHour;
     

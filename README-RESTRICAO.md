@@ -1,17 +1,33 @@
-# 🚫 Sistema de Restrição de Mensagens - 17h às 18h
+# 🚫 Sistema de Restrição de Mensagens - Horário Comercial
 
 ## 📋 Visão Geral
 
-O sistema implementa uma restrição inteligente que **bloqueia o envio de mensagens automáticas "aguardando"** durante o período de **17h às 18h** em dias úteis. Esta restrição foi criada para preparar o ambiente para o fim do expediente, garantindo que apenas a mensagem oficial de fim de expediente seja enviada no horário correto.
+O sistema implementa uma restrição inteligente que **bloqueia o envio de mensagens automáticas** fora do horário comercial definido. Esta restrição garante que apenas mensagens oficiais sejam enviadas nos horários apropriados, mantendo a organização e profissionalismo do atendimento.
 
 ---
 
 ## 🎯 Objetivo da Restrição
 
-- **Preparar o ambiente** para o fim do expediente
-- **Evitar conflitos** entre mensagens automáticas e mensagem oficial de fim
-- **Garantir ordem** no processo de encerramento do atendimento
-- **Melhorar a experiência** do paciente com comunicação organizada
+- **Respeitar horário comercial** definido pela clínica
+- **Evitar mensagens** fora do expediente
+- **Garantir organização** no processo de comunicação
+- **Melhorar a experiência** do paciente com comunicação profissional
+
+---
+
+## ⏰ Horários de Funcionamento
+
+### 📅 **SEGUNDA A SEXTA-FEIRA**
+- **Horário Comercial:** 8h às 18h
+- **Bloqueio Especial:** 17h às 18h (apenas mensagem de fim)
+
+### 📅 **SÁBADO**
+- **Horário Comercial:** 8h às 12h
+- **Bloqueio Especial:** 11h às 12h (apenas mensagem de fim)
+
+### 📅 **DOMINGO**
+- **Status:** ❌ **DIA NÃO ÚTIL**
+- **Bloqueio:** Total durante todo o dia
 
 ---
 
@@ -24,7 +40,7 @@ O sistema implementa uma restrição inteligente que **bloqueia o envio de mensa
 - ✅ Pacientes recebem notificações após 30 minutos de espera
 - ✅ Sistema monitora e processa todos os pacientes ativamente
 
-#### 🌇 **Tarde (17h - 18h) - PERÍODO DE BLOQUEIO**
+#### 🌇 **Tarde (17h - 18h) - PERÍODO DE BLOQUEIO ESPECIAL**
 - ❌ **BLOQUEIO TOTAL** para mensagens "aguardando"
 - ❌ **BLOQUEIO TOTAL** para mensagem de fim de expediente
 - 📝 Pacientes continuam sendo registrados na fila
@@ -36,9 +52,9 @@ O sistema implementa uma restrição inteligente que **bloqueia o envio de mensa
 - 💬 Mensagem: "Devido à grande demanda... será realizado no próximo expediente"
 
 #### 🌙 **Noite (18h - 8h do dia seguinte)**
-- ✅ **Mensagens "aguardando"** voltam a funcionar normalmente
-- ✅ Pacientes que chegam fora do horário recebem notificações
-- 🌙 Sistema funciona normalmente durante toda a noite
+- ❌ **BLOQUEIO TOTAL** para mensagens (fora do horário comercial)
+- 📝 Pacientes são registrados na fila, mas **NÃO recebem mensagens**
+- 🔇 Sistema funciona em modo de monitoramento apenas
 
 ---
 
@@ -49,7 +65,7 @@ O sistema implementa uma restrição inteligente que **bloqueia o envio de mensa
 - ✅ Pacientes recebem notificações após 30 minutos de espera
 - ✅ Sistema monitora e processa todos os pacientes ativamente
 
-#### 🌇 **Tarde (17h - 18h) - PERÍODO DE BLOQUEIO**
+#### 🌇 **Tarde (17h - 18h) - PERÍODO DE BLOQUEIO ESPECIAL**
 - ❌ **BLOQUEIO TOTAL** para mensagens "aguardando"
 - ❌ **BLOQUEIO TOTAL** para mensagem de fim de expediente
 - 📝 Pacientes continuam sendo registrados na fila
@@ -60,8 +76,8 @@ O sistema implementa uma restrição inteligente que **bloqueia o envio de mensa
 - 📱 Todos os pacientes aguardando recebem a mensagem de encerramento
 
 #### 🌙 **Noite (18h - 8h do dia seguinte)**
-- ✅ **Mensagens "aguardando"** voltam a funcionar normalmente
-- ✅ Pacientes que chegam fora do horário recebem notificações
+- ❌ **BLOQUEIO TOTAL** para mensagens (fora do horário comercial)
+- 📝 Pacientes são registrados na fila, mas **NÃO recebem mensagens**
 
 ---
 
@@ -72,7 +88,7 @@ O sistema implementa uma restrição inteligente que **bloqueia o envio de mensa
 - ✅ Pacientes recebem notificações após 30 minutos de espera
 - ✅ Sistema monitora e processa todos os pacientes ativamente
 
-#### 🌇 **Tarde (17h - 18h) - PERÍODO DE BLOQUEIO**
+#### 🌇 **Tarde (17h - 18h) - PERÍODO DE BLOQUEIO ESPECIAL**
 - ❌ **BLOQUEIO TOTAL** para mensagens "aguardando"
 - ❌ **BLOQUEIO TOTAL** para mensagem de fim de expediente
 - 📝 Pacientes continuam sendo registrados na fila
@@ -83,8 +99,8 @@ O sistema implementa uma restrição inteligente que **bloqueia o envio de mensa
 - 📱 Todos os pacientes aguardando recebem a mensagem de encerramento
 
 #### 🌙 **Noite (18h - 8h do dia seguinte)**
-- ✅ **Mensagens "aguardando"** voltam a funcionar normalmente
-- ✅ Pacientes que chegam fora do horário recebem notificações
+- ❌ **BLOQUEIO TOTAL** para mensagens (fora do horário comercial)
+- 📝 Pacientes são registrados na fila, mas **NÃO recebem mensagens**
 
 ---
 
@@ -95,7 +111,7 @@ O sistema implementa uma restrição inteligente que **bloqueia o envio de mensa
 - ✅ Pacientes recebem notificações após 30 minutos de espera
 - ✅ Sistema monitora e processa todos os pacientes ativamente
 
-#### 🌇 **Tarde (17h - 18h) - PERÍODO DE BLOQUEIO**
+#### 🌇 **Tarde (17h - 18h) - PERÍODO DE BLOQUEIO ESPECIAL**
 - ❌ **BLOQUEIO TOTAL** para mensagens "aguardando"
 - ❌ **BLOQUEIO TOTAL** para mensagem de fim de expediente
 - 📝 Pacientes continuam sendo registrados na fila
@@ -106,8 +122,8 @@ O sistema implementa uma restrição inteligente que **bloqueia o envio de mensa
 - 📱 Todos os pacientes aguardando recebem a mensagem de encerramento
 
 #### 🌙 **Noite (18h - 8h do dia seguinte)**
-- ✅ **Mensagens "aguardando"** voltam a funcionar normalmente
-- ✅ Pacientes que chegam fora do horário recebem notificações
+- ❌ **BLOQUEIO TOTAL** para mensagens (fora do horário comercial)
+- 📝 Pacientes são registrados na fila, mas **NÃO recebem mensagens**
 
 ---
 
@@ -118,7 +134,7 @@ O sistema implementa uma restrição inteligente que **bloqueia o envio de mensa
 - ✅ Pacientes recebem notificações após 30 minutos de espera
 - ✅ Sistema monitora e processa todos os pacientes ativamente
 
-#### 🌇 **Tarde (17h - 18h) - PERÍODO DE BLOQUEIO**
+#### 🌇 **Tarde (17h - 18h) - PERÍODO DE BLOQUEIO ESPECIAL**
 - ❌ **BLOQUEIO TOTAL** para mensagens "aguardando"
 - ❌ **BLOQUEIO TOTAL** para mensagem de fim de expediente
 - 📝 Pacientes continuam sendo registrados na fila
@@ -129,9 +145,9 @@ O sistema implementa uma restrição inteligente que **bloqueia o envio de mensa
 - 📱 Todos os pacientes aguardando recebem a mensagem de encerramento
 
 #### 🌙 **Noite (18h - 8h da segunda-feira seguinte)**
-- ✅ **Mensagens "aguardando"** voltam a funcionar normalmente
-- ✅ Pacientes que chegam fora do horário recebem notificações
-- 📅 Sistema funciona normalmente durante todo o fim de semana
+- ❌ **BLOQUEIO TOTAL** para mensagens (fora do horário comercial)
+- 📝 Pacientes são registrados na fila, mas **NÃO recebem mensagens**
+- 📅 Sistema funciona em modo de monitoramento durante todo o fim de semana
 
 ---
 
@@ -154,24 +170,24 @@ O sistema implementa uma restrição inteligente que **bloqueia o envio de mensa
 - 💬 Mensagem: "Devido à grande demanda... será realizado no próximo expediente"
 
 #### 🌙 **Tarde/Noite (12h - 8h da segunda-feira seguinte)**
-- ✅ **Mensagens "aguardando"** voltam a funcionar normalmente
-- ✅ Pacientes que chegam fora do horário recebem notificações
-- 📅 Sistema funciona normalmente durante todo o fim de semana
+- ❌ **BLOQUEIO TOTAL** para mensagens (fora do horário comercial)
+- 📝 Pacientes são registrados na fila, mas **NÃO recebem mensagens**
+- 📅 Sistema funciona em modo de monitoramento durante o fim de semana
 
 ---
 
-### 📅 **DOMINGO - SEM RESTRIÇÕES**
+### 📅 **DOMINGO - BLOQUEIO TOTAL**
 
 #### 🌅 **Manhã (8h - 18h)**
-- ✅ **Mensagens "aguardando"** funcionam normalmente
-- ✅ Pacientes recebem notificações após 30 minutos de espera
-- ✅ Sistema monitora e processa todos os pacientes ativamente
-- 🚫 **NÃO HÁ** período de bloqueio aos domingos
+- ❌ **BLOQUEIO TOTAL** para mensagens "aguardando"
+- ❌ **BLOQUEIO TOTAL** para mensagem de fim de expediente
+- 📝 Pacientes são registrados na fila, mas **NÃO recebem mensagens**
+- 🔇 Sistema fica em "modo silencioso" durante todo o domingo
 
 #### 🌙 **Noite (18h - 8h da segunda-feira seguinte)**
-- ✅ **Mensagens "aguardando"** funcionam normalmente
-- ✅ Pacientes que chegam fora do horário recebem notificações
-- 📅 Sistema funciona normalmente durante toda a noite
+- ❌ **BLOQUEIO TOTAL** para mensagens
+- 📝 Pacientes são registrados na fila, mas **NÃO recebem mensagens**
+- 📅 Sistema funciona em modo de monitoramento apenas
 
 ---
 
@@ -193,8 +209,8 @@ O sistema implementa uma restrição inteligente que **bloqueia o envio de mensa
 ### 📅 **Cenário 3: Paciente chega às 19h (Quarta-feira)**
 - ✅ **19h:** Paciente chega na clínica (fora do horário)
 - ✅ **19h30:** Paciente completa 30 minutos de espera
-- ✅ **19h30:** Sistema **ENVIA** mensagem "aguardando" (bloqueio inativo)
-- 📱 **Resultado:** Paciente recebe mensagem normal de aguardo
+- ❌ **19h30:** Sistema **NÃO ENVIA** mensagem "aguardando" (fora do horário comercial)
+- 📱 **Resultado:** Paciente **NÃO recebe** nenhuma mensagem (fora do expediente)
 
 ### 📅 **Cenário 4: Paciente chega às 10h30 (Sábado)**
 - ✅ **10h30:** Paciente chega na clínica
@@ -206,28 +222,34 @@ O sistema implementa uma restrição inteligente que **bloqueia o envio de mensa
 ### 📅 **Cenário 5: Paciente chega às 15h (Domingo)**
 - ✅ **15h:** Paciente chega na clínica
 - ✅ **15h30:** Paciente completa 30 minutos de espera
-- ✅ **15h30:** Sistema **ENVIA** mensagem "aguardando" (sem restrições aos domingos)
-- 📱 **Resultado:** Paciente recebe mensagem normal de aguardo
+- ❌ **15h30:** Sistema **NÃO ENVIA** mensagem "aguardando" (bloqueio total aos domingos)
+- 📱 **Resultado:** Paciente **NÃO recebe** nenhuma mensagem (domingo é dia não útil)
+
+### 📅 **Cenário 6: Paciente chega às 13h (Sábado)**
+- ✅ **13h:** Paciente chega na clínica (fora do horário comercial de sábado)
+- ✅ **13h30:** Paciente completa 30 minutos de espera
+- ❌ **13h30:** Sistema **NÃO ENVIA** mensagem "aguardando" (fora do horário comercial)
+- 📱 **Resultado:** Paciente **NÃO recebe** nenhuma mensagem (fora do expediente de sábado)
 
 ---
 
 ## 🎯 Benefícios da Restrição
 
 ### 👥 **Para os Pacientes:**
-- **Comunicação organizada** no fim do expediente
-- **Evita mensagens conflitantes** durante o encerramento
-- **Experiência mais profissional** com mensagem oficial única
+- **Comunicação organizada** respeitando horários comerciais
+- **Evita mensagens** em horários inadequados
+- **Experiência mais profissional** com comunicação controlada
 - **Clareza** sobre o status do atendimento
 
 ### 🏥 **Para a Clínica:**
-- **Processo de encerramento** mais organizado
-- **Evita sobrecarga** de mensagens no fim do expediente
-- **Controle total** sobre a comunicação oficial
-- **Preparação adequada** para o fim do atendimento
+- **Respeita horário comercial** definido
+- **Evita mensagens** fora do expediente
+- **Controle total** sobre a comunicação
+- **Profissionalismo** no atendimento
 
 ### 🤖 **Para o Sistema:**
-- **Reduz conflitos** entre mensagens automáticas e oficiais
-- **Melhora a performance** durante transições
+- **Reduz processamento** desnecessário fora do horário
+- **Melhora a performance** durante horários não comerciais
 - **Facilita manutenção** e monitoramento
 - **Garante consistência** no processo
 
@@ -237,12 +259,12 @@ O sistema implementa uma restrição inteligente que **bloqueia o envio de mensa
 
 | Período | Dias Úteis (Seg-Sex) | Sábado | Domingo |
 |---------|---------------------|--------|---------|
-| **8h-17h** | ✅ Mensagens normais | ✅ Mensagens normais | ✅ Mensagens normais |
-| **17h-18h** | ❌ **BLOQUEIO TOTAL** | ✅ Mensagens normais | ✅ Mensagens normais |
-| **11h-12h** | ✅ Mensagens normais | ❌ **BLOQUEIO TOTAL** | ✅ Mensagens normais |
-| **18h (Seg-Sex)** | ✅ Fim de expediente | ✅ Mensagens normais | ✅ Mensagens normais |
-| **12h (Sáb)** | ✅ Mensagens normais | ✅ Fim de expediente | ✅ Mensagens normais |
-| **18h+** | ✅ Mensagens normais | ✅ Mensagens normais | ✅ Mensagens normais |
+| **8h-17h** | ✅ Mensagens normais | ✅ Mensagens normais | ❌ **BLOQUEIO TOTAL** |
+| **17h-18h** | ❌ **BLOQUEIO ESPECIAL** | ❌ **BLOQUEIO TOTAL** | ❌ **BLOQUEIO TOTAL** |
+| **11h-12h** | ✅ Mensagens normais | ❌ **BLOQUEIO ESPECIAL** | ❌ **BLOQUEIO TOTAL** |
+| **18h (Seg-Sex)** | ✅ Fim de expediente | ❌ **BLOQUEIO TOTAL** | ❌ **BLOQUEIO TOTAL** |
+| **12h (Sáb)** | ❌ **BLOQUEIO TOTAL** | ✅ Fim de expediente | ❌ **BLOQUEIO TOTAL** |
+| **Fora expediente** | ❌ **BLOQUEIO TOTAL** | ❌ **BLOQUEIO TOTAL** | ❌ **BLOQUEIO TOTAL** |
 
 ---
 
@@ -256,4 +278,27 @@ O sistema registra todos os eventos de bloqueio e envio, permitindo:
 
 ---
 
-*Este sistema garante uma experiência profissional e organizada tanto para pacientes quanto para a equipe da clínica, mantendo a comunicação clara e eficiente em todos os momentos.*
+## 🛠️ Implementação Técnica
+
+### 🔧 **Funções Principais:**
+
+#### `isWorkingDay()`
+- Verifica se é dia útil (Segunda a Sábado)
+- Retorna `false` para domingos
+
+#### `isBusinessHours()`
+- Verifica se está no horário comercial
+- Considera horários especiais para sábados
+- **Bloqueia domingos** automaticamente
+
+#### `isWaitingMessageBlocked()`
+- Verifica bloqueio especial 17h-18h (dias úteis)
+- Verifica bloqueio especial 11h-12h (sábados)
+
+#### `canSendEndOfDayMessage()`
+- Permite mensagem de fim apenas no horário correto
+- Respeita período de bloqueio
+
+---
+
+*Este sistema garante uma experiência profissional e organizada, respeitando rigorosamente os horários comerciais definidos pela clínica.*
