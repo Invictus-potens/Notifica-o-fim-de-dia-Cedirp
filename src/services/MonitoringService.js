@@ -222,6 +222,12 @@ class MonitoringService {
         return false;
       }
       
+      // 5.1. 🚫 NOVA RESTRIÇÃO: Verificar se está no período de bloqueio (17h-18h)
+      if (!this.configManager.shouldIgnoreBusinessHours() && TimeUtils.isWaitingMessageBlocked()) {
+        console.log(`🚫 Paciente ${patient.name} não receberá mensagem de 30min - período de bloqueio ativo (17h-18h)`);
+        return false;
+      }
+      
       // 6. Verificar dia útil (apenas se não estiver configurado para ignorar horário comercial)
       if (!this.configManager.shouldIgnoreBusinessHours() && !TimeUtils.isWorkingDay()) {
         return false;
@@ -247,8 +253,8 @@ class MonitoringService {
    */
   async isPatientEligibleForEndOfDayMessage(patient) {
     try {
-      // 1. Verificar se é fim de dia (18h) com tolerância de 5 minutos
-      if (!TimeUtils.isEndOfDayTimeWithTolerance(5)) {
+      // 1. 🚫 NOVA VERIFICAÇÃO: Verificar se mensagem de fim de expediente está permitida
+      if (!TimeUtils.canSendEndOfDayMessage()) {
         return false;
       }
       

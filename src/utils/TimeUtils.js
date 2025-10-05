@@ -263,6 +263,55 @@ class TimeUtils {
   }
 
   /**
+   * 🚫 NOVA FUNÇÃO: Verifica se está no período de bloqueio (17h às 18h)
+   * Durante este período, mensagens "aguardando" são bloqueadas
+   * @returns {boolean} True se está no período de bloqueio
+   */
+  static isWaitingMessageBlocked() {
+    const brasiliaTime = this.getBrasiliaTime();
+    const hour = brasiliaTime.hour;
+    const weekday = brasiliaTime.weekday;
+    
+    // Verificar se é dia útil (segunda a sexta + sábado)
+    if (!this.isWorkingDay()) {
+      return false; // Não aplica bloqueio em domingos
+    }
+    
+    // Bloqueio ativo das 17h às 18h (exceto sábados que é 11h às 12h)
+    if (weekday === 6 && this.configManager) { // Sábado
+      const saturdayEndTime = this.configManager.getSaturdayEndTime();
+      const saturdayEndHour = parseInt(saturdayEndTime.split(':')[0]);
+      return hour >= (saturdayEndHour - 1) && hour < saturdayEndHour; // 11h-12h sábados
+    } else {
+      // Dias úteis: 17h-18h
+      return hour >= 17 && hour < 18;
+    }
+  }
+
+  /**
+   * 🚫 NOVA FUNÇÃO: Verifica se mensagens de fim de expediente estão permitidas
+   * Apenas às 18h (dias úteis) ou 12h (sábados)
+   * @returns {boolean} True se pode enviar mensagem de fim de expediente
+   */
+  static canSendEndOfDayMessage() {
+    const brasiliaTime = this.getBrasiliaTime();
+    const weekday = brasiliaTime.weekday;
+    
+    // Verificar se é dia útil
+    if (!this.isWorkingDay()) {
+      return false;
+    }
+    
+    // 🚫 IMPORTANTE: Não permitir mensagem de fim durante período de bloqueio
+    if (this.isWaitingMessageBlocked()) {
+      return false;
+    }
+    
+    // Mensagem de fim de expediente permitida apenas no horário exato
+    return this.isEndOfDayTimeWithTolerance(5); // ±5 minutos de tolerância
+  }
+
+  /**
    * Obtém informações detalhadas do horário atual
    * @returns {Object} Informações de tempo
    */
@@ -274,6 +323,8 @@ class TimeUtils {
       isBusinessHours: this.isBusinessHours(),
       isWorkingDay: this.isWorkingDay(),
       isEndOfDayTime: this.isEndOfDayTime(),
+      isWaitingMessageBlocked: this.isWaitingMessageBlocked(),
+      canSendEndOfDayMessage: this.canSendEndOfDayMessage(),
       nextEndOfDay: this.getNextEndOfDayTime(),
       nextCleanup: this.getNextDailyCleanupTime()
     };
