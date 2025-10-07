@@ -1,1 +1,17 @@
-[]
+[
+  {
+    "id": "68e134bdde0f4713053797c7",
+    "contactId": "671ba1e7494ea3ec1fc15f2c",
+    "name": "Studio de beleza jaqueline santos",
+    "phone": "5516994307551",
+    "sectorId": "65eb5a217b2ad8749ef7aa42",
+    "sectorName": "Setor 65eb5a217b2ad8749ef7aa42",
+    "channelId": "65f06d5b867543e1d094fa0f",
+    "channelType": "WhatsApp Business (Principal)",
+    "waitStartTime": "2025-10-04T14:52:45.179Z",
+    "waitTimeMinutes": 1733,
+    "status": "waiting",
+    "enteredAt": "2025-10-05T18:58:04.363Z",
+    "processedAt": "2025-10-06T14:26:48.315Z"
+  }
+]
