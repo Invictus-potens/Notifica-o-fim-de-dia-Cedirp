@@ -100,9 +100,11 @@ class MonitoringService {
         }
       }
       
+     
       // 3. Buscar pacientes elegíveis para mensagem de 30min
-      const eligible30Min = await this.getEligiblePatientsFor30MinMessage();
-      console.log(`⏰ ${eligible30Min.length} pacientes elegíveis para mensagem de 30min`);
+      // const eligible30Min = await this.getEligiblePatientsFor30MinMessage();
+      const eligible30Min = [];
+      // console.log(`⏰ ${eligible30Min.length} pacientes elegíveis para mensagem de 30min`);
       
       // 4. Buscar pacientes elegíveis para mensagem de fim de dia
       const eligibleEndOfDay = await this.getEligiblePatientsForEndOfDayMessage();
@@ -136,7 +138,7 @@ class MonitoringService {
   /**
    * Obtém pacientes elegíveis para mensagem de 30 minutos
    */
-  async getEligiblePatientsFor30MinMessage() {
+  /* async getEligiblePatientsFor30MinMessage() {
     try {
       const activePatients = await this.jsonPatientManager.loadPatientsFromFile(
         this.jsonPatientManager.files.active
@@ -157,7 +159,7 @@ class MonitoringService {
       this.errorHandler.logError(error, 'MonitoringService.getEligiblePatientsFor30MinMessage');
       return [];
     }
-  }
+  } */
 
   /**
    * Obtém pacientes elegíveis para mensagem de fim de dia
@@ -189,7 +191,7 @@ class MonitoringService {
    * Verifica se paciente é elegível para mensagem de 30min
    * 🎀 ATUALIZADO: Usa sistema de TAGS ao invés de isPatientProcessed
    */
-  async isPatientEligibleFor30MinMessage(patient) {
+  /* async isPatientEligibleFor30MinMessage(patient) {
     try {
       // 1. Verificar tempo de espera (usando configuração personalizada)
       const minWaitTime = this.configManager.getMinWaitTime();
@@ -244,7 +246,7 @@ class MonitoringService {
       this.errorHandler.logError(error, 'MonitoringService.isPatientEligibleFor30MinMessage');
       return false;
     }
-  }
+  } */
 
   /**
    * Verifica se paciente é elegível para mensagem de fim de dia

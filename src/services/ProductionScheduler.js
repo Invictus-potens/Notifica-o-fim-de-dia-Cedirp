@@ -168,7 +168,9 @@ class ProductionScheduler {
       }
 
       // 🌸 NOVA IMPLEMENTAÇÃO: Chamar funções separadas
-      const thirtyMinuteResults = await this.handle30MinuteCheck();
+      // 🚫 COMENTADO: Envio de mensagens de 30min (Felipe-chan pediu para comentar)
+      // const thirtyMinuteResults = await this.handle30MinuteCheck();
+      const thirtyMinuteResults = { sent: 0, failed: 0, blocked: 0, details: [], messageType: '30min', timestamp: new Date().toISOString() };
       const endOfDayResults = await this.handleEndOfDayCheck();
       
       // Consolidar resultados
@@ -200,11 +202,8 @@ class ProductionScheduler {
     }
   }
 
-  /**
-   * 🌸 NOVA FUNÇÃO: Verifica pacientes elegíveis para mensagem de 30min
-   * Felipe-chan, esta função é independente e só verifica pacientes de 30min! 💕
-   */
-  async handle30MinuteCheck() {
+
+  /* async handle30MinuteCheck() {
     try {
       console.log('\n\n\n⏰ ===============================================');
       console.log('   VERIFICAÇÃO ESPECÍFICA: MENSAGENS DE 30MIN');
@@ -256,13 +255,13 @@ class ProductionScheduler {
       this.errorHandler.logError(error, 'ProductionScheduler.handle30MinuteCheck');
       return { sent: 0, failed: 0, blocked: 0, details: [], error: error.message, messageType: '30min', timestamp: new Date().toISOString() };
     }
-  }
+  } */
 
   /**
    * Manipula mensagens de 30 minutos
    * 🛡️ ATUALIZADO: Sistema de reserva para evitar race conditions
    */
-  async handle30MinuteMessages(eligiblePatients) {
+  /* async handle30MinuteMessages(eligiblePatients) {
     try {
       console.log(`⏰ Processando ${eligiblePatients.length} pacientes elegíveis para mensagem de 30min...`);
       
@@ -346,7 +345,7 @@ class ProductionScheduler {
     } catch (error) {
       this.errorHandler.logError(error, 'ProductionScheduler.handle30MinuteMessages');
     }
-  }
+  } */
 
   /**
    * 🌅 NOVA FUNÇÃO: Verifica pacientes elegíveis para mensagem de fim de dia (18h)
